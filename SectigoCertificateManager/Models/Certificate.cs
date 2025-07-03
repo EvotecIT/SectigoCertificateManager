@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager.Models;
 
 using System.Collections.Generic;
+using SectigoCertificateManager;
 
 public sealed class Certificate
 {
@@ -10,7 +11,7 @@ public sealed class Certificate
 
     public int OrgId { get; set; }
 
-    public string Status { get; set; } = string.Empty;
+    public CertificateStatus Status { get; set; } = CertificateStatus.Any;
 
     public long OrderNumber { get; set; }
 
