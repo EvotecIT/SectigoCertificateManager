@@ -14,7 +14,14 @@ public sealed class SectigoClient : ISectigoClient
 
     public SectigoClient(ApiConfig config, HttpClient? httpClient = null)
     {
-        _client = httpClient ?? new HttpClient();
+        if (httpClient is null)
+        {
+            var handler = new HttpClientHandler();
+            config.ConfigureHandler?.Invoke(handler);
+            httpClient = new HttpClient(handler, disposeHandler: true);
+        }
+
+        _client = httpClient;
         _client.BaseAddress = new Uri(config.BaseUrl);
         ConfigureHeaders(config);
     }

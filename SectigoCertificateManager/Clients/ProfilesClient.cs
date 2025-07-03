@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager.Clients;
 
 using System.Net.Http.Json;
+using SectigoCertificateManager;
 using SectigoCertificateManager.Models;
 
 /// <summary>
@@ -22,7 +23,7 @@ public sealed class ProfilesClient
     public async Task<Profile?> GetAsync(int profileId, CancellationToken cancellationToken = default)
     {
         var response = await _client.GetAsync($"v1/profile/{profileId}", cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await response.EnsureSuccessWithApiErrorAsync();
         return await response.Content.ReadFromJsonAsync<Profile>(cancellationToken: cancellationToken);
     }
 }

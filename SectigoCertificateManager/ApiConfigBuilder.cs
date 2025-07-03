@@ -1,3 +1,5 @@
+using System.Net.Http;
+
 namespace SectigoCertificateManager;
 
 
@@ -21,6 +23,7 @@ public sealed class ApiConfigBuilder
     private string _customerUri = string.Empty;
 
     private ApiVersion _apiVersion = ApiVersion.V25_4;
+    private Action<HttpClientHandler>? _configureHandler;
 
 
 
@@ -114,6 +117,17 @@ public sealed class ApiConfigBuilder
 
     }
 
+    /// <summary>
+    /// Sets a callback used to configure the <see cref="HttpClientHandler"/> created for HTTP communication.
+    /// </summary>
+    /// <param name="configure">Callback that configures the handler.</param>
+    /// <returns>The builder instance.</returns>
+    public ApiConfigBuilder WithHandlerConfiguration(Action<HttpClientHandler> configure)
+    {
+        _configureHandler = configure;
+        return this;
+    }
+
 
 
     /// <summary>
@@ -126,7 +140,7 @@ public sealed class ApiConfigBuilder
 
     public ApiConfig Build()
 
-        => new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion);
+        => new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion, _configureHandler);
 
 }
 

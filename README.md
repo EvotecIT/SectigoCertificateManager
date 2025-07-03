@@ -34,3 +34,22 @@ var config = new ApiConfigBuilder()
 
 Use the resulting `ApiConfig` to instantiate `SectigoClient`.
 
+
+### Customizing the HTTP handler
+
+If you need to supply client certificates or modify other `HttpClientHandler` settings, configure a handler callback:
+
+```csharp
+var config = new ApiConfigBuilder()
+    .WithBaseUrl("https://example.com")
+    .WithCredentials("user", "pass")
+    .WithCustomerUri("cst1")
+    .WithHandlerConfiguration(handler =>
+    {
+        handler.ClientCertificates.Add(myCertificate);
+        handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+    })
+    .Build();
+```
+
+This callback is invoked when `SectigoClient` creates its own `HttpClient` and allows any handler property to be customized.

@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager.Clients;
 
 using System.Net.Http.Json;
+using SectigoCertificateManager;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
@@ -24,7 +25,7 @@ public sealed class CertificatesClient
     public async Task<Certificate?> GetAsync(int certificateId, CancellationToken cancellationToken = default)
     {
         var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await response.EnsureSuccessWithApiErrorAsync();
         return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken);
     }
 
@@ -34,7 +35,7 @@ public sealed class CertificatesClient
     public async Task<Certificate?> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default)
     {
         var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request), cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await response.EnsureSuccessWithApiErrorAsync();
         return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken);
     }
 }

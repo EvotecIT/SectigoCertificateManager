@@ -44,6 +44,26 @@ public class UnitTest1
         Assert.Equal("user", config.Username);
         Assert.Equal("pass", config.Password);
         Assert.Equal("cst1", config.CustomerUri);
-        Assert.Equal(ApiVersion.V25_5, config.ApiVersion);
+    Assert.Equal(ApiVersion.V25_5, config.ApiVersion);
+    }
+
+    [Fact]
+    public void BuilderAddsHandlerConfiguration()
+    {
+        void Configure(HttpClientHandler handler)
+        {
+            handler.AllowAutoRedirect = false;
+        }
+
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithCredentials("user", "pass")
+            .WithCustomerUri("cst1")
+            .WithHandlerConfiguration(Configure)
+            .Build();
+
+        var handler = new HttpClientHandler { AllowAutoRedirect = true };
+        config.ConfigureHandler?.Invoke(handler);
+        Assert.False(handler.AllowAutoRedirect);
     }
 }

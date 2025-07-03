@@ -1,3 +1,5 @@
+using System.Net.Http;
+
 namespace SectigoCertificateManager;
 
 /// <summary>
@@ -8,7 +10,7 @@ namespace SectigoCertificateManager;
 /// <param name="password">Password associated with <paramref name="username"/>.</param>
 /// <param name="customerUri">Value for the <c>customerUri</c> HTTP header.</param>
 /// <param name="apiVersion">Version of the API to use.</param>
-public sealed class ApiConfig(string baseUrl, string username, string password, string customerUri, ApiVersion apiVersion)
+public sealed class ApiConfig(string baseUrl, string username, string password, string customerUri, ApiVersion apiVersion, Action<HttpClientHandler>? configureHandler = null)
 {
     /// <summary>
     /// Gets the base URL of the API endpoint.
@@ -35,6 +37,11 @@ public sealed class ApiConfig(string baseUrl, string username, string password, 
     /// Gets the API version that should be used.
     /// </summary>
     public ApiVersion ApiVersion { get; } = apiVersion;
+
+    /// <summary>
+    /// Gets an optional callback used to configure the <see cref="HttpClientHandler"/> when an internal <see cref="HttpClient"/> is created.
+    /// </summary>
+    public Action<HttpClientHandler>? ConfigureHandler { get; } = configureHandler;
 }
 
 /// <summary>
