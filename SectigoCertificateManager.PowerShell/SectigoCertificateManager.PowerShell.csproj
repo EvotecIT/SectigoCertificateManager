@@ -11,4 +11,17 @@
     <ProjectReference Include="..\SectigoCertificateManager\SectigoCertificateManager.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+    <Compile Remove="GetSectigoCertificateCommand.cs" />
+    <Compile Remove="NewSectigoOrderCommand.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PowerShellStandard.Library" Version="7.0.0-preview.1" />
+  </ItemGroup>
+
 </Project>
