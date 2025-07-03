@@ -3,6 +3,9 @@ namespace SectigoCertificateManager;
 /// <summary>
 /// Enumerates statuses for certificates.
 /// </summary>
+using System.Text.Json.Serialization;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum CertificateStatus
 {
     /// <summary>Any status.</summary>
