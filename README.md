@@ -4,6 +4,17 @@
 
 This library provides a simple client for the Sectigo Certificate Manager API.
 
+The library defaults to **API version 25.4** as defined in `ApiConfigBuilder`.
+Support for version 25.5 is also available via `ApiVersion.V25_5`.
+
+## Documentation
+
+HTML copies of the official API reference are included in the repository:
+
+- [certmgr-api-doc-25.4.html](Documentation/certmgr-api-doc-25.4.html)
+- [certmgr-api-doc-25.5.html](Documentation/certmgr-api-doc-25.5.html)
+
+
 
 
 ## Fluent API
@@ -53,3 +64,15 @@ var config = new ApiConfigBuilder()
 ```
 
 This callback is invoked when `SectigoClient` creates its own `HttpClient` and allows any handler property to be customized.
+
+## PowerShell Module
+
+Import the module and call the cmdlets:
+
+```powershell
+Import-Module ./SectigoCertificateManager.PowerShell.dll
+
+Get-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123
+
+New-SectigoOrder -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CommonName "example.com" -ProfileId 1
+```
