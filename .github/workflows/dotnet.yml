@@ -3,14 +3,14 @@ name: Test .NET Libraries
 on:
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - 'README.md'
       - 'CHANGELOG.md'
       - 'Docs/**'
   pull_request:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 env:
