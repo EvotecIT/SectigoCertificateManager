@@ -4,6 +4,17 @@
 
 This library provides a simple client for the Sectigo Certificate Manager API.
 
+The library defaults to **API version 25.4** as defined in `ApiConfigBuilder`.
+Support for version 25.5 is also available via `ApiVersion.V25_5`.
+
+## Documentation
+
+HTML copies of the official API reference are included in the repository:
+
+- [certmgr-api-doc-25.4.html](Documentation/certmgr-api-doc-25.4.html)
+- [certmgr-api-doc-25.5.html](Documentation/certmgr-api-doc-25.5.html)
+
+
 
 
 ## Fluent API
