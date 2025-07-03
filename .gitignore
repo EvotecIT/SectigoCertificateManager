@@ -410,3 +410,7 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/powershell,visualstudio
+
+# Local build and packaging artifacts
+dotnet-install.sh
+packages-microsoft-prod.deb
