@@ -1,0 +1,9 @@
+<Project>
+  <ItemGroup>
+    <AnalyzerConfigFiles Include="$(MSBuildThisFileDirectory).editorconfig" />
+  </ItemGroup>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
