@@ -29,4 +29,21 @@ public class UnitTest1
         Assert.Equal("pass", httpClient.DefaultRequestHeaders.GetValues("password").Single());
         Assert.Equal("cst1", httpClient.DefaultRequestHeaders.GetValues("customerUri").Single());
     }
+
+    [Fact]
+    public void ApiConfigBuilderCreatesValidConfig()
+    {
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithCredentials("user", "pass")
+            .WithCustomerUri("cst1")
+            .WithApiVersion(ApiVersion.V25_5)
+            .Build();
+
+        Assert.Equal("https://example.com", config.BaseUrl);
+        Assert.Equal("user", config.Username);
+        Assert.Equal("pass", config.Password);
+        Assert.Equal("cst1", config.CustomerUri);
+        Assert.Equal(ApiVersion.V25_5, config.ApiVersion);
+    }
 }
