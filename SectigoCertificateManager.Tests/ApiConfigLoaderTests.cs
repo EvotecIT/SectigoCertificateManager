@@ -43,4 +43,21 @@ public sealed class ApiConfigLoaderTests
         Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", null);
         Environment.SetEnvironmentVariable("SECTIGO_API_VERSION", null);
     }
+
+    [Fact]
+    public void Load_UsesDefaultPathFromEnvironment()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var path = Path.Combine(tempDir, "cred.json");
+        File.WriteAllText(path, "{\"baseUrl\":\"https://example.com\",\"username\":\"user\",\"password\":\"pass\",\"customerUri\":\"cst1\"}");
+        Environment.SetEnvironmentVariable("SECTIGO_CREDENTIALS_PATH", path);
+
+        var config = ApiConfigLoader.Load();
+
+        Assert.Equal("https://example.com", config.BaseUrl);
+
+        Environment.SetEnvironmentVariable("SECTIGO_CREDENTIALS_PATH", null);
+        Directory.Delete(tempDir, true);
+    }
 }
