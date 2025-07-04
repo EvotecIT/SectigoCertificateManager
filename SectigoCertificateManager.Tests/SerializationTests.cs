@@ -8,22 +8,31 @@ public sealed class SerializationTests {
     [Fact]
     public void Deserialize_Certificate_Succeeds() {
         const string json = "{\"id\":1}";
-        var obj = JsonSerializer.Deserialize<Certificate>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var options = new JsonSerializerOptions {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+        var obj = JsonSerializer.Deserialize<Certificate>(json, options);
         Assert.NotNull(obj);
     }
 
     [Fact]
     public void Deserialize_Profile_Succeeds() {
         const string json = "{\"id\":1}";
-        var obj = JsonSerializer.Deserialize<Profile>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var options = new JsonSerializerOptions {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+        var obj = JsonSerializer.Deserialize<Profile>(json, options);
         Assert.NotNull(obj);
     }
 
     [Fact]
     public void CertificateStatus_RoundTrip_Succeeds() {
         foreach (CertificateStatus status in Enum.GetValues(typeof(CertificateStatus))) {
-            var json = JsonSerializer.Serialize(status);
-            var result = JsonSerializer.Deserialize<CertificateStatus>(json);
+            var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var json = JsonSerializer.Serialize(status, options);
+            var result = JsonSerializer.Deserialize<CertificateStatus>(json, options);
             Assert.Equal(status, result);
         }
     }
@@ -31,8 +40,9 @@ public sealed class SerializationTests {
     [Fact]
     public void OrderStatus_RoundTrip_Succeeds() {
         foreach (OrderStatus status in Enum.GetValues(typeof(OrderStatus))) {
-            var json = JsonSerializer.Serialize(status);
-            var result = JsonSerializer.Deserialize<OrderStatus>(json);
+            var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var json = JsonSerializer.Serialize(status, options);
+            var result = JsonSerializer.Deserialize<OrderStatus>(json, options);
             Assert.Equal(status, result);
         }
     }
