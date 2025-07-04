@@ -1,0 +1,85 @@
+using SectigoCertificateManager;
+using SectigoCertificateManager.Clients;
+using SectigoCertificateManager.Models;
+using SectigoCertificateManager.Requests;
+using System.Net.Http;
+using System.Threading.Tasks;
+using WireMock.RequestBuilders;
+using WireMock.ResponseBuilders;
+using WireMock.Server;
+using Xunit;
+
+namespace SectigoCertificateManager.Tests;
+
+public sealed class SectigoApiIntegrationTests : IAsyncLifetime
+{
+    private WireMockServer _server = null!;
+    private CertificatesClient _certificates = null!;
+    private OrdersClient _orders = null!;
+    private ProfilesClient _profiles = null!;
+
+    public Task InitializeAsync()
+    {
+        _server = WireMockServer.Start();
+        var config = new ApiConfig(_server.Url!, "user", "pass", "cst1", ApiVersion.V25_4);
+        var client = new SectigoClient(config, new HttpClient());
+        _certificates = new CertificatesClient(client);
+        _orders = new OrdersClient(client);
+        _profiles = new ProfilesClient(client);
+        return Task.CompletedTask;
+    }
+
+    public Task DisposeAsync()
+    {
+        _server.Stop();
+        _server.Dispose();
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task CertificatesClient_Get_ReturnsCertificate()
+    {
+        _server.Given(Request.Create().WithPath("/v1/certificate/1").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("{\"id\":1}"));
+
+        var result = await _certificates.GetAsync(1);
+
+        Assert.NotNull(result);
+        Assert.Equal(1, result!.Id);
+    }
+
+    [Fact]
+    public async Task CertificatesClient_Issue_ReturnsCertificate()
+    {
+        _server.Given(Request.Create().WithPath("/v1/certificate/issue").UsingPost())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("{\"id\":2}"));
+
+        var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = 12 };
+        var result = await _certificates.IssueAsync(request);
+
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Id);
+    }
+
+    [Fact]
+    public async Task OrdersClient_Get_ReturnsOrder()
+    {
+        _server.Given(Request.Create().WithPath("/v1/order/5").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("{\"id\":5,\"status\":0,\"orderNumber\":1,\"backendCertId\":\"abc\"}"));
+
+        var result = await _orders.GetAsync(5);
+
+        Assert.NotNull(result);
+        Assert.Equal(5, result!.Id);
+    }
+
+}
