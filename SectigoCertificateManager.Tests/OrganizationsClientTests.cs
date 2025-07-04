@@ -17,13 +17,18 @@ public sealed class OrganizationsClientTests
     {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
+        public string? Body { get; private set; }
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Request = request;
-            return Task.FromResult(_response);
+            if (request.Content is not null)
+            {
+                Body = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+            }
+            return _response;
         }
     }
 
@@ -62,9 +67,9 @@ public sealed class OrganizationsClientTests
         var id = await organizations.CreateAsync(request);
 
         Assert.NotNull(handler.Request);
-        var json = await handler.Request!.Content!.ReadAsStringAsync();
-        Assert.Contains("\"name\":\"org\"", json);
-        Assert.Equal("https://example.com/v1/organization", handler.Request.RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/organization", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(handler.Body);
+        Assert.Contains("\"name\":\"org\"", handler.Body);
         Assert.Equal(10, id);
     }
 }
