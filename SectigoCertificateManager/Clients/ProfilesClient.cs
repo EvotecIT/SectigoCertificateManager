@@ -21,8 +21,8 @@ public sealed class ProfilesClient
     /// </summary>
     public async Task<Profile?> GetAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        var response = await _client.GetAsync($"v1/profile/{profileId}", cancellationToken);
+        var response = await _client.GetAsync($"v1/profile/{profileId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Profile>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync<Profile>(cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 }
