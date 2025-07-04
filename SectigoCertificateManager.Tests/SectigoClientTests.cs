@@ -51,6 +51,21 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
+    public async Task TokenOverridesCredentialsWhenBothProvided() {
+        var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4, token: "tkn");
+        var handler = new TestHandler();
+        var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        Assert.True(httpClient.DefaultRequestHeaders.Authorization?.Scheme == "Bearer");
+        Assert.Equal("tkn", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
+        Assert.False(httpClient.DefaultRequestHeaders.Contains("login"));
+        Assert.False(httpClient.DefaultRequestHeaders.Contains("password"));
+    }
+
+    [Fact]
     public void ApiConfigBuilderCreatesValidConfig() {
         var config = new ApiConfigBuilder()
             .WithBaseUrl("https://example.com")
