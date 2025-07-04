@@ -35,6 +35,8 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
     [Parameter]
     public string[] SubjectAlternativeName { get; set; } = System.Array.Empty<string>();
 
+    /// <summary>Issues a certificate using provided parameters.</summary>
+    /// <para>Builds an API client and submits an <see cref="IssueCertificateRequest"/>.</para>
     protected override void ProcessRecord() {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
