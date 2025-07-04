@@ -47,4 +47,27 @@ public sealed class CertificatesClientTests {
         Assert.Single(actualResult.Certificates);
         Assert.Equal(1, actualResult.Certificates[0].Id);
     }
+
+    [Fact]
+    public async Task IssueAsync_ReturnsCertificate() {
+        var certificate = new Certificate { Id = 2, CommonName = "example.com" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(certificate)
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = 12 };
+        var result = await certificates.IssueAsync(request);
+
+        Assert.NotNull(handler.Request);
+        var actualRequest = handler.Request!;
+        Assert.Equal("https://example.com/v1/certificate/issue", actualRequest.RequestUri!.ToString());
+        Assert.NotNull(result);
+        var actualResult = result!;
+        Assert.Equal(2, actualResult.Id);
+        Assert.Equal("example.com", actualResult.CommonName);
+    }
 }
