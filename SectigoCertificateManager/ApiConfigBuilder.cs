@@ -62,5 +62,27 @@ public sealed class ApiConfigBuilder
 
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build()
-        => new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion, _clientCertificate, _configureHandler);
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl))
+        {
+            throw new ArgumentException("Base URL is required.", nameof(_baseUrl));
+        }
+
+        if (string.IsNullOrWhiteSpace(_username))
+        {
+            throw new ArgumentException("User name is required.", nameof(_username));
+        }
+
+        if (string.IsNullOrWhiteSpace(_password))
+        {
+            throw new ArgumentException("Password is required.", nameof(_password));
+        }
+
+        if (string.IsNullOrWhiteSpace(_customerUri))
+        {
+            throw new ArgumentException("Customer URI is required.", nameof(_customerUri));
+        }
+
+        return new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion, _clientCertificate, _configureHandler);
+    }
 }
