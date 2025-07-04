@@ -54,4 +54,25 @@ public sealed class SectigoClientTests
         Assert.Equal("cst1", config.CustomerUri);
         Assert.Equal(ApiVersion.V25_5, config.ApiVersion);
     }
+
+    [Fact]
+    public void BuilderAllowsCertificateAndHandler()
+    {
+#pragma warning disable SYSLIB0057
+        using var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(Array.Empty<byte>());
+#pragma warning restore SYSLIB0057
+        System.Net.Http.HttpClientHandler? captured = null;
+        System.Action<System.Net.Http.HttpClientHandler> action = h => captured = h;
+
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithCredentials("user", "pass")
+            .WithCustomerUri("cst1")
+            .WithClientCertificate(cert)
+            .WithHttpClientHandler(action)
+            .Build();
+
+        Assert.Same(cert, config.ClientCertificate);
+        Assert.Same(action, config.ConfigureHandler);
+    }
 }
