@@ -2,6 +2,8 @@ namespace SectigoCertificateManager.Models;
 
 using SectigoCertificateManager;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
+using System;
 
 /// <summary>
 /// Represents a certificate returned by the Sectigo API.
@@ -66,4 +68,17 @@ public sealed class Certificate {
 
     /// <summary>Gets or sets a value indicating whether notifications are suspended.</summary>
     public bool SuspendNotifications { get; set; }
+
+    /// <summary>
+    /// Creates an <see cref="X509Certificate2"/> from a base64 encoded certificate.
+    /// </summary>
+    /// <param name="data">Base64 encoded certificate bytes.</param>
+    public static X509Certificate2 FromBase64(string data) {
+        if (string.IsNullOrWhiteSpace(data)) {
+            throw new ArgumentException("Value cannot be null or empty.", nameof(data));
+        }
+
+        var bytes = Convert.FromBase64String(data);
+        return new X509Certificate2(bytes);
+    }
 }
