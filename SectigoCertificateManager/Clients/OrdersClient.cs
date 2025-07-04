@@ -28,4 +28,15 @@ public sealed class OrdersClient
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Order>(cancellationToken: cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Retrieves all orders visible to the user.
+    /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<Order>?> ListOrdersAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await _client.GetAsync("v1/order", cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<Order>>(cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
 }

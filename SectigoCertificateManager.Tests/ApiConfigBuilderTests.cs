@@ -17,7 +17,7 @@ public sealed class ApiConfigBuilderTests
     }
 
     [Fact]
-    public void BuildThrowsWithoutCredentials()
+    public void BuildThrowsWithoutCredentialsOrToken()
     {
         var builder = new ApiConfigBuilder()
             .WithBaseUrl("https://example.com")
@@ -34,5 +34,18 @@ public sealed class ApiConfigBuilderTests
             .WithCredentials("user", "pass");
 
         Assert.Throws<ArgumentException>(() => builder.Build());
+    }
+
+    [Fact]
+    public void BuildSucceedsWithToken()
+    {
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithCustomerUri("cst1")
+            .WithToken("tok")
+            .Build();
+
+        Assert.Equal("tok", config.Token);
+        Assert.Equal("https://example.com", config.BaseUrl);
     }
 }

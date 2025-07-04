@@ -97,8 +97,16 @@ public sealed class SectigoClient : ISectigoClient
     {
         _client.DefaultRequestHeaders.Clear();
         _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        _client.DefaultRequestHeaders.Add("login", cfg.Username);
-        _client.DefaultRequestHeaders.Add("password", cfg.Password);
         _client.DefaultRequestHeaders.Add("customerUri", cfg.CustomerUri);
+
+        if (!string.IsNullOrWhiteSpace(cfg.Token))
+        {
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", cfg.Token);
+        }
+        else
+        {
+            _client.DefaultRequestHeaders.Add("login", cfg.Username);
+            _client.DefaultRequestHeaders.Add("password", cfg.Password);
+        }
     }
 }
