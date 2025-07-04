@@ -1,5 +1,6 @@
 using SectigoCertificateManager.Utilities;
 using System.IO;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Xunit;
 
@@ -7,9 +8,17 @@ namespace SectigoCertificateManager.Tests;
 
 public sealed class CertificateExportTests {
     private static X509Certificate2 CreateCertificate() {
-        var req = new CertificateRequest("CN=Test", RSA.Create(2048), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        var cert = req.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
-        return cert.CopyWithPrivateKey(req.PrivateKey!);
+        using var key = RSA.Create(2048);
+#if NET472
+        var request = new CertificateRequest(
+            new X500DistinguishedName("CN=Test"),
+            key,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+#else
+        var request = new CertificateRequest("CN=Test", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#endif
+        return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
     }
 
     [Fact]
