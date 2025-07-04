@@ -47,12 +47,11 @@ var config = new ApiConfigBuilder()
 
 
 
-Use the resulting `ApiConfig` to instantiate `SectigoClient`.
+Use the resulting `ApiConfig` to instantiate `SectigoClient` and access the revocation endpoints.
 
 ```csharp
 var client = new SectigoClient(config);
-var revocations = new RevocationsClient(client);
-await revocations.RevokeAsync(123, "Key compromised");
+await client.Revocations.RevokeAsync(123, "Key compromised");
 ```
 
 

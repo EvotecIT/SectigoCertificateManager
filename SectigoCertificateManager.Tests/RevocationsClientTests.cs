@@ -12,12 +12,21 @@ public sealed class RevocationsClientTests
 {
     private sealed class TestHandler : HttpMessageHandler
     {
-        public HttpRequestMessage? Request { get; private set; }
+        public HttpMethod? Method { get; private set; }
+        public Uri? Uri { get; private set; }
+        public string? Content { get; private set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            Request = request;
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NoContent));
+            Method = request.Method;
+            Uri = request.RequestUri;
+
+            if (request.Content is not null)
+            {
+                Content = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
         }
     }
 
@@ -32,10 +41,8 @@ public sealed class RevocationsClientTests
 
         await revocations.RevokeAsync(10, "foo");
 
-        Assert.NotNull(handler.Request);
-        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
-        Assert.Equal(new Uri("https://example.com/api/v1/revoke/10"), handler.Request.RequestUri);
-        var json = await handler.Request.Content!.ReadAsStringAsync();
-        Assert.Equal("{\"reason\":\"foo\"}", json);
+        Assert.Equal(HttpMethod.Post, handler.Method);
+        Assert.Equal(new Uri("https://example.com/api/v1/revoke/10"), handler.Uri);
+        Assert.Equal("{\"reason\":\"foo\"}", handler.Content);
     }
 }
