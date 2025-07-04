@@ -49,6 +49,12 @@ var config = new ApiConfigBuilder()
 
 Use the resulting `ApiConfig` to instantiate `SectigoClient`.
 
+```csharp
+var client = new SectigoClient(config);
+var revocations = new RevocationsClient(client);
+await revocations.RevokeAsync(123, "Key compromised");
+```
+
 
 ## PowerShell Module
 

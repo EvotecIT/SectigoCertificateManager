@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using SectigoCertificateManager.Clients;
 
 public sealed class SectigoClient : ISectigoClient
 {
@@ -31,6 +32,11 @@ public sealed class SectigoClient : ISectigoClient
         _client.BaseAddress = new Uri(config.BaseUrl);
         ConfigureHeaders(config);
     }
+
+    /// <summary>
+    /// Gets a client for revocation operations.
+    /// </summary>
+    public RevocationsClient Revocations => new(this);
 
     public async Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default)
     {
