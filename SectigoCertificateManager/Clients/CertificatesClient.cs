@@ -37,4 +37,15 @@ public sealed class CertificatesClient
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken);
     }
+
+    /// <summary>
+    /// Updates an existing certificate.
+    /// </summary>
+    public async Task<Certificate?> UpdateAsync(int certificateId, UpdateCertificateRequest request, CancellationToken cancellationToken = default)
+    {
+        request.SslId = certificateId;
+        var response = await _client.PutAsync("v1/certificate", JsonContent.Create(request), cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken);
+    }
 }
