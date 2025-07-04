@@ -19,6 +19,8 @@ public sealed class ProfilesClient
     /// <summary>
     /// Retrieves a profile by identifier.
     /// </summary>
+    /// <param name="profileId">Identifier of the profile to retrieve.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Profile?> GetAsync(int profileId, CancellationToken cancellationToken = default)
     {
         var response = await _client.GetAsync($"v1/profile/{profileId}", cancellationToken).ConfigureAwait(false);

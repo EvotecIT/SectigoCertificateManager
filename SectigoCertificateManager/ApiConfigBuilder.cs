@@ -18,6 +18,7 @@ public sealed class ApiConfigBuilder
     private Action<HttpClientHandler>? _configureHandler;
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
+    /// <param name="baseUrl">The root URL of the Sectigo API.</param>
     public ApiConfigBuilder WithBaseUrl(string baseUrl)
     {
         _baseUrl = baseUrl;
@@ -25,6 +26,8 @@ public sealed class ApiConfigBuilder
     }
 
     /// <summary>Sets the credentials used for authentication.</summary>
+    /// <param name="username">User name for API authentication.</param>
+    /// <param name="password">Password associated with <paramref name="username"/>.</param>
     public ApiConfigBuilder WithCredentials(string username, string password)
     {
         _username = username;
@@ -33,6 +36,7 @@ public sealed class ApiConfigBuilder
     }
 
     /// <summary>Sets the customer URI header value.</summary>
+    /// <param name="customerUri">Value of the <c>customerUri</c> header.</param>
     public ApiConfigBuilder WithCustomerUri(string customerUri)
     {
         _customerUri = customerUri;
@@ -40,6 +44,7 @@ public sealed class ApiConfigBuilder
     }
 
     /// <summary>Sets the API version.</summary>
+    /// <param name="version">Desired API version.</param>
     public ApiConfigBuilder WithApiVersion(ApiVersion version)
     {
         _apiVersion = version;
@@ -47,6 +52,7 @@ public sealed class ApiConfigBuilder
     }
 
     /// <summary>Attaches a client certificate for mutual TLS authentication.</summary>
+    /// <param name="certificate">The certificate used for client authentication.</param>
     public ApiConfigBuilder WithClientCertificate(X509Certificate2 certificate)
     {
         _clientCertificate = certificate;
@@ -54,6 +60,7 @@ public sealed class ApiConfigBuilder
     }
 
     /// <summary>Allows configuration of the <see cref="HttpClientHandler"/> used by <see cref="SectigoClient"/>.</summary>
+    /// <param name="configure">Delegate used to configure the handler.</param>
     public ApiConfigBuilder WithHttpClientHandler(Action<HttpClientHandler> configure)
     {
         _configureHandler = configure;
