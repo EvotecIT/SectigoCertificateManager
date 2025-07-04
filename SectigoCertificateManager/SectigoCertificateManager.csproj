@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Net.Http.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
   </ItemGroup>
 
 </Project>

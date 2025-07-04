@@ -1,5 +1,6 @@
 namespace SectigoCertificateManager.Clients;
 
+using System.Collections.Generic;
 using System.Net.Http.Json;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
@@ -36,5 +37,47 @@ public sealed class CertificatesClient
         var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request), cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Lists certificates using paging.
+    /// </summary>
+    public async IAsyncEnumerable<Certificate> ListAsync(int pageNumber = 1, int pageSize = 200, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        if (pageNumber < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageNumber));
+        }
+
+        if (pageSize < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageSize));
+        }
+
+        var page = pageNumber;
+        while (true)
+        {
+            var response = await _client.GetAsync($"v1/certificate?page={page}&size={pageSize}", cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var results = await response.Content.ReadFromJsonAsync<CertificateResponse>(cancellationToken: cancellationToken);
+
+            if (results?.Certificates is null || results.Certificates.Count == 0)
+            {
+                yield break;
+            }
+
+            foreach (var certificate in results.Certificates)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return certificate;
+            }
+
+            if (results.Certificates.Count < pageSize)
+            {
+                yield break;
+            }
+
+            page++;
+        }
     }
 }
