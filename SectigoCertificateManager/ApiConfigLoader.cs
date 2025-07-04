@@ -11,10 +11,19 @@ public static class ApiConfigLoader
 {
     private sealed class FileModel
     {
+        /// <summary>Gets or sets the base URL.</summary>
         public string BaseUrl { get; set; } = string.Empty;
+
+        /// <summary>Gets or sets the username.</summary>
         public string Username { get; set; } = string.Empty;
+
+        /// <summary>Gets or sets the password.</summary>
         public string Password { get; set; } = string.Empty;
+
+        /// <summary>Gets or sets the customer URI.</summary>
         public string CustomerUri { get; set; } = string.Empty;
+
+        /// <summary>Gets or sets the API version string.</summary>
         public string ApiVersion { get; set; } = "V25_4";
     }
 

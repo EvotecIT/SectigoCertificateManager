@@ -20,6 +20,8 @@ public sealed class OrdersClient
     /// <summary>
     /// Retrieves an order by identifier.
     /// </summary>
+    /// <param name="orderId">Identifier of the order to retrieve.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Order?> GetAsync(int orderId, CancellationToken cancellationToken = default)
     {
         var response = await _client.GetAsync($"v1/order/{orderId}", cancellationToken);

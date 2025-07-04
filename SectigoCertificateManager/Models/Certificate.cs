@@ -3,45 +3,68 @@ namespace SectigoCertificateManager.Models;
 using System.Collections.Generic;
 using SectigoCertificateManager;
 
+/// <summary>
+/// Represents a certificate returned by the Sectigo API.
+/// </summary>
 public sealed class Certificate
 {
+    /// <summary>Gets or sets the identifier of the certificate.</summary>
     public int Id { get; set; }
 
+    /// <summary>Gets or sets the common name of the certificate.</summary>
     public string? CommonName { get; set; }
 
+    /// <summary>Gets or sets the organization identifier.</summary>
     public int OrgId { get; set; }
 
+    /// <summary>Gets or sets the certificate status.</summary>
     public CertificateStatus Status { get; set; } = CertificateStatus.Any;
 
+    /// <summary>Gets or sets the associated order number.</summary>
     public long OrderNumber { get; set; }
 
+    /// <summary>Gets or sets the backend certificate identifier.</summary>
     public string BackendCertId { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the certificate vendor.</summary>
     public string? Vendor { get; set; }
 
+    /// <summary>Gets or sets the certificate profile.</summary>
     public Profile? CertType { get; set; }
 
+    /// <summary>Gets or sets the certificate term.</summary>
     public int Term { get; set; }
 
+    /// <summary>Gets or sets the owner of the certificate.</summary>
     public string? Owner { get; set; }
 
+    /// <summary>Gets or sets the requester of the certificate.</summary>
     public string? Requester { get; set; }
 
+    /// <summary>Gets or sets additional comments.</summary>
     public string? Comments { get; set; }
 
+    /// <summary>Gets or sets the request date.</summary>
     public string? Requested { get; set; }
 
+    /// <summary>Gets or sets the expiry date.</summary>
     public string? Expires { get; set; }
 
+    /// <summary>Gets or sets the serial number.</summary>
     public string? SerialNumber { get; set; }
 
+    /// <summary>Gets or sets the key algorithm.</summary>
     public string? KeyAlgorithm { get; set; }
 
+    /// <summary>Gets or sets the key size.</summary>
     public int? KeySize { get; set; }
 
+    /// <summary>Gets or sets the key type.</summary>
     public string? KeyType { get; set; }
 
+    /// <summary>Gets or sets subject alternative names.</summary>
     public IReadOnlyList<string> SubjectAlternativeNames { get; set; } = [];
 
+    /// <summary>Gets or sets a value indicating whether notifications are suspended.</summary>
     public bool SuspendNotifications { get; set; }
 }
