@@ -13,12 +13,12 @@ public sealed class ApiConfigLoaderTests
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var path = Path.Combine(tempDir, "cred.json");
-        File.WriteAllText(path, "{\"baseUrl\":\"https://example.com\",\"username\":\"user\",\"password\":\"pass\",\"customerUri\":\"cst1\",\"apiVersion\":\"V25_5\"}");
+        File.WriteAllText(path, "{\"baseUrl\":\"https://example.com\",\"username\":\"user\",\"password\":\"pass\",\"customerUri\":\"cst1\",\"apiVersion\":\"V25_6\"}");
 
         var config = ApiConfigLoader.Load(path);
 
         Assert.Equal("https://example.com", config.BaseUrl);
-        Assert.Equal(ApiVersion.V25_5, config.ApiVersion);
+        Assert.Equal(ApiVersion.V25_6, config.ApiVersion);
 
         Directory.Delete(tempDir, true);
     }

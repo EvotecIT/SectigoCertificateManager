@@ -14,4 +14,9 @@ public enum ApiVersion
     /// Version 25.5 of the API.
     /// </summary>
     V25_5,
+
+    /// <summary>
+    /// Version 25.6 of the API.
+    /// </summary>
+    V25_6,
 }

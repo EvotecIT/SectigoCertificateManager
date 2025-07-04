@@ -18,7 +18,7 @@ public static class BasicApiExample
             .WithBaseUrl("https://cert-manager.com/api")
             .WithCredentials("<username>", "<password>")
             .WithCustomerUri("<customer uri>")
-            .WithApiVersion(ApiVersion.V25_5)
+            .WithApiVersion(ApiVersion.V25_6)
             .Build();
 
         var client = new SectigoClient(config);
