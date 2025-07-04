@@ -33,7 +33,8 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
     public int Term { get; set; } = 12;
 
     [Parameter]
-    public string[] SubjectAlternativeName { get; set; } = System.Array.Empty<string>();
+    [Alias("SubjectAlternativeName", "San")]
+    public string[] SubjectAlternativeNames { get; set; } = System.Array.Empty<string>();
 
     /// <summary>Issues a certificate using provided parameters.</summary>
     /// <para>Builds an API client and submits an <see cref="IssueCertificateRequest"/>.</para>
@@ -45,7 +46,7 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
             CommonName = CommonName,
             ProfileId = ProfileId,
             Term = Term,
-            SubjectAlternativeNames = SubjectAlternativeName
+            SubjectAlternativeNames = SubjectAlternativeNames
         };
         var certificate = certificates.IssueAsync(request).GetAwaiter().GetResult();
         WriteObject(certificate);
