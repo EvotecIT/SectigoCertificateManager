@@ -7,10 +7,8 @@ using System.Text.Json;
 /// <summary>
 /// Provides helpers for loading <see cref="ApiConfig"/> from environment variables or a JSON file.
 /// </summary>
-public static class ApiConfigLoader
-{
-    private sealed class FileModel
-    {
+public static class ApiConfigLoader {
+    private sealed class FileModel {
         /// <summary>Gets or sets the base URL.</summary>
         public string BaseUrl { get; set; } = string.Empty;
 
@@ -34,8 +32,7 @@ public static class ApiConfigLoader
     /// Loads configuration from environment variables or a JSON file.
     /// </summary>
     /// <param name="path">Optional path to the JSON file. If not provided, defaults are used.</param>
-    public static ApiConfig Load(string? path = null)
-    {
+    public static ApiConfig Load(string? path = null) {
         string? baseUrl = Environment.GetEnvironmentVariable("SECTIGO_BASE_URL");
         string? username = Environment.GetEnvironmentVariable("SECTIGO_USERNAME");
         string? password = Environment.GetEnvironmentVariable("SECTIGO_PASSWORD");
@@ -43,25 +40,19 @@ public static class ApiConfigLoader
         string? customerUri = Environment.GetEnvironmentVariable("SECTIGO_CUSTOMER_URI");
         string? version = Environment.GetEnvironmentVariable("SECTIGO_API_VERSION");
 
-        if (baseUrl is not null && token is not null && customerUri is not null)
-        {
+        if (baseUrl is not null && token is not null && customerUri is not null) {
             return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ParseVersion(version), token: token);
         }
 
-        if (baseUrl is not null && username is not null && password is not null && customerUri is not null)
-        {
+        if (baseUrl is not null && username is not null && password is not null && customerUri is not null) {
             return new ApiConfig(baseUrl, username, password, customerUri, ParseVersion(version));
         }
 
-        if (string.IsNullOrEmpty(path))
-        {
+        if (string.IsNullOrEmpty(path)) {
             var envPath = Environment.GetEnvironmentVariable("SECTIGO_CREDENTIALS_PATH");
-            if (!string.IsNullOrEmpty(envPath))
-            {
+            if (!string.IsNullOrEmpty(envPath)) {
                 path = envPath;
-            }
-            else
-            {
+            } else {
                 var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 path = Path.Combine(home, ".sectigo", "credentials.json");
             }

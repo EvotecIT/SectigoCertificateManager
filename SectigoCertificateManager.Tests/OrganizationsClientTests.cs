@@ -11,21 +11,17 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
-public sealed class OrganizationsClientTests
-{
-    private sealed class TestHandler : HttpMessageHandler
-    {
+public sealed class OrganizationsClientTests {
+    private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
         public string? Body { get; private set; }
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
-            if (request.Content is not null)
-            {
+            if (request.Content is not null) {
                 Body = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
             return _response;
@@ -33,11 +29,9 @@ public sealed class OrganizationsClientTests
     }
 
     [Fact]
-    public async Task GetAsync_ReturnsOrganization()
-    {
+    public async Task GetAsync_ReturnsOrganization() {
         var org = new Organization { Id = 3, Name = "org" };
-        var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(org)
         };
 
@@ -54,8 +48,7 @@ public sealed class OrganizationsClientTests
     }
 
     [Fact]
-    public async Task CreateAsync_SendsPayloadAndReturnsId()
-    {
+    public async Task CreateAsync_SendsPayloadAndReturnsId() {
         var response = new HttpResponseMessage(HttpStatusCode.Created);
         response.Headers.Location = new System.Uri("https://example.com/v1/organization/10");
 

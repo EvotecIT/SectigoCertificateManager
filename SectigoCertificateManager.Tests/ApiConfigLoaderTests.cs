@@ -5,11 +5,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
-public sealed class ApiConfigLoaderTests
-{
+public sealed class ApiConfigLoaderTests {
     [Fact]
-    public void Load_FromFile()
-    {
+    public void Load_FromFile() {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var path = Path.Combine(tempDir, "cred.json");
@@ -24,8 +22,7 @@ public sealed class ApiConfigLoaderTests
     }
 
     [Fact]
-    public void Load_FromEnvironment()
-    {
+    public void Load_FromEnvironment() {
         Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", "https://example.com");
         Environment.SetEnvironmentVariable("SECTIGO_USERNAME", "user");
         Environment.SetEnvironmentVariable("SECTIGO_PASSWORD", "pass");
@@ -45,8 +42,7 @@ public sealed class ApiConfigLoaderTests
     }
 
     [Fact]
-    public void Load_UsesDefaultPathFromEnvironment()
-    {
+    public void Load_UsesDefaultPathFromEnvironment() {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var path = Path.Combine(tempDir, "cred.json");
@@ -62,8 +58,7 @@ public sealed class ApiConfigLoaderTests
     }
 
     [Fact]
-    public void Load_FromEnvironment_WithToken()
-    {
+    public void Load_FromEnvironment_WithToken() {
         Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", "https://example.com");
         Environment.SetEnvironmentVariable("SECTIGO_TOKEN", "tok");
         Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", "cst1");
@@ -78,8 +73,7 @@ public sealed class ApiConfigLoaderTests
     }
 
     [Fact]
-    public void Load_FromFile_WithToken()
-    {
+    public void Load_FromFile_WithToken() {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var path = Path.Combine(tempDir, "cred.json");

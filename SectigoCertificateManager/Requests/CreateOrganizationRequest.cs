@@ -4,8 +4,7 @@ using SectigoCertificateManager.Models;
 /// <summary>
 /// Request payload used to create an organization.
 /// </summary>
-public sealed class CreateOrganizationRequest
-{
+public sealed class CreateOrganizationRequest {
     /// <summary>Gets or sets the organization name.</summary>
     public string Name { get; set; } = string.Empty;
 

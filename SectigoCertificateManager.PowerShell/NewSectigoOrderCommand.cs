@@ -1,14 +1,13 @@
-using System.Management.Automation;
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Requests;
+using System.Management.Automation;
 
 namespace SectigoCertificateManager.PowerShell;
 
 [Cmdlet(VerbsCommon.New, "SectigoOrder")]
 [OutputType(typeof(Models.Certificate))]
-public sealed class NewSectigoOrderCommand : PSCmdlet
-{
+public sealed class NewSectigoOrderCommand : PSCmdlet {
     [Parameter(Mandatory = true)]
     public string BaseUrl { get; set; } = string.Empty;
 
@@ -36,13 +35,11 @@ public sealed class NewSectigoOrderCommand : PSCmdlet
     [Parameter]
     public string[] SubjectAlternativeName { get; set; } = System.Array.Empty<string>();
 
-    protected override void ProcessRecord()
-    {
+    protected override void ProcessRecord() {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);
-        var request = new IssueCertificateRequest
-        {
+        var request = new IssueCertificateRequest {
             CommonName = CommonName,
             ProfileId = ProfileId,
             Term = Term,

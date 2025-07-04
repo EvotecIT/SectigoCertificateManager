@@ -10,8 +10,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// Provides a basic HTTP client wrapper for communicating with the Sectigo API.
 /// </summary>
-public sealed class SectigoClient : ISectigoClient
-{
+public sealed class SectigoClient : ISectigoClient {
     private readonly HttpClient _client;
 
     /// <summary>
@@ -24,13 +23,10 @@ public sealed class SectigoClient : ISectigoClient
     /// </summary>
     /// <param name="config">API configuration settings.</param>
     /// <param name="httpClient">Optional pre-configured HTTP client.</param>
-    public SectigoClient(ApiConfig config, HttpClient? httpClient = null)
-    {
-        if (httpClient is null)
-        {
+    public SectigoClient(ApiConfig config, HttpClient? httpClient = null) {
+        if (httpClient is null) {
             var handler = new HttpClientHandler();
-            if (config.ClientCertificate is not null)
-            {
+            if (config.ClientCertificate is not null) {
                 handler.ClientCertificates.Add(config.ClientCertificate);
             }
 
@@ -48,8 +44,7 @@ public sealed class SectigoClient : ISectigoClient
     /// </summary>
     /// <param name="requestUri">Relative request URI.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    public async Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default)
-    {
+    public async Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
         return response;
@@ -61,8 +56,7 @@ public sealed class SectigoClient : ISectigoClient
     /// <param name="requestUri">Relative request URI.</param>
     /// <param name="content">HTTP content to send.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
-    {
+    public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default) {
         var response = await _client.PostAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
         return response;
@@ -74,8 +68,7 @@ public sealed class SectigoClient : ISectigoClient
     /// <param name="requestUri">Relative request URI.</param>
     /// <param name="content">HTTP content to send.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
-    {
+    public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default) {
         var response = await _client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
         return response;
@@ -86,25 +79,20 @@ public sealed class SectigoClient : ISectigoClient
     /// </summary>
     /// <param name="requestUri">Relative request URI.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    public async Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default)
-    {
+    public async Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default) {
         var response = await _client.DeleteAsync(requestUri, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
         return response;
     }
 
-    private void ConfigureHeaders(ApiConfig cfg)
-    {
+    private void ConfigureHeaders(ApiConfig cfg) {
         _client.DefaultRequestHeaders.Clear();
         _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         _client.DefaultRequestHeaders.Add("customerUri", cfg.CustomerUri);
 
-        if (!string.IsNullOrWhiteSpace(cfg.Token))
-        {
+        if (!string.IsNullOrWhiteSpace(cfg.Token)) {
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", cfg.Token);
-        }
-        else
-        {
+        } else {
             _client.DefaultRequestHeaders.Add("login", cfg.Username);
             _client.DefaultRequestHeaders.Add("password", cfg.Password);
         }

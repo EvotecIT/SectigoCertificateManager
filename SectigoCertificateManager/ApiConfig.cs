@@ -22,8 +22,7 @@ public sealed class ApiConfig(
     ApiVersion apiVersion,
     X509Certificate2? clientCertificate = null,
     Action<HttpClientHandler>? configureHandler = null,
-    string? token = null)
-{
+    string? token = null) {
     /// <summary>Gets the base URL of the API endpoint.</summary>
     public string BaseUrl { get; } = baseUrl;
 

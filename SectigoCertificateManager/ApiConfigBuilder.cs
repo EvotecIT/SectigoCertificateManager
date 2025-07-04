@@ -7,8 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 /// <summary>
 /// Provides a builder for creating instances of <see cref="ApiConfig"/> using a fluent API.
 /// </summary>
-public sealed class ApiConfigBuilder
-{
+public sealed class ApiConfigBuilder {
     private string _baseUrl = string.Empty;
     private string _username = string.Empty;
     private string _password = string.Empty;
@@ -20,8 +19,7 @@ public sealed class ApiConfigBuilder
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
-    public ApiConfigBuilder WithBaseUrl(string baseUrl)
-    {
+    public ApiConfigBuilder WithBaseUrl(string baseUrl) {
         _baseUrl = baseUrl;
         return this;
     }
@@ -29,8 +27,7 @@ public sealed class ApiConfigBuilder
     /// <summary>Sets the credentials used for authentication.</summary>
     /// <param name="username">User name for API authentication.</param>
     /// <param name="password">Password associated with <paramref name="username"/>.</param>
-    public ApiConfigBuilder WithCredentials(string username, string password)
-    {
+    public ApiConfigBuilder WithCredentials(string username, string password) {
         _username = username;
         _password = password;
         return this;
@@ -38,75 +35,63 @@ public sealed class ApiConfigBuilder
 
     /// <summary>Sets the bearer token used for authentication.</summary>
     /// <param name="token">Token value.</param>
-    public ApiConfigBuilder WithToken(string token)
-    {
+    public ApiConfigBuilder WithToken(string token) {
         _token = token;
         return this;
     }
 
     /// <summary>Sets the customer URI header value.</summary>
     /// <param name="customerUri">Value of the <c>customerUri</c> header.</param>
-    public ApiConfigBuilder WithCustomerUri(string customerUri)
-    {
+    public ApiConfigBuilder WithCustomerUri(string customerUri) {
         _customerUri = customerUri;
         return this;
     }
 
     /// <summary>Sets the API version.</summary>
     /// <param name="version">Desired API version.</param>
-    public ApiConfigBuilder WithApiVersion(ApiVersion version)
-    {
+    public ApiConfigBuilder WithApiVersion(ApiVersion version) {
         _apiVersion = version;
         return this;
     }
 
     /// <summary>Attaches a client certificate for mutual TLS authentication.</summary>
     /// <param name="certificate">The certificate used for client authentication.</param>
-    public ApiConfigBuilder WithClientCertificate(X509Certificate2 certificate)
-    {
+    public ApiConfigBuilder WithClientCertificate(X509Certificate2 certificate) {
         _clientCertificate = certificate;
         return this;
     }
 
     /// <summary>Allows configuration of the <see cref="HttpClientHandler"/> used by <see cref="SectigoClient"/>.</summary>
     /// <param name="configure">Delegate used to configure the handler.</param>
-    public ApiConfigBuilder WithHttpClientHandler(Action<HttpClientHandler> configure)
-    {
+    public ApiConfigBuilder WithHttpClientHandler(Action<HttpClientHandler> configure) {
         _configureHandler = configure;
         return this;
     }
 
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
-    public ApiConfig Build()
-    {
-        if (string.IsNullOrWhiteSpace(_baseUrl))
-        {
+    public ApiConfig Build() {
+        if (string.IsNullOrWhiteSpace(_baseUrl)) {
             throw new ArgumentException("Base URL is required.", nameof(_baseUrl));
         }
 
         var hasToken = !string.IsNullOrWhiteSpace(_token);
         var hasCredentials = !string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_password);
 
-        if (!hasToken && !hasCredentials)
-        {
+        if (!hasToken && !hasCredentials) {
             throw new ArgumentException("Credentials or token are required.");
         }
 
-        if (!hasToken)
-        {
-            if (string.IsNullOrWhiteSpace(_username))
-            {
+        if (!hasToken) {
+            if (string.IsNullOrWhiteSpace(_username)) {
                 throw new ArgumentException("User name is required.", nameof(_username));
             }
 
-            if (string.IsNullOrWhiteSpace(_password))
-            {
+            if (string.IsNullOrWhiteSpace(_password)) {
                 throw new ArgumentException("Password is required.", nameof(_password));
             }
         }
 
-        if (string.IsNullOrWhiteSpace(_customerUri))
-        {
+        if (string.IsNullOrWhiteSpace(_customerUri)) {
             throw new ArgumentException("Customer URI is required.", nameof(_customerUri));
         }
 

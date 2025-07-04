@@ -6,8 +6,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Represents a response containing certificates.
 /// </summary>
-public sealed class CertificateResponse
-{
+public sealed class CertificateResponse {
     /// <summary>
     /// Gets or sets certificates returned by the API.
     /// </summary>

@@ -6,8 +6,7 @@ namespace SectigoCertificateManager;
 using System.Text.Json.Serialization;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum CertificateStatus
-{
+public enum CertificateStatus {
     /// <summary>Any status.</summary>
     Any = 0,
 

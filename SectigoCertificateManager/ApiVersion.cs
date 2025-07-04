@@ -3,8 +3,7 @@ namespace SectigoCertificateManager;
 /// <summary>
 /// Enumerates available Sectigo Certificate Manager API versions.
 /// </summary>
-public enum ApiVersion
-{
+public enum ApiVersion {
     /// <summary>
     /// Version 25.4 of the API.
     /// </summary>

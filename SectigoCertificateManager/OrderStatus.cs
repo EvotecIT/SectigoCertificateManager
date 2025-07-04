@@ -6,8 +6,7 @@ namespace SectigoCertificateManager;
 using System.Text.Json.Serialization;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum OrderStatus
-{
+public enum OrderStatus {
     /// <summary>Order is not initiated.</summary>
     NotInitiated,
 
