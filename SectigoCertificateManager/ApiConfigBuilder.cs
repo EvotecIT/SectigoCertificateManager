@@ -13,7 +13,7 @@ public sealed class ApiConfigBuilder
     private string _username = string.Empty;
     private string _password = string.Empty;
     private string _customerUri = string.Empty;
-    private ApiVersion _apiVersion = ApiVersion.V25_4;
+    private ApiVersion _apiVersion = ApiVersion.V25_6;
     private X509Certificate2? _clientCertificate;
     private Action<HttpClientHandler>? _configureHandler;
 

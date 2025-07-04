@@ -45,14 +45,14 @@ public sealed class SectigoClientTests
             .WithBaseUrl("https://example.com")
             .WithCredentials("user", "pass")
             .WithCustomerUri("cst1")
-            .WithApiVersion(ApiVersion.V25_5)
+            .WithApiVersion(ApiVersion.V25_6)
             .Build();
 
         Assert.Equal("https://example.com", config.BaseUrl);
         Assert.Equal("user", config.Username);
         Assert.Equal("pass", config.Password);
         Assert.Equal("cst1", config.CustomerUri);
-        Assert.Equal(ApiVersion.V25_5, config.ApiVersion);
+        Assert.Equal(ApiVersion.V25_6, config.ApiVersion);
     }
 
     [Fact]

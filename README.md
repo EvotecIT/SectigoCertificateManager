@@ -4,8 +4,9 @@
 
 This library provides a simple client for the Sectigo Certificate Manager API.
 
-The library defaults to **API version 25.4** as defined in `ApiConfigBuilder`.
-Support for version 25.5 is also available via `ApiVersion.V25_5`.
+The library defaults to **API version 25.6** as defined in `ApiConfigBuilder`.
+Support for version 25.5 remains available via `ApiVersion.V25_5`. To target
+version 25.6 explicitly, use `ApiVersion.V25_6`.
 
 ## Documentation
 
@@ -35,7 +36,7 @@ var config = new ApiConfigBuilder()
 
     .WithCustomerUri("cst1")
 
-    .WithApiVersion(ApiVersion.V25_5)
+    .WithApiVersion(ApiVersion.V25_6)
 
     // configure handler or attach a client certificate if needed
     .WithHttpClientHandler(h => h.AllowAutoRedirect = false)
