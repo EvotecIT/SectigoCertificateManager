@@ -82,4 +82,20 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime
         Assert.Equal(5, result!.Id);
     }
 
+    [Fact]
+    public async Task OrdersClient_List_ReturnsOrders()
+    {
+        _server.Given(Request.Create().WithPath("/v1/order").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("[{\"id\":3,\"status\":0,\"orderNumber\":2,\"backendCertId\":\"def\"}]"));
+
+        var result = await _orders.ListOrdersAsync();
+
+        Assert.NotNull(result);
+        Assert.Single(result!);
+        Assert.Equal(3, result[0].Id);
+    }
+
 }
