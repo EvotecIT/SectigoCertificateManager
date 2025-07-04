@@ -23,9 +23,9 @@ public sealed class CertificatesClient
     /// </summary>
     public async Task<Certificate?> GetAsync(int certificateId, CancellationToken cancellationToken = default)
     {
-        var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken);
+        var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -33,9 +33,9 @@ public sealed class CertificatesClient
     /// </summary>
     public async Task<Certificate?> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default)
     {
-        var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request), cancellationToken);
+        var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
