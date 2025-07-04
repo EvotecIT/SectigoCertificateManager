@@ -3,6 +3,7 @@ namespace SectigoCertificateManager;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,22 +15,50 @@ public sealed class SectigoClient : ISectigoClient
 
     public SectigoClient(ApiConfig config, HttpClient? httpClient = null)
     {
-        _client = httpClient ?? new HttpClient();
+        if (httpClient is null)
+        {
+            var handler = new HttpClientHandler();
+            if (config.ClientCertificate is not null)
+            {
+                handler.ClientCertificates.Add(config.ClientCertificate);
+            }
+
+            config.ConfigureHandler?.Invoke(handler);
+            httpClient = new HttpClient(handler);
+        }
+
+        _client = httpClient;
         _client.BaseAddress = new Uri(config.BaseUrl);
         ConfigureHeaders(config);
     }
 
-    public Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default)
-        => _client.GetAsync(requestUri, cancellationToken);
+    public async Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default)
+    {
+        var response = await _client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+        return response;
+    }
 
-    public Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
-        => _client.PostAsync(requestUri, content, cancellationToken);
+    public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
+    {
+        var response = await _client.PostAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+        return response;
+    }
 
-    public Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
-        => _client.PutAsync(requestUri, content, cancellationToken);
+    public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
+    {
+        var response = await _client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+        return response;
+    }
 
-    public Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default)
-        => _client.DeleteAsync(requestUri, cancellationToken);
+    public async Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default)
+    {
+        var response = await _client.DeleteAsync(requestUri, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+        return response;
+    }
 
     private void ConfigureHeaders(ApiConfig cfg)
     {
