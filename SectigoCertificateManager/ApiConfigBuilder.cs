@@ -16,6 +16,7 @@ public sealed class ApiConfigBuilder
     private ApiVersion _apiVersion = ApiVersion.V25_6;
     private X509Certificate2? _clientCertificate;
     private Action<HttpClientHandler>? _configureHandler;
+    private TimeSpan _cacheExpiration;
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
@@ -67,6 +68,14 @@ public sealed class ApiConfigBuilder
         return this;
     }
 
+    /// <summary>Sets the duration to cache GET responses.</summary>
+    /// <param name="expiration">Maximum age of cache entries.</param>
+    public ApiConfigBuilder WithCacheExpiration(TimeSpan expiration)
+    {
+        _cacheExpiration = expiration;
+        return this;
+    }
+
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build()
     {
@@ -90,6 +99,6 @@ public sealed class ApiConfigBuilder
             throw new ArgumentException("Customer URI is required.", nameof(_customerUri));
         }
 
-        return new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion, _clientCertificate, _configureHandler);
+        return new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion, _clientCertificate, _configureHandler, _cacheExpiration);
     }
 }

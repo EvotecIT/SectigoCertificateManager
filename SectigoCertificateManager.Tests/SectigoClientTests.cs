@@ -14,11 +14,16 @@ public sealed class SectigoClientTests
     private sealed class TestHandler : HttpMessageHandler
     {
         public HttpRequestMessage? Request { get; private set; }
+        public int Calls { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            Calls++;
             Request = request;
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(string.Empty)
+            });
         }
     }
 
@@ -74,5 +79,46 @@ public sealed class SectigoClientTests
 
         Assert.Same(cert, config.ClientCertificate);
         Assert.Same(action, config.ConfigureHandler);
+    }
+
+    [Fact]
+    public async Task GetAsync_UsesCache()
+    {
+        var handler = new TestHandler();
+        var httpClient = new HttpClient(handler);
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithCredentials("user", "pass")
+            .WithCustomerUri("cst1")
+            .WithCacheExpiration(TimeSpan.FromMinutes(1))
+            .Build();
+
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+        await client.GetAsync("v1/test");
+
+        Assert.Equal(1, handler.Calls);
+    }
+
+    [Fact]
+    public async Task GetAsync_ExpiresCache()
+    {
+        var handler = new TestHandler();
+        var httpClient = new HttpClient(handler);
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithCredentials("user", "pass")
+            .WithCustomerUri("cst1")
+            .WithCacheExpiration(TimeSpan.FromMilliseconds(100))
+            .Build();
+
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+        await Task.Delay(200);
+        await client.GetAsync("v1/test");
+
+        Assert.Equal(2, handler.Calls);
     }
 }

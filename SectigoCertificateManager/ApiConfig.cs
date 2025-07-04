@@ -21,7 +21,8 @@ public sealed class ApiConfig(
     string customerUri,
     ApiVersion apiVersion,
     X509Certificate2? clientCertificate = null,
-    Action<HttpClientHandler>? configureHandler = null)
+    Action<HttpClientHandler>? configureHandler = null,
+    TimeSpan cacheExpiration = default)
 {
     /// <summary>Gets the base URL of the API endpoint.</summary>
     public string BaseUrl { get; } = baseUrl;
@@ -43,4 +44,7 @@ public sealed class ApiConfig(
 
     /// <summary>Gets the optional handler configuration delegate.</summary>
     public Action<HttpClientHandler>? ConfigureHandler { get; } = configureHandler;
+
+    /// <summary>Gets the amount of time a response should be cached.</summary>
+    public TimeSpan CacheExpiration { get; } = cacheExpiration;
 }
