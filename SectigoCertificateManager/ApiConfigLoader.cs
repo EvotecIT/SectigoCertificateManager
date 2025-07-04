@@ -20,6 +20,9 @@ public static class ApiConfigLoader
         /// <summary>Gets or sets the password.</summary>
         public string Password { get; set; } = string.Empty;
 
+        /// <summary>Gets or sets the bearer token.</summary>
+        public string? Token { get; set; }
+
         /// <summary>Gets or sets the customer URI.</summary>
         public string CustomerUri { get; set; } = string.Empty;
 
@@ -36,8 +39,14 @@ public static class ApiConfigLoader
         string? baseUrl = Environment.GetEnvironmentVariable("SECTIGO_BASE_URL");
         string? username = Environment.GetEnvironmentVariable("SECTIGO_USERNAME");
         string? password = Environment.GetEnvironmentVariable("SECTIGO_PASSWORD");
+        string? token = Environment.GetEnvironmentVariable("SECTIGO_TOKEN");
         string? customerUri = Environment.GetEnvironmentVariable("SECTIGO_CUSTOMER_URI");
         string? version = Environment.GetEnvironmentVariable("SECTIGO_API_VERSION");
+
+        if (baseUrl is not null && token is not null && customerUri is not null)
+        {
+            return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ParseVersion(version), token: token);
+        }
 
         if (baseUrl is not null && username is not null && password is not null && customerUri is not null)
         {
@@ -62,7 +71,7 @@ public static class ApiConfigLoader
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var model = JsonSerializer.Deserialize<FileModel>(json, options)
                     ?? throw new InvalidOperationException("Invalid configuration file.");
-        return new ApiConfig(model.BaseUrl, model.Username, model.Password, model.CustomerUri, ParseVersion(model.ApiVersion));
+        return new ApiConfig(model.BaseUrl, model.Username, model.Password, model.CustomerUri, ParseVersion(model.ApiVersion), token: model.Token);
     }
 
     private static ApiVersion ParseVersion(string? value)

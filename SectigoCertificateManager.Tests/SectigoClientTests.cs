@@ -23,7 +23,7 @@ public sealed class SectigoClientTests
     }
 
     [Fact]
-    public async Task AddsHeadersAndUsesBaseUrl()
+    public async Task AddsHeadersAndUsesBaseUrl_WithCredentials()
     {
         var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4);
         var handler = new TestHandler();
@@ -36,6 +36,23 @@ public sealed class SectigoClientTests
         Assert.Equal("user", httpClient.DefaultRequestHeaders.GetValues("login").Single());
         Assert.Equal("pass", httpClient.DefaultRequestHeaders.GetValues("password").Single());
         Assert.Equal("cst1", httpClient.DefaultRequestHeaders.GetValues("customerUri").Single());
+    }
+
+    [Fact]
+    public async Task AddsBearerHeaderWhenTokenPresent()
+    {
+        var config = new ApiConfig("https://example.com/api/", string.Empty, string.Empty, "cst1", ApiVersion.V25_4, token: "tkn");
+        var handler = new TestHandler();
+        var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        Assert.True(httpClient.DefaultRequestHeaders.Authorization?.Scheme == "Bearer");
+        Assert.Equal("tkn", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
+        Assert.Equal("cst1", httpClient.DefaultRequestHeaders.GetValues("customerUri").Single());
+        Assert.False(httpClient.DefaultRequestHeaders.Contains("login"));
+        Assert.False(httpClient.DefaultRequestHeaders.Contains("password"));
     }
 
     [Fact]

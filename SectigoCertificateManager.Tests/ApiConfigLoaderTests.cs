@@ -60,4 +60,35 @@ public sealed class ApiConfigLoaderTests
         Environment.SetEnvironmentVariable("SECTIGO_CREDENTIALS_PATH", null);
         Directory.Delete(tempDir, true);
     }
+
+    [Fact]
+    public void Load_FromEnvironment_WithToken()
+    {
+        Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", "https://example.com");
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN", "tok");
+        Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", "cst1");
+
+        var config = ApiConfigLoader.Load();
+
+        Assert.Equal("tok", config.Token);
+
+        Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", null);
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN", null);
+        Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", null);
+    }
+
+    [Fact]
+    public void Load_FromFile_WithToken()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var path = Path.Combine(tempDir, "cred.json");
+        File.WriteAllText(path, "{\"baseUrl\":\"https://example.com\",\"token\":\"tok\",\"customerUri\":\"cst1\"}");
+
+        var config = ApiConfigLoader.Load(path);
+
+        Assert.Equal("tok", config.Token);
+
+        Directory.Delete(tempDir, true);
+    }
 }
