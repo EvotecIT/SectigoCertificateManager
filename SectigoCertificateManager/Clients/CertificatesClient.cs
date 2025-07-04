@@ -21,6 +21,8 @@ public sealed class CertificatesClient
     /// <summary>
     /// Retrieves a certificate by identifier.
     /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to retrieve.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> GetAsync(int certificateId, CancellationToken cancellationToken = default)
     {
         var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
@@ -31,6 +33,8 @@ public sealed class CertificatesClient
     /// <summary>
     /// Issues a new certificate.
     /// </summary>
+    /// <param name="request">Payload describing the certificate to issue.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default)
     {
         var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request), cancellationToken).ConfigureAwait(false);

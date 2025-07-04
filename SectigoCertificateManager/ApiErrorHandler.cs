@@ -5,8 +5,15 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
+/// <summary>
+/// Handles API error responses.
+/// </summary>
 internal static class ApiErrorHandler
 {
+    /// <summary>
+    /// Throws an exception if the response indicates an error.
+    /// </summary>
+    /// <param name="response">HTTP response message.</param>
     public static async Task ThrowIfErrorAsync(HttpResponseMessage response)
     {
         if (response.IsSuccessStatusCode)
