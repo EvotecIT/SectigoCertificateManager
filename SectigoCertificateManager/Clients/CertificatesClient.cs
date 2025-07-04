@@ -4,12 +4,16 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 /// <summary>
 /// Provides access to certificate related endpoints.
 /// </summary>
 public sealed class CertificatesClient {
     private readonly ISectigoClient _client;
+    private static readonly JsonSerializerOptions s_json = new() {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CertificatesClient"/> class.
@@ -25,7 +29,7 @@ public sealed class CertificatesClient {
     public async Task<Certificate?> GetAsync(int certificateId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -34,9 +38,9 @@ public sealed class CertificatesClient {
     /// <param name="request">Payload describing the certificate to issue.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default) {
-        var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request), cancellationToken).ConfigureAwait(false);
+        var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -46,7 +50,7 @@ public sealed class CertificatesClient {
         var query = BuildQuery(request);
         var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken);
         response.EnsureSuccessStatusCode();
-        var items = await response.Content.ReadFromJsonAsync<IReadOnlyList<Certificate>>(cancellationToken: cancellationToken);
+        var items = await response.Content.ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken);
         return items is null ? null : new CertificateResponse { Certificates = items };
     }
 
