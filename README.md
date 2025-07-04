@@ -60,6 +60,8 @@ Import-Module ./SectigoCertificateManager.PowerShell.dll
 
 Get-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123
 
+Get-SectigoProfile -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ProfileId 2
+
 New-SectigoOrder -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CommonName "example.com" -ProfileId 1
 
 Get-SectigoOrders -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1"
