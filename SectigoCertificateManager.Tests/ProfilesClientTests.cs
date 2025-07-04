@@ -61,4 +61,22 @@ public sealed class ProfilesClientTests {
         Assert.True(result.KeyTypes.ContainsKey("RSA"));
         Assert.Equal("2048", result.KeyTypes["RSA"][0]);
     }
+
+    [Fact]
+    public async Task ListProfilesAsync_ReturnsProfiles() {
+        var profile = new Profile { Id = 2, Name = "Test" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { profile })
+        };
+        var client = new StubClient(response);
+        var profiles = new ProfilesClient(client);
+
+        var result = await profiles.ListProfilesAsync();
+
+        Assert.NotNull(client.Request);
+        Assert.Equal("v1/profile", client.Request!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Single(result!);
+        Assert.Equal(2, result[0].Id);
+    }
 }

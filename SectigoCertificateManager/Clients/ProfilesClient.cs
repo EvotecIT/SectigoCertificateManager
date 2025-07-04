@@ -25,4 +25,14 @@ public sealed class ProfilesClient {
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Profile>(cancellationToken: cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Retrieves all profiles visible to the user.
+    /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<Profile>?> ListProfilesAsync(CancellationToken cancellationToken = default) {
+        var response = await _client.GetAsync("v1/profile", cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<Profile>>(cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
 }
