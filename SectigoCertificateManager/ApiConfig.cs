@@ -14,6 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 /// <param name="apiVersion">Version of the API to use.</param>
 /// <param name="clientCertificate">Optional client certificate used for mutual TLS.</param>
 /// <param name="configureHandler">Optional delegate used to configure the <see cref="HttpClientHandler"/> created by <see cref="SectigoClient"/>.</param>
+/// <param name="token">Optional bearer token used for authentication.</param>
 public sealed class ApiConfig(
     string baseUrl,
     string username,
