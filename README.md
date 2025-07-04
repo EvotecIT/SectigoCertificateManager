@@ -37,6 +37,10 @@ var config = new ApiConfigBuilder()
 
     .WithApiVersion(ApiVersion.V25_5)
 
+    // configure handler or attach a client certificate if needed
+    .WithHttpClientHandler(h => h.AllowAutoRedirect = false)
+    .WithClientCertificate(myCert)
+
     .Build();
 
 ```
