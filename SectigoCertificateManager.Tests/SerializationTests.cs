@@ -21,7 +21,7 @@ public sealed class SerializationTests {
 
     [Fact]
     public void CertificateStatus_RoundTrip_Succeeds() {
-        foreach (var status in Enum.GetValues<CertificateStatus>()) {
+        foreach (CertificateStatus status in Enum.GetValues(typeof(CertificateStatus))) {
             var json = JsonSerializer.Serialize(status);
             var result = JsonSerializer.Deserialize<CertificateStatus>(json);
             Assert.Equal(status, result);
@@ -30,7 +30,7 @@ public sealed class SerializationTests {
 
     [Fact]
     public void OrderStatus_RoundTrip_Succeeds() {
-        foreach (var status in Enum.GetValues<OrderStatus>()) {
+        foreach (OrderStatus status in Enum.GetValues(typeof(OrderStatus))) {
             var json = JsonSerializer.Serialize(status);
             var result = JsonSerializer.Deserialize<OrderStatus>(json);
             Assert.Equal(status, result);
