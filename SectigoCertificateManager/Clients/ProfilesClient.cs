@@ -2,12 +2,16 @@ namespace SectigoCertificateManager.Clients;
 
 using SectigoCertificateManager.Models;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 /// <summary>
 /// Provides access to profile related endpoints.
 /// </summary>
 public sealed class ProfilesClient {
     private readonly ISectigoClient _client;
+    private static readonly JsonSerializerOptions s_json = new() {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProfilesClient"/> class.
@@ -23,7 +27,7 @@ public sealed class ProfilesClient {
     public async Task<Profile?> GetAsync(int profileId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/profile/{profileId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Profile>(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<Profile>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -33,6 +37,6 @@ public sealed class ProfilesClient {
     public async Task<IReadOnlyList<Profile>?> ListProfilesAsync(CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync("v1/profile", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<IReadOnlyList<Profile>>(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<Profile>>(s_json, cancellationToken).ConfigureAwait(false);
     }
 }

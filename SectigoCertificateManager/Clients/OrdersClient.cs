@@ -3,12 +3,16 @@ namespace SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Responses;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 /// <summary>
 /// Provides access to order related endpoints.
 /// </summary>
 public sealed class OrdersClient {
     private readonly ISectigoClient _client;
+    private static readonly JsonSerializerOptions s_json = new() {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OrdersClient"/> class.
@@ -24,7 +28,7 @@ public sealed class OrdersClient {
     public async Task<Order?> GetAsync(int orderId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/order/{orderId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Order>(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<Order>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -34,6 +38,6 @@ public sealed class OrdersClient {
     public async Task<IReadOnlyList<Order>?> ListOrdersAsync(CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync("v1/order", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<IReadOnlyList<Order>>(cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<Order>>(s_json, cancellationToken).ConfigureAwait(false);
     }
 }
