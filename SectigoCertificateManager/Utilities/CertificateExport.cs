@@ -36,6 +36,10 @@ public static class CertificateExport {
             ? certificate.Export(X509ContentType.Pfx)
             : certificate.Export(X509ContentType.Pfx, password);
         File.WriteAllBytes(path, bytes);
+#if NET6_0_OR_GREATER
         CryptographicOperations.ZeroMemory(bytes);
+#else
+        Array.Clear(bytes, 0, bytes.Length);
+#endif
     }
 }
