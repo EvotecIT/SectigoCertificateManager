@@ -37,4 +37,13 @@ public sealed class CertificatesClient
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Certificate>(cancellationToken: cancellationToken);
     }
+
+    /// <summary>
+    /// Deletes a certificate by identifier.
+    /// </summary>
+    public async Task DeleteAsync(int certificateId, CancellationToken cancellationToken = default)
+    {
+        var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
 }
