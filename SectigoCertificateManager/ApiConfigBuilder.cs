@@ -12,6 +12,7 @@ public sealed class ApiConfigBuilder
     private string _baseUrl = string.Empty;
     private string _username = string.Empty;
     private string _password = string.Empty;
+    private string? _token;
     private string _customerUri = string.Empty;
     private ApiVersion _apiVersion = ApiVersion.V25_6;
     private X509Certificate2? _clientCertificate;
@@ -32,6 +33,14 @@ public sealed class ApiConfigBuilder
     {
         _username = username;
         _password = password;
+        return this;
+    }
+
+    /// <summary>Sets the bearer token used for authentication.</summary>
+    /// <param name="token">Token value.</param>
+    public ApiConfigBuilder WithToken(string token)
+    {
+        _token = token;
         return this;
     }
 
@@ -75,14 +84,25 @@ public sealed class ApiConfigBuilder
             throw new ArgumentException("Base URL is required.", nameof(_baseUrl));
         }
 
-        if (string.IsNullOrWhiteSpace(_username))
+        var hasToken = !string.IsNullOrWhiteSpace(_token);
+        var hasCredentials = !string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_password);
+
+        if (!hasToken && !hasCredentials)
         {
-            throw new ArgumentException("User name is required.", nameof(_username));
+            throw new ArgumentException("Credentials or token are required.");
         }
 
-        if (string.IsNullOrWhiteSpace(_password))
+        if (!hasToken)
         {
-            throw new ArgumentException("Password is required.", nameof(_password));
+            if (string.IsNullOrWhiteSpace(_username))
+            {
+                throw new ArgumentException("User name is required.", nameof(_username));
+            }
+
+            if (string.IsNullOrWhiteSpace(_password))
+            {
+                throw new ArgumentException("Password is required.", nameof(_password));
+            }
         }
 
         if (string.IsNullOrWhiteSpace(_customerUri))
@@ -90,6 +110,6 @@ public sealed class ApiConfigBuilder
             throw new ArgumentException("Customer URI is required.", nameof(_customerUri));
         }
 
-        return new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion, _clientCertificate, _configureHandler);
+        return new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion, _clientCertificate, _configureHandler, _token);
     }
 }
