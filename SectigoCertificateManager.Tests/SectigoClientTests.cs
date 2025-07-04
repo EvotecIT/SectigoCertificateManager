@@ -9,22 +9,18 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
-public sealed class SectigoClientTests
-{
-    private sealed class TestHandler : HttpMessageHandler
-    {
+public sealed class SectigoClientTests {
+    private sealed class TestHandler : HttpMessageHandler {
         public HttpRequestMessage? Request { get; private set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
         }
     }
 
     [Fact]
-    public async Task AddsHeadersAndUsesBaseUrl_WithCredentials()
-    {
+    public async Task AddsHeadersAndUsesBaseUrl_WithCredentials() {
         var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4);
         var handler = new TestHandler();
         var httpClient = new HttpClient(handler);
@@ -39,8 +35,7 @@ public sealed class SectigoClientTests
     }
 
     [Fact]
-    public async Task AddsBearerHeaderWhenTokenPresent()
-    {
+    public async Task AddsBearerHeaderWhenTokenPresent() {
         var config = new ApiConfig("https://example.com/api/", string.Empty, string.Empty, "cst1", ApiVersion.V25_4, token: "tkn");
         var handler = new TestHandler();
         var httpClient = new HttpClient(handler);
@@ -56,8 +51,7 @@ public sealed class SectigoClientTests
     }
 
     [Fact]
-    public void ApiConfigBuilderCreatesValidConfig()
-    {
+    public void ApiConfigBuilderCreatesValidConfig() {
         var config = new ApiConfigBuilder()
             .WithBaseUrl("https://example.com")
             .WithCredentials("user", "pass")
@@ -73,8 +67,7 @@ public sealed class SectigoClientTests
     }
 
     [Fact]
-    public void BuilderAllowsCertificateAndHandler()
-    {
+    public void BuilderAllowsCertificateAndHandler() {
 #pragma warning disable SYSLIB0057
         using var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(Array.Empty<byte>());
 #pragma warning restore SYSLIB0057

@@ -3,8 +3,7 @@ namespace SectigoCertificateManager.Requests;
 /// <summary>
 /// Request used to search for certificates.
 /// </summary>
-public sealed class CertificateSearchRequest
-{
+public sealed class CertificateSearchRequest {
     public int? Size { get; set; }
 
     public int? Position { get; set; }

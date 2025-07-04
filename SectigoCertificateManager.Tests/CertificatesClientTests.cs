@@ -12,28 +12,23 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
-public sealed class CertificatesClientTests
-{
-    private sealed class TestHandler : HttpMessageHandler
-    {
+public sealed class CertificatesClientTests {
+    private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
             return Task.FromResult(_response);
         }
     }
 
     [Fact]
-    public async Task SearchAsync_BuildsQueryAndParsesResponse()
-    {
+    public async Task SearchAsync_BuildsQueryAndParsesResponse() {
         var certificate = new Certificate { Id = 1, CommonName = "test" };
-        var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(new[] { certificate })
         };
 

@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// Defines a minimal wrapper around <see cref="HttpClient"/> used by this library.
 /// </summary>
-public interface ISectigoClient
-{
+public interface ISectigoClient {
     /// <summary>
     /// Gets the underlying <see cref="HttpClient"/> instance.
     /// </summary>

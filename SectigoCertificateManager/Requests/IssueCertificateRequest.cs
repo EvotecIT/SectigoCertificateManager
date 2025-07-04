@@ -5,8 +5,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Request payload used when issuing a new certificate.
 /// </summary>
-public sealed class IssueCertificateRequest
-{
+public sealed class IssueCertificateRequest {
     /// <summary>
     /// Gets or sets the common name of the certificate.
     /// </summary>

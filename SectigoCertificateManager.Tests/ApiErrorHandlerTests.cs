@@ -8,14 +8,11 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
-public sealed class ApiErrorHandlerTests
-{
-    private sealed class RespondingHandler : HttpMessageHandler
-    {
+public sealed class ApiErrorHandlerTests {
+    private sealed class RespondingHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
 
-        public RespondingHandler(HttpResponseMessage response)
-        {
+        public RespondingHandler(HttpResponseMessage response) {
             _response = response;
         }
 
@@ -23,18 +20,15 @@ public sealed class ApiErrorHandlerTests
             => Task.FromResult(_response);
     }
 
-    private static SectigoClient CreateClient(HttpResponseMessage response)
-    {
+    private static SectigoClient CreateClient(HttpResponseMessage response) {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new RespondingHandler(response);
         return new SectigoClient(config, new HttpClient(handler));
     }
 
     [Fact]
-    public async Task ThrowsAuthenticationException()
-    {
-        var response = new HttpResponseMessage(HttpStatusCode.Unauthorized)
-        {
+    public async Task ThrowsAuthenticationException() {
+        var response = new HttpResponseMessage(HttpStatusCode.Unauthorized) {
             Content = JsonContent.Create(new ApiError { Code = -16, Description = "Unknown user" })
         };
 
@@ -45,10 +39,8 @@ public sealed class ApiErrorHandlerTests
     }
 
     [Fact]
-    public async Task ThrowsValidationException()
-    {
-        var response = new HttpResponseMessage(HttpStatusCode.BadRequest)
-        {
+    public async Task ThrowsValidationException() {
+        var response = new HttpResponseMessage(HttpStatusCode.BadRequest) {
             Content = JsonContent.Create(new ApiError { Code = -10, Description = "Invalid" })
         };
 
@@ -59,10 +51,8 @@ public sealed class ApiErrorHandlerTests
     }
 
     [Fact]
-    public async Task ThrowsApiExceptionForOtherErrors()
-    {
-        var response = new HttpResponseMessage(HttpStatusCode.InternalServerError)
-        {
+    public async Task ThrowsApiExceptionForOtherErrors() {
+        var response = new HttpResponseMessage(HttpStatusCode.InternalServerError) {
             Content = JsonContent.Create(new ApiError { Code = -2, Description = "Boom" })
         };
 

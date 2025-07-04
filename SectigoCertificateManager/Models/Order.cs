@@ -5,8 +5,7 @@ using SectigoCertificateManager;
 /// <summary>
 /// Represents a certificate order.
 /// </summary>
-public sealed class Order
-{
+public sealed class Order {
     /// <summary>Gets or sets the order identifier.</summary>
     public int Id { get; set; }
 

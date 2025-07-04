@@ -1,15 +1,14 @@
 namespace SectigoCertificateManager.Clients;
 
-using System;
-using System.Net.Http.Json;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
+using System;
+using System.Net.Http.Json;
 
 /// <summary>
 /// Provides access to organization related endpoints.
 /// </summary>
-public sealed class OrganizationsClient
-{
+public sealed class OrganizationsClient {
     private readonly ISectigoClient _client;
 
     /// <summary>
@@ -23,8 +22,7 @@ public sealed class OrganizationsClient
     /// </summary>
     /// <param name="organizationId">Identifier of the organization to retrieve.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    public async Task<Organization?> GetAsync(int organizationId, CancellationToken cancellationToken = default)
-    {
+    public async Task<Organization?> GetAsync(int organizationId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/organization/{organizationId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Organization>(cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -36,16 +34,13 @@ public sealed class OrganizationsClient
     /// <param name="request">Payload describing the organization to create.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The identifier of the created organization.</returns>
-    public async Task<int> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default)
-    {
+    public async Task<int> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default) {
         var response = await _client.PostAsync("v1/organization", JsonContent.Create(request), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         var location = response.Headers.Location;
-        if (location is not null)
-        {
+        if (location is not null) {
             var last = location.Segments[location.Segments.Length - 1];
-            if (int.TryParse(last, out var id))
-            {
+            if (int.TryParse(last, out var id)) {
                 return id;
             }
         }

@@ -10,10 +10,8 @@ namespace SectigoCertificateManager.Examples.Examples;
 /// Navigate to <strong>Administration</strong> \u2192 <strong>Users</strong>, edit your user
 /// and create API credentials. Use the generated login and password below.
 /// </summary>
-public static class BasicApiExample
-{
-    public static async Task RunAsync()
-    {
+public static class BasicApiExample {
+    public static async Task RunAsync() {
         var config = new ApiConfigBuilder()
             .WithBaseUrl("https://cert-manager.com/api")
             .WithCredentials("<username>", "<password>")

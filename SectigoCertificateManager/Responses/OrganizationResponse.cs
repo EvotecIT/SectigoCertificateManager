@@ -5,8 +5,7 @@ using SectigoCertificateManager.Models;
 /// <summary>
 /// Represents a response containing organization information.
 /// </summary>
-public sealed class OrganizationResponse
-{
+public sealed class OrganizationResponse {
     /// <summary>
     /// Gets or sets the organization.
     /// </summary>

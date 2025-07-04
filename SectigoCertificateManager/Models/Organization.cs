@@ -5,8 +5,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Represents an organization returned by the Sectigo API.
 /// </summary>
-public sealed class Organization
-{
+public sealed class Organization {
     /// <summary>Gets or sets the organization identifier.</summary>
     public int Id { get; set; }
 
@@ -71,8 +70,7 @@ public sealed class Organization
 /// <summary>
 /// Represents department information returned with an organization.
 /// </summary>
-public sealed class OrganizationDepartment
-{
+public sealed class OrganizationDepartment {
     /// <summary>Gets or sets the department identifier.</summary>
     public int Id { get; set; }
 
@@ -86,8 +84,7 @@ public sealed class OrganizationDepartment
 /// <summary>
 /// Represents client certificate settings for an organization.
 /// </summary>
-public sealed class OrganizationClientCertificate
-{
+public sealed class OrganizationClientCertificate {
     /// <summary>Gets or sets a value indicating whether master admins can recover keys.</summary>
     public bool AllowKeyRecoveryByMasterAdmins { get; set; }
 

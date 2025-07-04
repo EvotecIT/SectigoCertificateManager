@@ -10,28 +10,23 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
-public sealed class OrdersClientTests
-{
-    private sealed class TestHandler : HttpMessageHandler
-    {
+public sealed class OrdersClientTests {
+    private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
             return Task.FromResult(_response);
         }
     }
 
     [Fact]
-    public async Task ListOrdersAsync_RequestsOrders()
-    {
+    public async Task ListOrdersAsync_RequestsOrders() {
         var order = new Order { Id = 1, OrderNumber = 10, BackendCertId = "a" };
-        var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(new[] { order })
         };
 

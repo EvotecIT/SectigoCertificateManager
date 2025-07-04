@@ -1,13 +1,12 @@
 namespace SectigoCertificateManager.Models;
 
-using System.Collections.Generic;
 using SectigoCertificateManager;
+using System.Collections.Generic;
 
 /// <summary>
 /// Represents a certificate returned by the Sectigo API.
 /// </summary>
-public sealed class Certificate
-{
+public sealed class Certificate {
     /// <summary>Gets or sets the identifier of the certificate.</summary>
     public int Id { get; set; }
 

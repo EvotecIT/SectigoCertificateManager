@@ -4,8 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Represents a certificate profile.
 /// </summary>
-public sealed class Profile
-{
+public sealed class Profile {
     /// <summary>Gets or sets the profile identifier.</summary>
     public int Id { get; set; }
 

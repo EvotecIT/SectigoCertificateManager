@@ -11,15 +11,13 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
-public sealed class SectigoApiIntegrationTests : IAsyncLifetime
-{
+public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
     private WireMockServer _server = null!;
     private CertificatesClient _certificates = null!;
     private OrdersClient _orders = null!;
     private ProfilesClient _profiles = null!;
 
-    public Task InitializeAsync()
-    {
+    public Task InitializeAsync() {
         _server = WireMockServer.Start();
         var config = new ApiConfig(_server.Url!, "user", "pass", "cst1", ApiVersion.V25_4);
         var client = new SectigoClient(config, new HttpClient());
@@ -29,16 +27,14 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime
         return Task.CompletedTask;
     }
 
-    public Task DisposeAsync()
-    {
+    public Task DisposeAsync() {
         _server.Stop();
         _server.Dispose();
         return Task.CompletedTask;
     }
 
     [Fact]
-    public async Task CertificatesClient_Get_ReturnsCertificate()
-    {
+    public async Task CertificatesClient_Get_ReturnsCertificate() {
         _server.Given(Request.Create().WithPath("/v1/certificate/1").UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -52,8 +48,7 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task CertificatesClient_Issue_ReturnsCertificate()
-    {
+    public async Task CertificatesClient_Issue_ReturnsCertificate() {
         _server.Given(Request.Create().WithPath("/v1/certificate/issue").UsingPost())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -68,8 +63,7 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task OrdersClient_Get_ReturnsOrder()
-    {
+    public async Task OrdersClient_Get_ReturnsOrder() {
         _server.Given(Request.Create().WithPath("/v1/order/5").UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -83,8 +77,7 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task OrdersClient_List_ReturnsOrders()
-    {
+    public async Task OrdersClient_List_ReturnsOrders() {
         _server.Given(Request.Create().WithPath("/v1/order").UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
