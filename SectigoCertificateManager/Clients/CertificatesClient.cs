@@ -38,6 +38,14 @@ public sealed class CertificatesClient {
     /// <param name="request">Payload describing the certificate to issue.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        if (request.Term <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(request.Term));
+        }
+
         var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
     }
