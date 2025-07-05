@@ -28,7 +28,6 @@ public sealed class CertificatesClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> GetAsync(int certificateId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -39,7 +38,6 @@ public sealed class CertificatesClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default) {
         var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -49,7 +47,6 @@ public sealed class CertificatesClient {
     public async Task<CertificateResponse?> SearchAsync(CertificateSearchRequest request, CancellationToken cancellationToken = default) {
         var query = BuildQuery(request);
         var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken);
-        response.EnsureSuccessStatusCode();
         var items = await response.Content.ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken);
         return items is null ? null : new CertificateResponse { Certificates = items };
     }
