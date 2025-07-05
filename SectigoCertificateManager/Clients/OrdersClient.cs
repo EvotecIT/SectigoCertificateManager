@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.Clients;
 
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Responses;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -39,5 +40,15 @@ public sealed class OrdersClient {
         var response = await _client.GetAsync("v1/order", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<IReadOnlyList<Order>>(s_json, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Cancels an order by identifier.
+    /// </summary>
+    /// <param name="orderId">Identifier of the order to cancel.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task CancelAsync(int orderId, CancellationToken cancellationToken = default) {
+        var response = await _client.PostAsync($"v1/order/{orderId}/cancel", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
     }
 }
