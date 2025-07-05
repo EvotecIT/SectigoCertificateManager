@@ -62,4 +62,16 @@ public sealed class CertificateExportTests {
             File.Delete(path);
         }
     }
+
+    [Fact]
+    public void SavePfxForTest_ClearsBuffer() {
+        using var cert = CreateCertificate();
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            var buffer = CertificateExport.SavePfxForTest(cert, path, "pwd");
+            Assert.All(buffer, b => Assert.Equal(0, b));
+        } finally {
+            File.Delete(path);
+        }
+    }
 }
