@@ -3,6 +3,8 @@ namespace SectigoCertificateManager;
 using System;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Provides configuration settings for communicating with the Sectigo Certificate Manager API.
@@ -15,6 +17,8 @@ using System.Security.Cryptography.X509Certificates;
 /// <param name="clientCertificate">Optional client certificate used for mutual TLS.</param>
 /// <param name="configureHandler">Optional delegate used to configure the <see cref="HttpClientHandler"/> created by <see cref="SectigoClient"/>.</param>
 /// <param name="token">Optional bearer token used for authentication.</param>
+/// <param name="tokenExpiresAt">Optional expiration time for <paramref name="token"/>.</param>
+/// <param name="refreshToken">Optional delegate used to refresh the token.</param>
 public sealed class ApiConfig(
     string baseUrl,
     string username,
@@ -23,7 +27,9 @@ public sealed class ApiConfig(
     ApiVersion apiVersion,
     X509Certificate2? clientCertificate = null,
     Action<HttpClientHandler>? configureHandler = null,
-    string? token = null) {
+    string? token = null,
+    DateTimeOffset? tokenExpiresAt = null,
+    Func<CancellationToken, Task<TokenInfo>>? refreshToken = null) {
     /// <summary>Gets the base URL of the API endpoint.</summary>
     public string BaseUrl { get; } = baseUrl;
 
@@ -47,4 +53,10 @@ public sealed class ApiConfig(
 
     /// <summary>Gets the bearer token used for authentication, if any.</summary>
     public string? Token { get; } = token;
+
+    /// <summary>Gets the token expiration time, if any.</summary>
+    public DateTimeOffset? TokenExpiresAt { get; } = tokenExpiresAt;
+
+    /// <summary>Gets the delegate used to refresh the token, if any.</summary>
+    public Func<CancellationToken, Task<TokenInfo>>? RefreshToken { get; } = refreshToken;
 }
