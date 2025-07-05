@@ -43,8 +43,9 @@ public sealed class OrganizationsClient {
         response.EnsureSuccessStatusCode();
         var location = response.Headers.Location;
         if (location is not null) {
-            var last = location.Segments[location.Segments.Length - 1];
-            if (int.TryParse(last, out var id)) {
+            var path = location.AbsolutePath.TrimEnd('/');
+            var segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length > 0 && int.TryParse(segments[segments.Length - 1], out var id)) {
                 return id;
             }
         }
