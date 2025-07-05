@@ -42,4 +42,18 @@ public sealed class OrdersClientTests {
         Assert.Single(result!);
         Assert.Equal(1, result[0].Id);
     }
+
+    [Fact]
+    public async Task CancelAsync_SendsPostRequest() {
+        var response = new HttpResponseMessage(HttpStatusCode.NoContent);
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var orders = new OrdersClient(client);
+
+        await orders.CancelAsync(5);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal("https://example.com/v1/order/5/cancel", handler.Request.RequestUri!.ToString());
+    }
 }
