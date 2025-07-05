@@ -93,4 +93,46 @@ public sealed class CertificatesClientTests {
         Assert.Contains("\"reasonCode\":4", handler.Body);
         Assert.Contains("\"reason\":\"superseded\"", handler.Body);
     }
+
+    [Fact]
+    public async Task SearchAsync_EmptyRequest_UsesBaseEndpoint() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(Array.Empty<Certificate>())
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var request = new CertificateSearchRequest();
+        await certificates.SearchAsync(request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/certificate", handler.Request!.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task SearchAsync_EncodesAndOrdersQueryParameters() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(Array.Empty<Certificate>())
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var request = new CertificateSearchRequest {
+            Size = 10,
+            Position = 5,
+            CommonName = "te st",
+            Status = CertificateStatus.Issued,
+            SslTypeId = 2,
+            Issuer = "A&B",
+            KeyAlgorithm = "RSA/DSA"
+        };
+        await certificates.SearchAsync(request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/certificate?size=10&position=5&commonName=te%20st&status=Issued&sslTypeId=2&issuer=A%26B&keyAlgorithm=RSA%2FDSA", handler.Request!.RequestUri!.AbsoluteUri);
+    }
 }
