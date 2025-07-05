@@ -86,6 +86,10 @@ public sealed class ApiConfigBuilder {
     /// <summary>Allows configuration of the <see cref="HttpClientHandler"/> used by <see cref="SectigoClient"/>.</summary>
     /// <param name="configure">Delegate used to configure the handler.</param>
     public ApiConfigBuilder WithHttpClientHandler(Action<HttpClientHandler> configure) {
+        if (configure is null) {
+            throw new ArgumentNullException(nameof(configure));
+        }
+
         _configureHandler = configure;
         return this;
     }
