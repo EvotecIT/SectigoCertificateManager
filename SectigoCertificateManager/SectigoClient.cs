@@ -10,8 +10,9 @@ using System.Threading.Tasks;
 /// <summary>
 /// Provides a basic HTTP client wrapper for communicating with the Sectigo API.
 /// </summary>
-public sealed class SectigoClient : ISectigoClient {
+public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly HttpClient _client;
+    private bool _disposed;
 
     /// <summary>
     /// Gets the underlying <see cref="HttpClient"/> instance used for requests.
@@ -96,5 +97,15 @@ public sealed class SectigoClient : ISectigoClient {
             _client.DefaultRequestHeaders.Add("login", cfg.Username);
             _client.DefaultRequestHeaders.Add("password", cfg.Password);
         }
+    }
+
+    /// <inheritdoc />
+    public void Dispose() {
+        if (_disposed) {
+            return;
+        }
+
+        _client.Dispose();
+        _disposed = true;
     }
 }

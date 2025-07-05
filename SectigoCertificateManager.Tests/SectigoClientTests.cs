@@ -19,6 +19,18 @@ public sealed class SectigoClientTests {
         }
     }
 
+    private sealed class DisposableHandler : HttpMessageHandler {
+        public bool Disposed { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            Disposed = true;
+        }
+    }
+
     [Fact]
     public async Task AddsHeadersAndUsesBaseUrl_WithCredentials() {
         var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4);
@@ -99,5 +111,29 @@ public sealed class SectigoClientTests {
 
         Assert.Same(cert, config.ClientCertificate);
         Assert.Same(action, config.ConfigureHandler);
+    }
+
+    [Fact]
+    public void DisposeDisposesHttpClient() {
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+        var handler = new DisposableHandler();
+        var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        client.Dispose();
+
+        Assert.True(handler.Disposed);
+    }
+
+    [Fact]
+    public async Task MethodsThrowAfterDispose() {
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+        var handler = new TestHandler();
+        var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        client.Dispose();
+
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => client.GetAsync("v1/test"));
     }
 }
