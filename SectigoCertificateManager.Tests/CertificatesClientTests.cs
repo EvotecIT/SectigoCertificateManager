@@ -3,6 +3,7 @@ using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -73,6 +74,18 @@ public sealed class CertificatesClientTests {
         var actualResult = result!;
         Assert.Equal(2, actualResult.Id);
         Assert.Equal("example.com", actualResult.CommonName);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public async Task IssueAsync_InvalidTerm_Throws(int term) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = term };
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.IssueAsync(request));
     }
 
     [Fact]
