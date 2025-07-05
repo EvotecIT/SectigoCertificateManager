@@ -12,9 +12,11 @@ namespace SectigoCertificateManager.Tests;
 public sealed class SectigoClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         public HttpRequestMessage? Request { get; private set; }
+        public CancellationToken Token { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
+            Token = cancellationToken;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
         }
     }
@@ -99,5 +101,24 @@ public sealed class SectigoClientTests {
 
         Assert.Same(cert, config.ClientCertificate);
         Assert.Same(action, config.ConfigureHandler);
+    }
+
+    [Fact]
+    public async Task UsesProvidedCancellationToken() {
+        var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4);
+        var handler = new TestHandler();
+        var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        try {
+            await client.GetAsync("v1/test", cts.Token);
+        } catch (TaskCanceledException) {
+            // expected on some frameworks
+        }
+
+        Assert.True(handler.Token.IsCancellationRequested);
     }
 }
