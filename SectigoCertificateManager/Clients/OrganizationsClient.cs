@@ -28,7 +28,6 @@ public sealed class OrganizationsClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Organization?> GetAsync(int organizationId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/organization/{organizationId}", cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Organization>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -40,7 +39,6 @@ public sealed class OrganizationsClient {
     /// <returns>The identifier of the created organization.</returns>
     public async Task<int> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default) {
         var response = await _client.PostAsync("v1/organization", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
         var location = response.Headers.Location;
         if (location is not null) {
             var last = location.Segments[location.Segments.Length - 1];

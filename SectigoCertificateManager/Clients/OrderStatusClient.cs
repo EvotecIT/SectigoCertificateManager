@@ -25,7 +25,6 @@ public sealed class OrderStatusClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<OrderStatus?> GetStatusAsync(int orderId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/order/{orderId}/status", cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
         var result = await response.Content.ReadFromJsonAsync<StatusResponse>(s_json, cancellationToken).ConfigureAwait(false);
         return result?.Status;
     }

@@ -27,7 +27,6 @@ public sealed class OrdersClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Order?> GetAsync(int orderId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/order/{orderId}", cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<Order>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -37,7 +36,6 @@ public sealed class OrdersClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<IReadOnlyList<Order>?> ListOrdersAsync(CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync("v1/order", cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<IReadOnlyList<Order>>(s_json, cancellationToken).ConfigureAwait(false);
     }
 }
