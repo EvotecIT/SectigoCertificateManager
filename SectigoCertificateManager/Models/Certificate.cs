@@ -79,6 +79,10 @@ public sealed class Certificate {
         }
 
         var bytes = Convert.FromBase64String(data);
+#if NET9_0_OR_GREATER
+        return X509CertificateLoader.LoadCertificate(bytes);
+#else
         return new X509Certificate2(bytes);
+#endif
     }
 }

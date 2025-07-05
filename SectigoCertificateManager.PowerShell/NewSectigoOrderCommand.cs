@@ -5,33 +5,43 @@ using System.Management.Automation;
 
 namespace SectigoCertificateManager.PowerShell;
 
+/// <summary>Submits a new certificate order to Sectigo.</summary>
 [Cmdlet(VerbsCommon.New, "SectigoOrder")]
 [OutputType(typeof(Models.Certificate))]
 public sealed class NewSectigoOrderCommand : PSCmdlet {
+    /// <para>Base address of the Sectigo API.</para>
     [Parameter(Mandatory = true)]
     public string BaseUrl { get; set; } = string.Empty;
 
+    /// <para>API username.</para>
     [Parameter(Mandatory = true)]
     public string Username { get; set; } = string.Empty;
 
+    /// <para>API password.</para>
     [Parameter(Mandatory = true)]
     public string Password { get; set; } = string.Empty;
 
+    /// <para>Customer URI associated with the account.</para>
     [Parameter(Mandatory = true)]
     public string CustomerUri { get; set; } = string.Empty;
 
+    /// <para>API version to use.</para>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
 
+    /// <para>Common name for the certificate.</para>
     [Parameter(Mandatory = true)]
     public string CommonName { get; set; } = string.Empty;
 
+    /// <para>Identifier of the certificate profile.</para>
     [Parameter(Mandatory = true)]
     public int ProfileId { get; set; }
 
+    /// <para>Certificate term in months.</para>
     [Parameter]
     public int Term { get; set; } = 12;
 
+    /// <para>Subject alternative names for the certificate.</para>
     [Parameter]
     [Alias("SubjectAlternativeName", "San")]
     public string[] SubjectAlternativeNames { get; set; } = System.Array.Empty<string>();

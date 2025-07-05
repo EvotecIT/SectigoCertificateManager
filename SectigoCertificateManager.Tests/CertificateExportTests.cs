@@ -56,8 +56,20 @@ public sealed class CertificateExportTests {
         try {
             CertificateExport.SavePfx(cert, path, "pwd");
             Assert.True(File.Exists(path));
+#if NET472
             using var loaded = new X509Certificate2(path, "pwd");
             Assert.Equal(cert.Thumbprint, loaded.Thumbprint);
+#elif NET9_0_OR_GREATER
+            using var loaded = X509CertificateLoader.LoadPkcs12FromFile(
+                path,
+                "pwd",
+                X509KeyStorageFlags.DefaultKeySet,
+                Pkcs12LoaderLimits.Defaults);
+            Assert.Equal(cert.Thumbprint, loaded.Thumbprint);
+#else
+            using var loaded = new X509Certificate2(path, "pwd");
+            Assert.Equal(cert.Thumbprint, loaded.Thumbprint);
+#endif
         } finally {
             File.Delete(path);
         }
