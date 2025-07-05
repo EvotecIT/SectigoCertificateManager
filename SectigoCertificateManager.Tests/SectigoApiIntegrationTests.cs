@@ -91,4 +91,11 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
         Assert.Equal(3, result[0].Id);
     }
 
+    [Fact]
+    public async Task OrdersClient_Cancel_Succeeds() {
+        _server.Given(Request.Create().WithPath("/v1/order/7/cancel").UsingPost())
+            .RespondWith(Response.Create().WithStatusCode(204));
+
+        await _orders.CancelAsync(7);
+    }
 }
