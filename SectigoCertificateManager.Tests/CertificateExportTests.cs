@@ -74,4 +74,45 @@ public sealed class CertificateExportTests {
             File.Delete(path);
         }
     }
+
+    [Fact]
+    public void SavePemChain_WritesChain() {
+        using var rootKey = RSA.Create(2048);
+#if NET472
+        var rootRequest = new CertificateRequest(
+            new X500DistinguishedName("CN=Root"),
+            rootKey,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+#else
+        var rootRequest = new CertificateRequest("CN=Root", rootKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#endif
+        rootRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+        var now = DateTimeOffset.UtcNow;
+        using var rootCert = rootRequest.CreateSelfSigned(now.AddDays(-1), now.AddDays(2));
+
+        using var leafKey = RSA.Create(2048);
+#if NET472
+        var leafRequest = new CertificateRequest(
+            new X500DistinguishedName("CN=Leaf"),
+            leafKey,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+#else
+        var leafRequest = new CertificateRequest("CN=Leaf", leafKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#endif
+        var serial = new byte[8];
+        RandomNumberGenerator.Fill(serial);
+        var leafCert = leafRequest.Create(rootCert, now.AddDays(-1), now.AddDays(1), serial);
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            CertificateExport.SavePemChain(leafCert, path, new[] { rootCert });
+            var content = File.ReadAllText(path);
+            Assert.Contains("BEGIN CERTIFICATE", content);
+            Assert.Equal(2, content.Split("-----END CERTIFICATE-----").Length - 1);
+        } finally {
+            File.Delete(path);
+        }
+    }
 }
