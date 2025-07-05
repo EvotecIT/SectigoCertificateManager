@@ -42,4 +42,24 @@ public static class CertificateExport {
         Array.Clear(bytes, 0, bytes.Length);
 #endif
     }
+
+    /// <summary>
+    /// Saves the certificate and private key in a PFX container and returns the cleared buffer for testing.
+    /// </summary>
+    /// <param name="certificate">Certificate to export.</param>
+    /// <param name="path">Destination file path.</param>
+    /// <param name="password">Optional password protecting the PFX.</param>
+    /// <returns>The cleared buffer used to write the PFX.</returns>
+    internal static byte[] SavePfxForTest(X509Certificate2 certificate, string path, string? password = null) {
+        var bytes = password is null
+            ? certificate.Export(X509ContentType.Pfx)
+            : certificate.Export(X509ContentType.Pfx, password);
+        File.WriteAllBytes(path, bytes);
+#if NET6_0_OR_GREATER
+        CryptographicOperations.ZeroMemory(bytes);
+#else
+        Array.Clear(bytes, 0, bytes.Length);
+#endif
+        return bytes;
+    }
 }
