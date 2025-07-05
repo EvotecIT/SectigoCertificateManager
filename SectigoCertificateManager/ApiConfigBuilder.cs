@@ -20,6 +20,10 @@ public sealed class ApiConfigBuilder {
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
     public ApiConfigBuilder WithBaseUrl(string baseUrl) {
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out _)) {
+            throw new ArgumentException("Base URL must be a valid absolute URI.", nameof(baseUrl));
+        }
+
         _baseUrl = baseUrl;
         return this;
     }
