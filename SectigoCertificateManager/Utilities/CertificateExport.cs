@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager.Utilities;
 
 using System.IO;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -61,5 +62,35 @@ public static class CertificateExport {
         Array.Clear(bytes, 0, bytes.Length);
 #endif
         return bytes;
+    }
+
+    /// <summary>Saves the certificate chain as a PEM encoded file.</summary>
+    /// <param name="certificate">Leaf certificate to export.</param>
+    /// <param name="path">Destination file path.</param>
+    /// <param name="extraCertificates">Certificates used to build the chain.</param>
+    public static void SavePemChain(
+        X509Certificate2 certificate,
+        string path,
+        IEnumerable<X509Certificate2>? extraCertificates = null) {
+        using var chain = new X509Chain();
+        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+
+        if (extraCertificates is not null) {
+            foreach (var cert in extraCertificates) {
+                chain.ChainPolicy.ExtraStore.Add(cert);
+            }
+        }
+
+        chain.Build(certificate);
+
+        var builder = new StringBuilder();
+        foreach (var element in chain.ChainElements) {
+            builder.AppendLine("-----BEGIN CERTIFICATE-----");
+            builder.AppendLine(Convert.ToBase64String(element.Certificate.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks));
+            builder.AppendLine("-----END CERTIFICATE-----");
+        }
+
+        File.WriteAllText(path, builder.ToString());
     }
 }
