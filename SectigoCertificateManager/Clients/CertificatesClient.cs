@@ -42,6 +42,16 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
+    /// Revokes a certificate.
+    /// </summary>
+    /// <param name="request">Payload describing the certificate to revoke.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task RevokeAsync(RevokeCertificateRequest request, CancellationToken cancellationToken = default) {
+        var response = await _client.PostAsync("v1/certificate/revoke", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
     /// Searches for certificates using the provided filter.
     /// </summary>
     public async Task<CertificateResponse?> SearchAsync(CertificateSearchRequest request, CancellationToken cancellationToken = default) {
