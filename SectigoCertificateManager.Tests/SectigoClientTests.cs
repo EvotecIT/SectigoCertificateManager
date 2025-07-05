@@ -126,6 +126,19 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
+    public void DisposeIsIdempotent() {
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+        var handler = new DisposableHandler();
+        var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        client.Dispose();
+        client.Dispose();
+
+        Assert.True(handler.Disposed);
+    }
+
+    [Fact]
     public async Task MethodsThrowAfterDispose() {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new TestHandler();
