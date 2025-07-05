@@ -61,4 +61,21 @@ public sealed class ApiConfigBuilderTests {
 
         Assert.Equal("https://example.com", config.BaseUrl);
     }
+
+    [Fact]
+    public void BuilderIncludesTokenMetadata() {
+        DateTimeOffset expires = DateTimeOffset.UtcNow.AddMinutes(5);
+        Func<CancellationToken, Task<TokenInfo>> del = _ => Task.FromResult(new TokenInfo("tok", expires));
+
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithCustomerUri("cst1")
+            .WithToken("tok")
+            .WithTokenExpiration(expires)
+            .WithTokenRefresh(del)
+            .Build();
+
+        Assert.Equal(expires, config.TokenExpiresAt);
+        Assert.Same(del, config.RefreshToken);
+    }
 }
