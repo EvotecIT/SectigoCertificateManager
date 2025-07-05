@@ -36,6 +36,21 @@ public sealed class CertificateExportTests {
     }
 
     [Fact]
+    public void SavePem_WritesFile_ToNewDirectory() {
+        using var cert = CreateCertificate();
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, "cert.pem");
+        try {
+            CertificateExport.SavePem(cert, path);
+            Assert.True(File.Exists(path));
+        } finally {
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
+            }
+        }
+    }
+
+    [Fact]
     public void SaveDer_WritesFile() {
         using var cert = CreateCertificate();
         var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -50,6 +65,21 @@ public sealed class CertificateExportTests {
     }
 
     [Fact]
+    public void SaveDer_WritesFile_ToNewDirectory() {
+        using var cert = CreateCertificate();
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, "cert.der");
+        try {
+            CertificateExport.SaveDer(cert, path);
+            Assert.True(File.Exists(path));
+        } finally {
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
+            }
+        }
+    }
+
+    [Fact]
     public void SavePfx_WritesFile() {
         using var cert = CreateCertificate();
         var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -60,6 +90,23 @@ public sealed class CertificateExportTests {
             Assert.Equal(cert.Thumbprint, loaded.Thumbprint);
         } finally {
             File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void SavePfx_WritesFile_ToNewDirectory() {
+        using var cert = CreateCertificate();
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, "cert.pfx");
+        try {
+            CertificateExport.SavePfx(cert, path, "pwd");
+            Assert.True(File.Exists(path));
+            using var loaded = new X509Certificate2(path, "pwd");
+            Assert.Equal(cert.Thumbprint, loaded.Thumbprint);
+        } finally {
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
+            }
         }
     }
 }
