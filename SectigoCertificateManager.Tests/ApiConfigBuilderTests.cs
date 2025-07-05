@@ -78,4 +78,11 @@ public sealed class ApiConfigBuilderTests {
         Assert.Equal(expires, config.TokenExpiresAt);
         Assert.Same(del, config.RefreshToken);
     }
+
+    [Fact]
+    public void WithHttpClientHandler_ThrowsForNullDelegate() {
+        var builder = new ApiConfigBuilder();
+
+        Assert.Throws<ArgumentNullException>(() => builder.WithHttpClientHandler(null!));
+    }
 }
