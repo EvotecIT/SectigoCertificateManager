@@ -3,6 +3,8 @@ namespace SectigoCertificateManager;
 using System;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Provides a builder for creating instances of <see cref="ApiConfig"/> using a fluent API.
@@ -12,6 +14,8 @@ public sealed class ApiConfigBuilder {
     private string _username = string.Empty;
     private string _password = string.Empty;
     private string? _token;
+    private DateTimeOffset? _tokenExpiresAt;
+    private Func<CancellationToken, Task<TokenInfo>>? _refreshToken;
     private string _customerUri = string.Empty;
     private ApiVersion _apiVersion = ApiVersion.V25_6;
     private X509Certificate2? _clientCertificate;
@@ -41,6 +45,20 @@ public sealed class ApiConfigBuilder {
     /// <param name="token">Token value.</param>
     public ApiConfigBuilder WithToken(string token) {
         _token = token;
+        return this;
+    }
+
+    /// <summary>Sets the token expiration time.</summary>
+    /// <param name="expiresAt">UTC time when the token expires.</param>
+    public ApiConfigBuilder WithTokenExpiration(DateTimeOffset expiresAt) {
+        _tokenExpiresAt = expiresAt;
+        return this;
+    }
+
+    /// <summary>Sets the delegate used to refresh the token when expired.</summary>
+    /// <param name="refresh">Delegate invoked to obtain a new token.</param>
+    public ApiConfigBuilder WithTokenRefresh(Func<CancellationToken, Task<TokenInfo>> refresh) {
+        _refreshToken = refresh;
         return this;
     }
 
@@ -99,6 +117,16 @@ public sealed class ApiConfigBuilder {
             throw new ArgumentException("Customer URI is required.", nameof(_customerUri));
         }
 
-        return new ApiConfig(_baseUrl, _username, _password, _customerUri, _apiVersion, _clientCertificate, _configureHandler, _token);
+        return new ApiConfig(
+            _baseUrl,
+            _username,
+            _password,
+            _customerUri,
+            _apiVersion,
+            _clientCertificate,
+            _configureHandler,
+            _token,
+            _tokenExpiresAt,
+            _refreshToken);
     }
 }
