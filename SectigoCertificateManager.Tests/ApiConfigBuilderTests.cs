@@ -43,4 +43,22 @@ public sealed class ApiConfigBuilderTests {
         Assert.Equal("tok", config.Token);
         Assert.Equal("https://example.com", config.BaseUrl);
     }
+
+    [Fact]
+    public void WithBaseUrl_ThrowsForInvalidUri() {
+        var builder = new ApiConfigBuilder();
+
+        Assert.Throws<ArgumentException>(() => builder.WithBaseUrl("not a url"));
+    }
+
+    [Fact]
+    public void WithBaseUrl_AllowsValidUri() {
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithToken("tok")
+            .WithCustomerUri("cst1")
+            .Build();
+
+        Assert.Equal("https://example.com", config.BaseUrl);
+    }
 }
