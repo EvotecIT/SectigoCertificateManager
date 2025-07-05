@@ -65,4 +65,19 @@ public sealed class OrganizationsClientTests {
         Assert.Contains("\"name\":\"org\"", handler.Body);
         Assert.Equal(10, id);
     }
+
+    [Fact]
+    public async Task CreateAsync_ParsesId_WhenLocationEndsWithSlash() {
+        var response = new HttpResponseMessage(HttpStatusCode.Created);
+        response.Headers.Location = new System.Uri("https://example.com/v1/organization/11/");
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var organizations = new OrganizationsClient(client);
+
+        var request = new CreateOrganizationRequest { Name = "org" };
+        var id = await organizations.CreateAsync(request);
+
+        Assert.Equal(11, id);
+    }
 }
