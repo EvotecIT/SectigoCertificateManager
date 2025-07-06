@@ -1,4 +1,5 @@
 using SectigoCertificateManager.Models;
+using SectigoCertificateManager;
 using System;
 using System.Security.Cryptography.X509Certificates;
 using Xunit;
@@ -17,7 +18,16 @@ public sealed class CertificateTests {
 
     [Fact]
     public void FromBase64_WithInvalidData_Throws() {
-        Assert.Throws<FormatException>(() => Certificate.FromBase64("invalid"));
+        var ex = Assert.Throws<ValidationException>(() => Certificate.FromBase64("invalid"));
+        Assert.Equal("Certificate data is not valid Base64.", ex.Message);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void FromBase64_WithMissingData_Throws(string? input) {
+        Assert.Throws<ArgumentException>(() => Certificate.FromBase64(input!));
     }
 
     [Fact]
