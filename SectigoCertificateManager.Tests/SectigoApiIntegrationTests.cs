@@ -18,13 +18,23 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
     private ProfilesClient _profiles = null!;
 
     public Task InitializeAsync() {
+        var success = false;
         _server = WireMockServer.Start();
-        var config = new ApiConfig(_server.Url!, "user", "pass", "cst1", ApiVersion.V25_4);
-        var client = new SectigoClient(config, new HttpClient());
-        _certificates = new CertificatesClient(client);
-        _orders = new OrdersClient(client);
-        _profiles = new ProfilesClient(client);
-        return Task.CompletedTask;
+        try {
+            var config = new ApiConfig(_server.Url!, "user", "pass", "cst1", ApiVersion.V25_4);
+            var client = new SectigoClient(config, new HttpClient());
+            _certificates = new CertificatesClient(client);
+            _orders = new OrdersClient(client);
+            _profiles = new ProfilesClient(client);
+            success = true;
+            return Task.CompletedTask;
+        }
+        finally {
+            if (!success) {
+                _server.Stop();
+                _server.Dispose();
+            }
+        }
     }
 
     public Task DisposeAsync() {
