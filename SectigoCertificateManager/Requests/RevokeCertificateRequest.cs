@@ -1,5 +1,6 @@
 namespace SectigoCertificateManager.Requests;
 
+using System.ComponentModel.DataAnnotations;
 /// <summary>
 /// Request payload used to revoke a certificate.
 /// </summary>
@@ -17,6 +18,7 @@ public sealed class RevokeCertificateRequest {
     public DateTimeOffset? RevokeDate { get; set; }
 
     /// <summary>Gets or sets the revocation reason code.</summary>
+    [Range(0, int.MaxValue)]
     public int ReasonCode { get; set; }
 
     /// <summary>Gets or sets the revocation reason message.</summary>

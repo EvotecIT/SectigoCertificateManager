@@ -85,7 +85,7 @@ public sealed class CertificatesClientTests {
         var certificates = new CertificatesClient(client);
 
         var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = term };
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.IssueAsync(request));
+        await Assert.ThrowsAsync<System.ComponentModel.DataAnnotations.ValidationException>(() => certificates.IssueAsync(request));
     }
 
     [Fact]

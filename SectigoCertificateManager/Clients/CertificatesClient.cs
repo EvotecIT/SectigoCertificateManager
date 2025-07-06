@@ -3,6 +3,7 @@ namespace SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
+using SectigoCertificateManager.Utilities;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -42,9 +43,7 @@ public sealed class CertificatesClient {
             throw new ArgumentNullException(nameof(request));
         }
 
-        if (request.Term <= 0) {
-            throw new ArgumentOutOfRangeException(nameof(request.Term));
-        }
+        RequestValidator.Validate(request);
 
         var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
@@ -56,6 +55,7 @@ public sealed class CertificatesClient {
     /// <param name="request">Payload describing the certificate to revoke.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task RevokeAsync(RevokeCertificateRequest request, CancellationToken cancellationToken = default) {
+        RequestValidator.Validate(request);
         var response = await _client.PostAsync("v1/certificate/revoke", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
@@ -68,6 +68,7 @@ public sealed class CertificatesClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The identifier of the newly issued certificate.</returns>
     public async Task<int> RenewAsync(int certificateId, RenewCertificateRequest request, CancellationToken cancellationToken = default) {
+        RequestValidator.Validate(request);
         var response = await _client.PostAsync($"v1/certificate/renewById/{certificateId}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var result = await response.Content.ReadFromJsonAsync<RenewCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
         return result?.SslId ?? 0;
@@ -77,6 +78,7 @@ public sealed class CertificatesClient {
     /// Searches for certificates using the provided filter.
     /// </summary>
     public async Task<CertificateResponse?> SearchAsync(CertificateSearchRequest request, CancellationToken cancellationToken = default) {
+        RequestValidator.Validate(request);
         var query = BuildQuery(request);
         var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken);
         var items = await response.Content.ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken);

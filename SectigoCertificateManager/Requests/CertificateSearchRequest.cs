@@ -1,11 +1,15 @@
 namespace SectigoCertificateManager.Requests;
 
+using System.ComponentModel.DataAnnotations;
+
 /// <summary>
 /// Request used to search for certificates.
 /// </summary>
 public sealed class CertificateSearchRequest {
+    [Range(1, int.MaxValue)]
     public int? Size { get; set; }
 
+    [Range(1, int.MaxValue)]
     public int? Position { get; set; }
 
     public string? CommonName { get; set; }
@@ -14,12 +18,14 @@ public sealed class CertificateSearchRequest {
 
     public CertificateStatus? Status { get; set; }
 
+    [Range(1, int.MaxValue)]
     public int? SslTypeId { get; set; }
 
     public string? DiscoveryStatus { get; set; }
 
     public string? Vendor { get; set; }
 
+    [Range(1, int.MaxValue)]
     public int? OrgId { get; set; }
 
     public string? InstallStatus { get; set; }
@@ -38,6 +44,7 @@ public sealed class CertificateSearchRequest {
 
     public string? KeyAlgorithm { get; set; }
 
+    [Range(1, int.MaxValue)]
     public int? KeySize { get; set; }
 
     public string? KeyParam { get; set; }

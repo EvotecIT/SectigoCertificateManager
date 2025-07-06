@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.Clients;
 
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
+using SectigoCertificateManager.Utilities;
 using System;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -38,6 +39,7 @@ public sealed class OrganizationsClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The identifier of the created organization.</returns>
     public async Task<int> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default) {
+        RequestValidator.Validate(request);
         var response = await _client.PostAsync("v1/organization", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var location = response.Headers.Location;
         if (location is not null) {

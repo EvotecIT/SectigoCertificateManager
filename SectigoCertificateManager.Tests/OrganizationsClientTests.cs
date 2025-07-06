@@ -80,4 +80,14 @@ public sealed class OrganizationsClientTests {
 
         Assert.Equal(11, id);
     }
+
+    [Fact]
+    public async Task CreateAsync_InvalidRequest_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.Created));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var organizations = new OrganizationsClient(client);
+
+        var request = new CreateOrganizationRequest();
+        await Assert.ThrowsAsync<System.ComponentModel.DataAnnotations.ValidationException>(() => organizations.CreateAsync(request));
+    }
 }

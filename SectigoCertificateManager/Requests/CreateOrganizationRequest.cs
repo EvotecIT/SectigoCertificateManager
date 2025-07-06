@@ -1,11 +1,13 @@
 namespace SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Models;
+using System.ComponentModel.DataAnnotations;
 
 /// <summary>
 /// Request payload used to create an organization.
 /// </summary>
 public sealed class CreateOrganizationRequest {
     /// <summary>Gets or sets the organization name.</summary>
+    [Required]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the alternative name.</summary>
