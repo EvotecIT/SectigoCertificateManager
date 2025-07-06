@@ -51,4 +51,8 @@ public sealed class CertificateSearchRequest {
     public string? ExtendedKeyUsage { get; set; }
 
     public string? RequestedVia { get; set; }
+
+    public DateTime? DateFrom { get; set; }
+
+    public DateTime? DateTo { get; set; }
 }
