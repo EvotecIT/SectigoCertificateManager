@@ -116,6 +116,15 @@ public sealed class CertificatesClient {
             builder.Append(name).Append('=').Append(value);
         }
 
+        void AppendDate(string name, DateTime? value) {
+            if (!value.HasValue) {
+                return;
+            }
+
+            AppendSeparator();
+            builder.Append(name).Append('=').Append(value.Value.ToString("yyyy-MM-dd"));
+        }
+
         if (request.Size.HasValue) {
             AppendInt("size", request.Size.Value);
         }
@@ -161,6 +170,8 @@ public sealed class CertificatesClient {
         Append("keyUsage", request.KeyUsage);
         Append("extendedKeyUsage", request.ExtendedKeyUsage);
         Append("requestedVia", request.RequestedVia);
+        AppendDate("dateFrom", request.DateFrom);
+        AppendDate("dateTo", request.DateTo);
 
         return builder.ToString();
     }
