@@ -113,10 +113,19 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
         _server.Given(Request.Create().WithPath("/v1/order").UsingGet())
             .InScenario("orders")
             .WhenStateIs("page2")
+            .WillSetStateTo("done")
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
                 .WithBody("[{\"id\":2,\"status\":0,\"orderNumber\":2,\"backendCertId\":\"b\"}]"));
+
+        _server.Given(Request.Create().WithPath("/v1/order").UsingGet())
+            .InScenario("orders")
+            .WhenStateIs("done")
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("[]"));
 
         var list = new List<Order>();
         await foreach (var order in _orders.EnumerateOrdersAsync(pageSize: 1)) {
