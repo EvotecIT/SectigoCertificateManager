@@ -4,6 +4,7 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 
 /// <summary>
@@ -37,6 +38,14 @@ public sealed class CertificatesClient {
     /// <param name="request">Payload describing the certificate to issue.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        if (request.Term <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(request.Term));
+        }
+
         var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
     }
@@ -75,60 +84,72 @@ public sealed class CertificatesClient {
     }
 
     private static string BuildQuery(CertificateSearchRequest request) {
-        var parts = new List<string>();
+        var builder = new StringBuilder();
+
+        void AppendSeparator() {
+            _ = builder.Length == 0 ? builder.Append('?') : builder.Append('&');
+        }
+
+        void Append(string name, string? value) {
+            if (string.IsNullOrEmpty(value)) {
+                return;
+            }
+
+            AppendSeparator();
+            builder.Append(name).Append('=').Append(Uri.EscapeDataString(value));
+        }
+
+        void AppendInt(string name, int value) {
+            AppendSeparator();
+            builder.Append(name).Append('=').Append(value);
+        }
 
         if (request.Size.HasValue) {
-            parts.Add($"size={request.Size.Value}");
+            AppendInt("size", request.Size.Value);
         }
 
         if (request.Position.HasValue) {
-            parts.Add($"position={request.Position.Value}");
+            AppendInt("position", request.Position.Value);
         }
 
-        Add(parts, "commonName", request.CommonName);
-        Add(parts, "subjectAlternativeName", request.SubjectAlternativeName);
+        Append("commonName", request.CommonName);
+        Append("subjectAlternativeName", request.SubjectAlternativeName);
 
         if (request.Status.HasValue && request.Status.Value != CertificateStatus.Any) {
-            Add(parts, "status", request.Status.Value.ToString());
+            Append("status", request.Status.Value.ToString());
         }
 
         if (request.SslTypeId.HasValue) {
-            parts.Add($"sslTypeId={request.SslTypeId.Value}");
+            AppendInt("sslTypeId", request.SslTypeId.Value);
         }
 
-        Add(parts, "discoveryStatus", request.DiscoveryStatus);
-        Add(parts, "vendor", request.Vendor);
+        Append("discoveryStatus", request.DiscoveryStatus);
+        Append("vendor", request.Vendor);
 
         if (request.OrgId.HasValue) {
-            parts.Add($"orgId={request.OrgId.Value}");
+            AppendInt("orgId", request.OrgId.Value);
         }
 
-        Add(parts, "installStatus", request.InstallStatus);
-        Add(parts, "renewalStatus", request.RenewalStatus);
-        Add(parts, "issuer", request.Issuer);
-        Add(parts, "serialNumber", request.SerialNumber);
-        Add(parts, "requester", request.Requester);
-        Add(parts, "externalRequester", request.ExternalRequester);
-        Add(parts, "signatureAlgorithm", request.SignatureAlgorithm);
-        Add(parts, "keyAlgorithm", request.KeyAlgorithm);
+        Append("installStatus", request.InstallStatus);
+        Append("renewalStatus", request.RenewalStatus);
+        Append("issuer", request.Issuer);
+        Append("serialNumber", request.SerialNumber);
+        Append("requester", request.Requester);
+        Append("externalRequester", request.ExternalRequester);
+        Append("signatureAlgorithm", request.SignatureAlgorithm);
+        Append("keyAlgorithm", request.KeyAlgorithm);
 
         if (request.KeySize.HasValue) {
-            parts.Add($"keySize={request.KeySize.Value}");
+            AppendInt("keySize", request.KeySize.Value);
         }
 
-        Add(parts, "keyParam", request.KeyParam);
-        Add(parts, "sha1Hash", request.Sha1Hash);
-        Add(parts, "md5Hash", request.Md5Hash);
-        Add(parts, "keyUsage", request.KeyUsage);
-        Add(parts, "extendedKeyUsage", request.ExtendedKeyUsage);
-        Add(parts, "requestedVia", request.RequestedVia);
+        Append("keyParam", request.KeyParam);
+        Append("sha1Hash", request.Sha1Hash);
+        Append("md5Hash", request.Md5Hash);
+        Append("keyUsage", request.KeyUsage);
+        Append("extendedKeyUsage", request.ExtendedKeyUsage);
+        Append("requestedVia", request.RequestedVia);
 
-        return parts.Count > 0 ? "?" + string.Join("&", parts) : string.Empty;
-    }
-
-    private static void Add(ICollection<string> parts, string name, string? value) {
-        if (!string.IsNullOrEmpty(value)) {
-            parts.Add($"{name}={Uri.EscapeDataString(value)}");
-        }
+        return builder.ToString();
     }
 }

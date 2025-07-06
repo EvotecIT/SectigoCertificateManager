@@ -76,7 +76,23 @@ public sealed class ProfilesClientTests {
         Assert.NotNull(client.Request);
         Assert.Equal("v1/profile", client.Request!.RequestUri!.ToString());
         Assert.NotNull(result);
-        Assert.Single(result!);
+        Assert.Single(result);
         Assert.Equal(2, result[0].Id);
+    }
+
+    [Fact]
+    public async Task ListProfilesAsync_ReturnsEmpty_WhenResponseNull() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create<object?>(null)
+        };
+        var client = new StubClient(response);
+        var profiles = new ProfilesClient(client);
+
+        var result = await profiles.ListProfilesAsync();
+
+        Assert.NotNull(client.Request);
+        Assert.Equal("v1/profile", client.Request!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 }
