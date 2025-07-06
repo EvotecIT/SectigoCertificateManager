@@ -205,4 +205,47 @@ public sealed class SectigoClientTests {
         Assert.False(called);
         Assert.Equal("old", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
     }
+
+    private sealed class ThrottleHandler : HttpMessageHandler {
+        private readonly TimeSpan _delay;
+        private int _current;
+
+        public int MaxObserved { get; private set; }
+
+        public ThrottleHandler(TimeSpan delay) {
+            _delay = delay;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            var current = Interlocked.Increment(ref _current);
+            if (current > MaxObserved) {
+                MaxObserved = current;
+            }
+
+            await Task.Delay(_delay, cancellationToken);
+            Interlocked.Decrement(ref _current);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
+    }
+
+    [Fact]
+    public async Task ConcurrencyIsLimited() {
+        var handler = new ThrottleHandler(TimeSpan.FromMilliseconds(50));
+        var httpClient = new HttpClient(handler);
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com/")
+            .WithCredentials("u", "p")
+            .WithCustomerUri("c")
+            .WithConcurrencyLimit(2)
+            .Build();
+
+        var client = new SectigoClient(config, httpClient);
+
+        await Task.WhenAll(
+            client.GetAsync("v1/a"),
+            client.GetAsync("v1/b"),
+            client.GetAsync("v1/c"));
+
+        Assert.True(handler.MaxObserved <= 2);
+    }
 }

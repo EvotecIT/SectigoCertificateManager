@@ -17,6 +17,7 @@ public static class BasicApiExample {
             .WithCredentials("<username>", "<password>")
             .WithCustomerUri("<customer uri>")
             .WithApiVersion(ApiVersion.V25_6)
+            .WithConcurrencyLimit(2)
             .Build();
 
         var client = new SectigoClient(config);

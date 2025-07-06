@@ -29,7 +29,8 @@ public sealed class ApiConfig(
     Action<HttpClientHandler>? configureHandler = null,
     string? token = null,
     DateTimeOffset? tokenExpiresAt = null,
-    Func<CancellationToken, Task<TokenInfo>>? refreshToken = null) {
+    Func<CancellationToken, Task<TokenInfo>>? refreshToken = null,
+    int? concurrencyLimit = null) {
     /// <summary>Gets the base URL of the API endpoint.</summary>
     public string BaseUrl { get; } = baseUrl;
 
@@ -59,4 +60,7 @@ public sealed class ApiConfig(
 
     /// <summary>Gets the delegate used to refresh the token, if any.</summary>
     public Func<CancellationToken, Task<TokenInfo>>? RefreshToken { get; } = refreshToken;
+
+    /// <summary>Gets the optional concurrency limit for HTTP requests.</summary>
+    public int? ConcurrencyLimit { get; } = concurrencyLimit;
 }
