@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using WireMock.RequestBuilders;
@@ -97,5 +98,31 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
             .RespondWith(Response.Create().WithStatusCode(204));
 
         await _orders.CancelAsync(7);
+    }
+
+    [Fact]
+    public async Task OrdersClient_Enumerate_ReturnsOrders() {
+        _server.Given(Request.Create().WithPath("/v1/order").UsingGet())
+            .InScenario("orders")
+            .WillSetStateTo("page2")
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("[{\"id\":1,\"status\":0,\"orderNumber\":1,\"backendCertId\":\"a\"}]"));
+
+        _server.Given(Request.Create().WithPath("/v1/order").UsingGet())
+            .InScenario("orders")
+            .WhenStateIs("page2")
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("[{\"id\":2,\"status\":0,\"orderNumber\":2,\"backendCertId\":\"b\"}]"));
+
+        var list = new List<Order>();
+        await foreach (var order in _orders.EnumerateOrdersAsync(pageSize: 1)) {
+            list.Add(order);
+        }
+
+        Assert.Equal(2, list.Count);
     }
 }

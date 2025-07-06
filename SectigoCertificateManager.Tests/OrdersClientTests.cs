@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -37,7 +38,7 @@ public sealed class OrdersClientTests {
         var result = await orders.ListOrdersAsync();
 
         Assert.NotNull(handler.Request);
-        Assert.Equal("https://example.com/v1/order", handler.Request!.RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/order?size=200&position=0", handler.Request!.RequestUri!.ToString());
         Assert.NotNull(result);
         Assert.Single(result!);
         Assert.Equal(1, result[0].Id);
@@ -55,5 +56,43 @@ public sealed class OrdersClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal("https://example.com/v1/order/5/cancel", handler.Request.RequestUri!.ToString());
+    }
+
+    private sealed class SequenceHandler : HttpMessageHandler {
+        private readonly Queue<HttpResponseMessage> _responses;
+        public List<HttpRequestMessage> Requests { get; } = new();
+
+        public SequenceHandler(IEnumerable<HttpResponseMessage> responses) => _responses = new Queue<HttpResponseMessage>(responses);
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            Requests.Add(request);
+            return Task.FromResult(_responses.Dequeue());
+        }
+    }
+
+    [Fact]
+    public async Task EnumerateOrdersAsync_ReturnsPages() {
+        var page1 = new[] { new Order { Id = 1 }, new Order { Id = 2 } };
+        var page2 = new[] { new Order { Id = 3 } };
+
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page1) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page2) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var orders = new OrdersClient(client);
+
+        var results = new List<Order>();
+        await foreach (var order in orders.EnumerateOrdersAsync(pageSize: 2)) {
+            results.Add(order);
+        }
+
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal("https://example.com/v1/order?size=2&position=0", handler.Requests[0].RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/order?size=2&position=2", handler.Requests[1].RequestUri!.ToString());
+        Assert.Equal(3, results.Count);
+        Assert.Equal(3, results[2].Id);
     }
 }
