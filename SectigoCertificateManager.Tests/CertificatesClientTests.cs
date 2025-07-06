@@ -123,6 +123,28 @@ public sealed class CertificatesClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/certificate", handler.Request!.RequestUri!.ToString());
     }
+  
+    [Fact]
+    public async Task RenewAsync_SendsRequestAndReturnsId() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new RenewCertificateResponse { SslId = 10 })
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var request = new RenewCertificateRequest { Csr = "csr", DcvMode = "EMAIL", DcvEmail = "admin@example.com" };
+        var result = await certificates.RenewAsync(7, request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/certificate/renewById/7", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(handler.Body);
+        Assert.Contains("\"csr\":\"csr\"", handler.Body);
+        Assert.Contains("\"dcvMode\":\"EMAIL\"", handler.Body);
+        Assert.Contains("\"dcvEmail\":\"admin@example.com\"", handler.Body);
+        Assert.Equal(10, result);
+    }
 
     [Fact]
     public async Task SearchAsync_EncodesAndOrdersQueryParameters() {
