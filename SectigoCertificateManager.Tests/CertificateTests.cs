@@ -19,4 +19,30 @@ public sealed class CertificateTests {
     public void FromBase64_WithInvalidData_Throws() {
         Assert.Throws<FormatException>(() => Certificate.FromBase64("invalid"));
     }
+
+    [Fact]
+    public void FromBase64_StreamOverload_CreatesCertificate() {
+        var bytes = System.Text.Encoding.ASCII.GetBytes(Base64Cert);
+        using var stream = new System.IO.MemoryStream(bytes);
+
+        using var result = Certificate.FromBase64(stream);
+
+        Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", result.Thumbprint);
+    }
+
+    [Fact]
+    public void FromBase64_StreamOverload_ReportsProgress() {
+        var bytes = System.Text.Encoding.ASCII.GetBytes(Base64Cert);
+        using var stream = new System.IO.MemoryStream(bytes);
+        var progress = new TestProgress();
+
+        using var _ = Certificate.FromBase64(stream, progress);
+
+        Assert.Equal(1d, progress.Value, 3);
+    }
+
+    private sealed class TestProgress : IProgress<double> {
+        public double Value { get; private set; }
+        public void Report(double value) => Value = value;
+    }
 }
