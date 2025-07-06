@@ -36,7 +36,7 @@
         <Delete Files="$(OutDir)System.Management.Automation.dll"
             Condition="Exists('$(OutDir)System.Management.Automation.dll')" />
         <Delete Files="$(OutDir)System.Management.dll"
-            Condition="Exists('$(OutDir)System.Management.Automation.dll')" />
+            Condition="Exists('$(OutDir)System.Management.dll')" />
     </Target>
 
     <PropertyGroup>
