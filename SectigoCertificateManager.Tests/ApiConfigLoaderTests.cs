@@ -85,4 +85,12 @@ public sealed class ApiConfigLoaderTests {
 
         Directory.Delete(tempDir, true);
     }
+
+    [Fact]
+    public void Load_WithMissingFile_Throws() {
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "missing.json");
+
+        var ex = Assert.Throws<FileNotFoundException>(() => ApiConfigLoader.Load(path));
+        Assert.Contains(path, ex.Message);
+    }
 }
