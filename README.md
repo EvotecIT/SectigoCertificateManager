@@ -68,6 +68,8 @@ Get-SectigoProfile -BaseUrl "https://example.com" -Username "user" -Password "pa
 New-SectigoOrder -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CommonName "example.com" -ProfileId 1 -SubjectAlternativeNames "www.example.com","admin.example.com"
 
 Get-SectigoOrders -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1"
+
+Update-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123 -Csr "<csr>" -DcvMode "EMAIL" -DcvEmail "admin@example.com"
 ```
 
 Use `-SubjectAlternativeNames` to specify multiple SAN values when placing an order.
