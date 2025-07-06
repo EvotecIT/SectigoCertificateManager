@@ -41,12 +41,18 @@ public sealed class CertificatesClientTests {
         var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
-        var request = new CertificateSearchRequest { Size = 5, CommonName = "test", Status = CertificateStatus.Issued };
+        var request = new CertificateSearchRequest {
+            Size = 5,
+            CommonName = "test",
+            Status = CertificateStatus.Issued,
+            DateFrom = new DateTime(2023, 1, 1),
+            DateTo = new DateTime(2023, 1, 31)
+        };
         var result = await certificates.SearchAsync(request);
 
         Assert.NotNull(handler.Request);
         var actualRequest = handler.Request!;
-        Assert.Equal("https://example.com/v1/certificate?size=5&commonName=test&status=Issued", actualRequest.RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/certificate?size=5&commonName=test&status=Issued&dateFrom=2023-01-01&dateTo=2023-01-31", actualRequest.RequestUri!.ToString());
         Assert.NotNull(result);
         var actualResult = result!;
         Assert.Single(actualResult.Certificates);
@@ -163,11 +169,13 @@ public sealed class CertificatesClientTests {
             Status = CertificateStatus.Issued,
             SslTypeId = 2,
             Issuer = "A&B",
-            KeyAlgorithm = "RSA/DSA"
+            KeyAlgorithm = "RSA/DSA",
+            DateFrom = new DateTime(2023, 7, 1),
+            DateTo = new DateTime(2023, 7, 31)
         };
         await certificates.SearchAsync(request);
 
         Assert.NotNull(handler.Request);
-        Assert.Equal("https://example.com/v1/certificate?size=10&position=5&commonName=te%20st&status=Issued&sslTypeId=2&issuer=A%26B&keyAlgorithm=RSA%2FDSA", handler.Request!.RequestUri!.AbsoluteUri);
+        Assert.Equal("https://example.com/v1/certificate?size=10&position=5&commonName=te%20st&status=Issued&sslTypeId=2&issuer=A%26B&keyAlgorithm=RSA%2FDSA&dateFrom=2023-07-01&dateTo=2023-07-31", handler.Request!.RequestUri!.AbsoluteUri);
     }
 }
