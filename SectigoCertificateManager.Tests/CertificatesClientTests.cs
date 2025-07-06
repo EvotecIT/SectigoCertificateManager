@@ -170,4 +170,31 @@ public sealed class CertificatesClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/certificate?size=10&position=5&commonName=te%20st&status=Issued&sslTypeId=2&issuer=A%26B&keyAlgorithm=RSA%2FDSA", handler.Request!.RequestUri!.AbsoluteUri);
     }
+
+    [Fact]
+    public async Task RevokeAsync_NullRequest_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.RevokeAsync(null!));
+    }
+
+    [Fact]
+    public async Task RenewAsync_NullRequest_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(new RenewCertificateResponse { SslId = 1 }) });
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.RenewAsync(1, null!));
+    }
+
+    [Fact]
+    public async Task SearchAsync_NullRequest_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Array.Empty<Certificate>()) });
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.SearchAsync(null!));
+    }
 }

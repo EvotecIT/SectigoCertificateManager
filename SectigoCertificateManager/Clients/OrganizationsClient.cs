@@ -38,6 +38,10 @@ public sealed class OrganizationsClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The identifier of the created organization.</returns>
     public async Task<int> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
         var response = await _client.PostAsync("v1/organization", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var location = response.Headers.Location;
         if (location is not null) {
