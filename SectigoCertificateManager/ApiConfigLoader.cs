@@ -58,6 +58,10 @@ public static class ApiConfigLoader {
             }
         }
 
+        if (!File.Exists(path!)) {
+            throw new FileNotFoundException($"Configuration file not found: {path}", path);
+        }
+
         var json = File.ReadAllText(path!);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var model = JsonSerializer.Deserialize<FileModel>(json, options)
