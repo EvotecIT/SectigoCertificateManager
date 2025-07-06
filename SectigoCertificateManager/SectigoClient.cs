@@ -14,6 +14,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly HttpClient _client;
     private readonly Func<CancellationToken, Task<TokenInfo>>? _refreshToken;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
+    private readonly SemaphoreSlim? _throttle;
     private string? _token;
     private DateTimeOffset? _tokenExpiresAt;
     private bool _disposed;
@@ -55,6 +56,9 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         _refreshToken = config.RefreshToken;
         _token = config.Token;
         _tokenExpiresAt = config.TokenExpiresAt;
+        if (config.ConcurrencyLimit.HasValue) {
+            _throttle = new SemaphoreSlim(config.ConcurrencyLimit.Value, config.ConcurrencyLimit.Value);
+        }
         ConfigureHeaders(config);
     }
 
@@ -66,9 +70,16 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     public async Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default) {
         ThrowIfDisposed();
         await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
-        var response = await _client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
-        await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
-        return response;
+        if (_throttle is not null) {
+            await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        try {
+            var response = await _client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+            return response;
+        } finally {
+            _throttle?.Release();
+        }
     }
 
     /// <summary>
@@ -80,9 +91,16 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default) {
         ThrowIfDisposed();
         await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
-        var response = await _client.PostAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
-        await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
-        return response;
+        if (_throttle is not null) {
+            await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        try {
+            var response = await _client.PostAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
+            await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+            return response;
+        } finally {
+            _throttle?.Release();
+        }
     }
 
     /// <summary>
@@ -94,9 +112,16 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default) {
         ThrowIfDisposed();
         await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
-        var response = await _client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
-        await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
-        return response;
+        if (_throttle is not null) {
+            await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        try {
+            var response = await _client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
+            await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+            return response;
+        } finally {
+            _throttle?.Release();
+        }
     }
 
     /// <summary>
@@ -107,9 +132,16 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     public async Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default) {
         ThrowIfDisposed();
         await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
-        var response = await _client.DeleteAsync(requestUri, cancellationToken).ConfigureAwait(false);
-        await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
-        return response;
+        if (_throttle is not null) {
+            await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        try {
+            var response = await _client.DeleteAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+            return response;
+        } finally {
+            _throttle?.Release();
+        }
     }
 
     private void ConfigureHeaders(ApiConfig cfg) {

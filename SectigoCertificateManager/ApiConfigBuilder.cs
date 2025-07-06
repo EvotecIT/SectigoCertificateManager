@@ -20,6 +20,7 @@ public sealed class ApiConfigBuilder {
     private ApiVersion _apiVersion = ApiVersion.V25_6;
     private X509Certificate2? _clientCertificate;
     private Action<HttpClientHandler>? _configureHandler;
+    private int? _concurrencyLimit;
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
@@ -94,6 +95,17 @@ public sealed class ApiConfigBuilder {
         return this;
     }
 
+    /// <summary>Limits the number of concurrent HTTP requests.</summary>
+    /// <param name="limit">Maximum number of simultaneous requests.</param>
+    public ApiConfigBuilder WithConcurrencyLimit(int limit) {
+        if (limit <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(limit));
+        }
+
+        _concurrencyLimit = limit;
+        return this;
+    }
+
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build() {
         if (string.IsNullOrWhiteSpace(_baseUrl)) {
@@ -131,6 +143,7 @@ public sealed class ApiConfigBuilder {
             _configureHandler,
             _token,
             _tokenExpiresAt,
-            _refreshToken);
+            _refreshToken,
+            _concurrencyLimit);
     }
 }
