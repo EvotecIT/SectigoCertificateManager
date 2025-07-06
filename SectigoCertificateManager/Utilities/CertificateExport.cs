@@ -36,7 +36,9 @@ public static class CertificateExport {
         var bytes = password is null
             ? certificate.Export(X509ContentType.Pfx)
             : certificate.Export(X509ContentType.Pfx, password);
-        File.WriteAllBytes(path, bytes);
+        using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None)) {
+            stream.Write(bytes, 0, bytes.Length);
+        }
 #if NET6_0_OR_GREATER
         CryptographicOperations.ZeroMemory(bytes);
 #else
@@ -55,7 +57,9 @@ public static class CertificateExport {
         var bytes = password is null
             ? certificate.Export(X509ContentType.Pfx)
             : certificate.Export(X509ContentType.Pfx, password);
-        File.WriteAllBytes(path, bytes);
+        using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None)) {
+            stream.Write(bytes, 0, bytes.Length);
+        }
 #if NET6_0_OR_GREATER
         CryptographicOperations.ZeroMemory(bytes);
 #else
