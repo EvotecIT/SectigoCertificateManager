@@ -82,7 +82,14 @@ public sealed class ApiConfigBuilderTests {
     [Fact]
     public void WithHttpClientHandler_ThrowsForNullDelegate() {
         var builder = new ApiConfigBuilder();
-
         Assert.Throws<ArgumentNullException>(() => builder.WithHttpClientHandler(null!));
+    }
+
+    [Fact]
+    public void WithHttpClientHandler_ThrowsWithCorrectParameterName() {
+        var builder = new ApiConfigBuilder();
+
+        var ex = Assert.Throws<ArgumentNullException>(() => builder.WithHttpClientHandler(null!));
+        Assert.Equal("configure", ex.ParamName);
     }
 }
