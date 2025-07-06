@@ -78,7 +78,16 @@ public sealed class Certificate {
             throw new ArgumentException("Value cannot be null or empty.", nameof(data));
         }
 
-        var bytes = Convert.FromBase64String(data);
+        byte[] bytes;
+        try {
+            bytes = Convert.FromBase64String(data);
+        } catch (FormatException) {
+            throw new ValidationException(new ApiError {
+                Code = -1,
+                Description = "Certificate data is not valid Base64."
+            });
+        }
+
         return new X509Certificate2(bytes);
     }
 }
