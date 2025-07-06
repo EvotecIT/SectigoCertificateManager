@@ -2,8 +2,10 @@ namespace SectigoCertificateManager.Models;
 
 using SectigoCertificateManager;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System;
+using System.Text;
 
 /// <summary>
 /// Represents a certificate returned by the Sectigo API.
@@ -80,5 +82,33 @@ public sealed class Certificate {
 
         var bytes = Convert.FromBase64String(data);
         return new X509Certificate2(bytes);
+    }
+
+    /// <summary>
+    /// Creates an <see cref="X509Certificate2"/> from a stream containing base64 encoded data.
+    /// </summary>
+    /// <param name="stream">Stream providing base64 encoded certificate bytes.</param>
+    /// <param name="progress">Optional progress reporter.</param>
+    public static X509Certificate2 FromBase64(Stream stream, IProgress<double>? progress = null) {
+        if (stream is null) {
+            throw new ArgumentNullException(nameof(stream));
+        }
+
+        using var reader = new StreamReader(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
+        var builder = new StringBuilder();
+        var buffer = new char[4096];
+        long read = 0;
+        long total = stream.CanSeek ? stream.Length : -1;
+
+        int count;
+        while ((count = reader.Read(buffer, 0, buffer.Length)) > 0) {
+            builder.Append(buffer, 0, count);
+            read += count;
+            if (progress is not null && total > 0) {
+                progress.Report((double)read / total);
+            }
+        }
+
+        return FromBase64(builder.ToString());
     }
 }
