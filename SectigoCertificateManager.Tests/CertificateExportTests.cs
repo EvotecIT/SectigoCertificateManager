@@ -35,6 +35,22 @@ public sealed class CertificateExportTests {
         }
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void SavePem_InvalidPath_Throws(string path) {
+        using var cert = CreateCertificate();
+        Assert.Throws<ArgumentException>(() => CertificateExport.SavePem(cert, path!));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void SaveDer_InvalidPath_Throws(string path) {
+        using var cert = CreateCertificate();
+        Assert.Throws<ArgumentException>(() => CertificateExport.SaveDer(cert, path!));
+    }
+
     [Fact]
     public void SaveDer_WritesFile() {
         using var cert = CreateCertificate();
@@ -61,6 +77,14 @@ public sealed class CertificateExportTests {
         } finally {
             File.Delete(path);
         }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void SavePfx_InvalidPath_Throws(string path) {
+        using var cert = CreateCertificate();
+        Assert.Throws<ArgumentException>(() => CertificateExport.SavePfx(cert, path!, null));
     }
 
     [Fact]
