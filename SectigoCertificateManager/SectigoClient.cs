@@ -12,12 +12,27 @@ using System.Threading.Tasks;
 /// </summary>
 public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly HttpClient _client;
+    private readonly Func<CancellationToken, Task<TokenInfo>>? _refreshToken;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
+    private string? _token;
+    private DateTimeOffset? _tokenExpiresAt;
     private bool _disposed;
+
+    private void ThrowIfDisposed() {
+        if (_disposed) {
+            throw new ObjectDisposedException(nameof(SectigoClient));
+        }
+    }
 
     /// <summary>
     /// Gets the underlying <see cref="HttpClient"/> instance used for requests.
     /// </summary>
-    public HttpClient HttpClient => _client;
+    public HttpClient HttpClient {
+        get {
+            ThrowIfDisposed();
+            return _client;
+        }
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SectigoClient"/> class.
@@ -37,6 +52,9 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
 
         _client = httpClient;
         _client.BaseAddress = new Uri(config.BaseUrl);
+        _refreshToken = config.RefreshToken;
+        _token = config.Token;
+        _tokenExpiresAt = config.TokenExpiresAt;
         ConfigureHeaders(config);
     }
 
@@ -46,6 +64,8 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     /// <param name="requestUri">Relative request URI.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default) {
+        ThrowIfDisposed();
+        await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
         var response = await _client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
         return response;
@@ -58,6 +78,8 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     /// <param name="content">HTTP content to send.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default) {
+        ThrowIfDisposed();
+        await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
         var response = await _client.PostAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
         return response;
@@ -70,6 +92,8 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     /// <param name="content">HTTP content to send.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default) {
+        ThrowIfDisposed();
+        await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
         var response = await _client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
         return response;
@@ -81,6 +105,8 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     /// <param name="requestUri">Relative request URI.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default) {
+        ThrowIfDisposed();
+        await EnsureValidTokenAsync(cancellationToken).ConfigureAwait(false);
         var response = await _client.DeleteAsync(requestUri, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
         return response;
@@ -96,6 +122,32 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         } else {
             _client.DefaultRequestHeaders.Add("login", cfg.Username);
             _client.DefaultRequestHeaders.Add("password", cfg.Password);
+        }
+    }
+
+    private async Task EnsureValidTokenAsync(CancellationToken cancellationToken) {
+        if (_refreshToken is null) {
+            return;
+        }
+
+        if (_token is not null && _tokenExpiresAt is not null && _tokenExpiresAt > DateTimeOffset.UtcNow) {
+            return;
+        }
+
+        await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try {
+            if (_token is not null && _tokenExpiresAt is not null && _tokenExpiresAt > DateTimeOffset.UtcNow) {
+                return;
+            }
+
+            var info = await _refreshToken(cancellationToken).ConfigureAwait(false);
+            _token = info.Token;
+            _tokenExpiresAt = info.ExpiresAt;
+            _client.DefaultRequestHeaders.Remove("login");
+            _client.DefaultRequestHeaders.Remove("password");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", info.Token);
+        } finally {
+            _refreshLock.Release();
         }
     }
 
