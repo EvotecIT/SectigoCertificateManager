@@ -35,11 +35,14 @@ public sealed class GetSectigoOrdersCommand : PSCmdlet {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var orders = new OrdersClient(client);
-        var result = orders.ListOrdersAsync().GetAwaiter().GetResult();
-        if (result is not null) {
-            foreach (var order in result) {
-                WriteObject(order);
+        var enumerator = orders.EnumerateOrdersAsync().GetAsyncEnumerator();
+
+        try {
+            while (enumerator.MoveNextAsync().GetAwaiter().GetResult()) {
+                WriteObject(enumerator.Current);
             }
+        } finally {
+            enumerator.DisposeAsync().GetAwaiter().GetResult();
         }
     }
 }
