@@ -4,6 +4,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Unit tests for <see cref="ApiConfigBuilder"/>.
+/// </summary>
 public sealed class ApiConfigBuilderTests {
     [Fact]
     public void BuildThrowsWithoutBaseUrl() {
