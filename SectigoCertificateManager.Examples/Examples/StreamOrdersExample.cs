@@ -7,6 +7,9 @@ namespace SectigoCertificateManager.Examples.Examples;
 /// Demonstrates streaming orders using <see cref="OrdersClient"/>.
 /// </summary>
 public static class StreamOrdersExample {
+    /// <summary>
+    /// Executes the example that streams order records.
+    /// </summary>
     public static async Task RunAsync() {
         var config = new ApiConfigBuilder()
             .WithBaseUrl("https://cert-manager.com/api")

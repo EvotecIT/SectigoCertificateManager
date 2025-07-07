@@ -11,6 +11,9 @@ namespace SectigoCertificateManager.Examples.Examples;
 /// and create API credentials. Use the generated login and password below.
 /// </summary>
 public static class BasicApiExample {
+    /// <summary>
+    /// Executes the example showing basic API usage.
+    /// </summary>
     public static async Task RunAsync() {
         var config = new ApiConfigBuilder()
             .WithBaseUrl("https://cert-manager.com/api")

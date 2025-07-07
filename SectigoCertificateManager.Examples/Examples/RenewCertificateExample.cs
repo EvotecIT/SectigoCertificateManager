@@ -8,6 +8,9 @@ namespace SectigoCertificateManager.Examples.Examples;
 /// Demonstrates renewing a certificate using the API.
 /// </summary>
 public static class RenewCertificateExample {
+    /// <summary>
+    /// Executes the example that renews an existing certificate.
+    /// </summary>
     public static async Task RunAsync() {
         var config = new ApiConfigBuilder()
             .WithBaseUrl("https://cert-manager.com/api")
