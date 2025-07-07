@@ -5,7 +5,11 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Unit tests for <see cref="ApiConfigLoader"/>.
+/// </summary>
 public sealed class ApiConfigLoaderTests {
+    /// <summary>Loads configuration from file.</summary>
     [Fact]
     public void Load_FromFile() {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());

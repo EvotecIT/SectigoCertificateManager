@@ -6,6 +6,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Tests for <see cref="CertificateExport"/> helpers.
+/// </summary>
 public sealed class CertificateExportTests {
     private static X509Certificate2 CreateCertificate() {
         using var key = RSA.Create(2048);
@@ -21,6 +24,7 @@ public sealed class CertificateExportTests {
         return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
     }
 
+    /// <summary>Exports certificate as PEM file.</summary>
     [Fact]
     public void SavePem_WritesFile() {
         using var cert = CreateCertificate();
