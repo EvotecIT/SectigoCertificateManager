@@ -4,7 +4,11 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Tests for JSON serialization helpers.
+/// </summary>
 public sealed class SerializationTests {
+    /// <summary>Ensures certificate JSON deserializes.</summary>
     [Fact]
     public void Deserialize_Certificate_Succeeds() {
         const string json = "{\"id\":1}";

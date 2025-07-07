@@ -33,6 +33,7 @@ public sealed class CertificatesClientTests {
         }
     }
 
+    /// <summary>Parses search results.</summary>
     [Fact]
     public async Task SearchAsync_BuildsQueryAndParsesResponse() {
         var certificate = new Certificate { Id = 1, CommonName = "test" };

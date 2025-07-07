@@ -12,12 +12,16 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Integration tests using a mock API server.
+/// </summary>
 public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
     private WireMockServer _server = null!;
     private CertificatesClient _certificates = null!;
     private OrdersClient _orders = null!;
     private ProfilesClient _profiles = null!;
 
+    /// <summary>Sets up the mock server.</summary>
     public Task InitializeAsync() {
         var success = false;
         _server = WireMockServer.Start();
