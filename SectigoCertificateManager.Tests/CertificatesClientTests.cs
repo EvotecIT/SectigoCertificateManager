@@ -13,6 +13,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Unit tests for <see cref="CertificatesClient"/>.
+/// </summary>
 public sealed class CertificatesClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;

@@ -5,33 +5,45 @@ using System.Management.Automation;
 
 namespace SectigoCertificateManager.PowerShell;
 
+/// <summary>
+/// Updates an existing certificate using the renew endpoint.
+/// </summary>
 [Cmdlet(VerbsData.Update, "SectigoCertificate")]
 [OutputType(typeof(int))]
 public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
+    /// <summary>The API base URL.</summary>
     [Parameter(Mandatory = true)]
     public string BaseUrl { get; set; } = string.Empty;
 
+    /// <summary>The user name for authentication.</summary>
     [Parameter(Mandatory = true)]
     public string Username { get; set; } = string.Empty;
 
+    /// <summary>The password for authentication.</summary>
     [Parameter(Mandatory = true)]
     public string Password { get; set; } = string.Empty;
 
+    /// <summary>The customer URI assigned by Sectigo.</summary>
     [Parameter(Mandatory = true)]
     public string CustomerUri { get; set; } = string.Empty;
 
+    /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
 
+    /// <summary>The identifier of the certificate to renew.</summary>
     [Parameter(Mandatory = true, Position = 0)]
     public int CertificateId { get; set; }
 
+    /// <summary>The certificate signing request.</summary>
     [Parameter(Mandatory = true)]
     public string Csr { get; set; } = string.Empty;
 
+    /// <summary>The domain control validation mode.</summary>
     [Parameter(Mandatory = true)]
     public string DcvMode { get; set; } = string.Empty;
 
+    /// <summary>The domain control validation email address.</summary>
     [Parameter]
     public string? DcvEmail { get; set; }
 
