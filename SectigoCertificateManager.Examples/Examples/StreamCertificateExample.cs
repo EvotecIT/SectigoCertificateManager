@@ -8,6 +8,9 @@ namespace SectigoCertificateManager.Examples.Examples;
 /// Demonstrates loading a certificate from a stream with progress reporting.
 /// </summary>
 public static class StreamCertificateExample {
+    /// <summary>
+    /// Executes the example demonstrating certificate loading from a stream.
+    /// </summary>
     public static void Run() {
         const string base64 = "<base64 certificate>";
         using var stream = new MemoryStream(Encoding.ASCII.GetBytes(base64));

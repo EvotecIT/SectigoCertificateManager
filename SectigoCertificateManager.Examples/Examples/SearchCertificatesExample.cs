@@ -5,6 +5,9 @@ using SectigoCertificateManager.Requests;
 namespace SectigoCertificateManager.Examples.Examples;
 
 public static class SearchCertificatesExample {
+    /// <summary>
+    /// Executes the example demonstrating certificate search.
+    /// </summary>
     public static async Task RunAsync() {
         var config = new ApiConfigBuilder()
             .WithBaseUrl("https://cert-manager.com/api")
