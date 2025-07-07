@@ -27,6 +27,7 @@ public sealed class OrdersClientTests {
         }
     }
 
+    /// <summary>Lists certificate orders.</summary>
     [Fact]
     public async Task ListOrdersAsync_RequestsOrders() {
         var order = new Order { Id = 1, OrderNumber = 10, BackendCertId = "a" };

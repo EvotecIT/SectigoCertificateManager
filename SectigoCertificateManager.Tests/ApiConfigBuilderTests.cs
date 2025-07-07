@@ -8,6 +8,7 @@ namespace SectigoCertificateManager.Tests;
 /// Unit tests for <see cref="ApiConfigBuilder"/>.
 /// </summary>
 public sealed class ApiConfigBuilderTests {
+    /// <summary>Fails when base URL is missing.</summary>
     [Fact]
     public void BuildThrowsWithoutBaseUrl() {
         var builder = new ApiConfigBuilder()
