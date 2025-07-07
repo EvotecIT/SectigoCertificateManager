@@ -9,6 +9,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Unit tests for <see cref="SectigoClient"/>.
+/// </summary>
 public sealed class SectigoClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         public HttpRequestMessage? Request { get; private set; }
@@ -31,6 +34,7 @@ public sealed class SectigoClientTests {
         }
     }
 
+    /// <summary>Uses credentials to add HTTP headers.</summary>
     [Fact]
     public async Task AddsHeadersAndUsesBaseUrl_WithCredentials() {
         var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4);

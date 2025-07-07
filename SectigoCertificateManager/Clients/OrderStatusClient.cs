@@ -30,6 +30,7 @@ public sealed class OrderStatusClient {
     }
 
     private sealed class StatusResponse {
+        /// <summary>Gets or sets the order status.</summary>
         public OrderStatus Status { get; set; }
     }
 }

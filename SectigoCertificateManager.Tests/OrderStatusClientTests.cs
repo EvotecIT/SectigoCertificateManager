@@ -9,6 +9,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Unit tests for <see cref="OrderStatusClient"/>.
+/// </summary>
 public sealed class OrderStatusClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
@@ -22,6 +25,7 @@ public sealed class OrderStatusClientTests {
         }
     }
 
+    /// <summary>Fetches order status.</summary>
     [Fact]
     public async Task GetStatusAsync_ReturnsOrderStatus() {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {

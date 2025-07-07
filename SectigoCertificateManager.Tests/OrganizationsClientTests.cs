@@ -11,6 +11,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Tests for <see cref="OrganizationsClient"/>.
+/// </summary>
 public sealed class OrganizationsClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
@@ -28,6 +31,7 @@ public sealed class OrganizationsClientTests {
         }
     }
 
+    /// <summary>Retrieves an organization.</summary>
     [Fact]
     public async Task GetAsync_ReturnsOrganization() {
         var org = new Organization { Id = 3, Name = "org" };

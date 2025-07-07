@@ -5,6 +5,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Tests for <see cref="RenewCertificateRequest"/> helpers.
+/// </summary>
 public sealed class RenewCertificateRequestTests {
     private const string Base64Csr = "VGVzdENzUg=="; // "TestCsr" in base64
 
@@ -13,6 +16,7 @@ public sealed class RenewCertificateRequestTests {
         public void Report(double value) => Value = value;
     }
 
+    /// <summary>Reads CSR from a stream.</summary>
     [Fact]
     public void SetCsr_FromStream_SetsProperty() {
         var bytes = Encoding.ASCII.GetBytes(Base64Csr);

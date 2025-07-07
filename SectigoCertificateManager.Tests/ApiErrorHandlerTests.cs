@@ -8,6 +8,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Unit tests for <see cref="ApiErrorHandler"/>.
+/// </summary>
 public sealed class ApiErrorHandlerTests {
     private sealed class RespondingHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
@@ -26,6 +29,7 @@ public sealed class ApiErrorHandlerTests {
         return new SectigoClient(config, new HttpClient(handler));
     }
 
+    /// <summary>Handles 401 responses correctly.</summary>
     [Fact]
     public async Task ThrowsAuthenticationException() {
         var response = new HttpResponseMessage(HttpStatusCode.Unauthorized) {

@@ -11,6 +11,9 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
+/// <summary>
+/// Tests for <see cref="ProfilesClient"/>.
+/// </summary>
 public sealed class ProfilesClientTests {
     private sealed class StubClient : ISectigoClient {
         private readonly HttpResponseMessage _response;
@@ -34,6 +37,7 @@ public sealed class ProfilesClientTests {
             => throw new System.NotImplementedException();
     }
 
+    /// <summary>Gets a profile by identifier.</summary>
     [Fact]
     public async Task GetAsync_ReturnsProfile() {
         var profile = new Profile {
