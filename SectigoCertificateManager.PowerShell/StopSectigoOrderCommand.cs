@@ -1,5 +1,6 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
+using System;
 using System.Management.Automation;
 
 namespace SectigoCertificateManager.PowerShell;
@@ -35,6 +36,12 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
     /// <summary>Cancels an order.</summary>
     /// <para>Builds an API client and calls the cancel endpoint.</para>
     protected override void ProcessRecord() {
+        if (OrderId <= 0) {
+            var ex = new ArgumentOutOfRangeException(nameof(OrderId));
+            var record = new ErrorRecord(ex, "InvalidOrderId", ErrorCategory.InvalidArgument, OrderId);
+            ThrowTerminatingError(record);
+        }
+
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var orders = new OrdersClient(client);
