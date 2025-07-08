@@ -4,6 +4,7 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System.Net.Http.Json;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 
@@ -93,6 +94,35 @@ public sealed class CertificatesClient {
         var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken);
         var items = await response.Content.ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken);
         return items is null ? null : new CertificateResponse { Certificates = items };
+    }
+
+    /// <summary>
+    /// Downloads an issued certificate and saves it to disk.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to download.</param>
+    /// <param name="path">Destination file path.</param>
+    /// <param name="format">Certificate format to request. Defaults to <c>base64</c>.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task DownloadAsync(
+        int certificateId,
+        string path,
+        string format = "base64",
+        CancellationToken cancellationToken = default) {
+        if (string.IsNullOrEmpty(path)) {
+            throw new ArgumentException("Path cannot be null or empty.", nameof(path));
+        }
+
+        var url = $"ssl/v1/collect/{certificateId}?format={Uri.EscapeDataString(format)}";
+        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        using (stream) {
+            using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+#if NETSTANDARD2_0 || NET472
+            await stream.CopyToAsync(file).ConfigureAwait(false);
+#else
+            await stream.CopyToAsync(file, cancellationToken).ConfigureAwait(false);
+#endif
+        }
     }
 
     private static string BuildQuery(CertificateSearchRequest request) {

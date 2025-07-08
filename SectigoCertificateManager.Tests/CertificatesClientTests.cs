@@ -4,6 +4,7 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -199,6 +200,39 @@ public sealed class CertificatesClientTests {
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.RenewAsync(1, null!));
+    }
+
+    [Fact]
+    public async Task DownloadAsync_WritesFile() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("DATA")
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            await certificates.DownloadAsync(2, path);
+            Assert.NotNull(handler.Request);
+            Assert.Equal("https://example.com/ssl/v1/collect/2?format=base64", handler.Request!.RequestUri!.ToString());
+            Assert.True(File.Exists(path));
+            Assert.Equal("DATA", File.ReadAllText(path));
+        } finally {
+            File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public async Task DownloadAsync_InvalidPath_Throws(string path) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => certificates.DownloadAsync(1, path!));
     }
 
     [Fact]
