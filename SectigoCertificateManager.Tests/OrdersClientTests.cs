@@ -62,6 +62,28 @@ public sealed class OrdersClientTests {
         Assert.Equal("https://example.com/v1/order/5/cancel", handler.Request.RequestUri!.ToString());
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task GetAsync_InvalidOrderId_Throws(int orderId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var orders = new OrdersClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.GetAsync(orderId));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-3)]
+    public async Task CancelAsync_InvalidOrderId_Throws(int orderId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var orders = new OrdersClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.CancelAsync(orderId));
+    }
+
     private sealed class SequenceHandler : HttpMessageHandler {
         private readonly Queue<HttpResponseMessage> _responses;
         public List<HttpRequestMessage> Requests { get; } = new();
