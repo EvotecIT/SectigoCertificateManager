@@ -4,6 +4,7 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Responses;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Runtime.CompilerServices;
 
@@ -84,7 +85,8 @@ public sealed class OrdersClient {
     /// <param name="orderId">Identifier of the order to cancel.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task CancelAsync(int orderId, CancellationToken cancellationToken = default) {
-        var response = await _client.PostAsync($"v1/order/{orderId}/cancel", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
+        var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync($"v1/order/{orderId}/cancel", content, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 }

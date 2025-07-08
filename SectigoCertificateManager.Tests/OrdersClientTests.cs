@@ -60,6 +60,7 @@ public sealed class OrdersClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal("https://example.com/v1/order/5/cancel", handler.Request.RequestUri!.ToString());
+        Assert.Equal("application/json; charset=utf-8", handler.Request.Content!.Headers.ContentType!.ToString());
     }
 
     private sealed class SequenceHandler : HttpMessageHandler {
