@@ -55,6 +55,17 @@ public sealed class CertificateTests {
         Assert.Equal(1d, progress.Value, 3);
     }
 
+    [Fact]
+    public void FromBase64_StreamPrePositioned_CreatesCertificate() {
+        var bytes = System.Text.Encoding.ASCII.GetBytes(Base64Cert);
+        using var stream = new System.IO.MemoryStream(bytes);
+        stream.Position = 10;
+
+        using var result = Certificate.FromBase64(stream);
+
+        Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", result.Thumbprint);
+    }
+
     private sealed class TestProgress : IProgress<double> {
         public double Value { get; private set; }
         public void Report(double value) => Value = value;
