@@ -1,0 +1,11 @@
+Describe "Stop-SectigoOrder" {
+    BeforeAll {
+        dotnet build "$PSScriptRoot/../../SectigoCertificateManager.PowerShell" -c Release | Out-Null
+        $dll = Join-Path $PSScriptRoot '../../SectigoCertificateManager.PowerShell/bin/Release/net8.0/SectigoCertificateManager.PowerShell.dll'
+        Import-Module $dll
+    }
+
+    It "throws when OrderId is less than or equal to zero" {
+        { Stop-SectigoOrder -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -OrderId 0 } | Should -Throw
+    }
+}
