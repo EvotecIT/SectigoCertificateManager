@@ -93,4 +93,42 @@ public sealed class OrganizationsClientTests {
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => organizations.CreateAsync(null!));
     }
+
+    [Fact]
+    public async Task ListOrganizationsAsync_ReturnsOrganizations() {
+        var org = new Organization { Id = 2, Name = "Test" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { org })
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var organizations = new OrganizationsClient(client);
+
+        var result = await organizations.ListOrganizationsAsync();
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/organization", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal(2, result[0].Id);
+    }
+
+    [Fact]
+    public async Task ListOrganizationsAsync_ReturnsEmpty_WhenResponseNull() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create<object?>(null)
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var organizations = new OrganizationsClient(client);
+
+        var result = await organizations.ListOrganizationsAsync();
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/organization", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
 }
