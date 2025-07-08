@@ -42,7 +42,7 @@ public sealed class CreateOrganizationRequest {
     public string? City { get; set; }
 
     /// <summary>Gets or sets the state or province.</summary>
-    public string? StateProvince { get; set; }
+    public string? StateOrProvince { get; set; }
 
     /// <summary>Gets or sets the postal code.</summary>
     public string? PostalCode { get; set; }
