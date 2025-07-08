@@ -103,6 +103,10 @@ public sealed class Certificate {
             throw new ArgumentNullException(nameof(stream));
         }
 
+        if (stream.CanSeek) {
+            stream.Seek(0, SeekOrigin.Begin);
+        }
+
         using var reader = new StreamReader(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
         var builder = new StringBuilder();
         var buffer = new char[4096];
