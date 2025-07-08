@@ -56,6 +56,7 @@ public sealed class ApiConfigLoaderTests {
         var config = ApiConfigLoader.Load();
 
         Assert.Equal("https://example.com", config.BaseUrl);
+        Assert.Equal(ApiVersion.V25_6, config.ApiVersion);
 
         Environment.SetEnvironmentVariable("SECTIGO_CREDENTIALS_PATH", null);
         Directory.Delete(tempDir, true);
@@ -70,6 +71,7 @@ public sealed class ApiConfigLoaderTests {
         var config = ApiConfigLoader.Load();
 
         Assert.Equal("tok", config.Token);
+        Assert.Equal(ApiVersion.V25_6, config.ApiVersion);
 
         Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", null);
         Environment.SetEnvironmentVariable("SECTIGO_TOKEN", null);
@@ -86,6 +88,7 @@ public sealed class ApiConfigLoaderTests {
         var config = ApiConfigLoader.Load(path);
 
         Assert.Equal("tok", config.Token);
+        Assert.Equal(ApiVersion.V25_6, config.ApiVersion);
 
         Directory.Delete(tempDir, true);
     }

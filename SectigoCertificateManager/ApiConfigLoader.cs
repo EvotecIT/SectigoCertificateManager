@@ -25,7 +25,7 @@ public static class ApiConfigLoader {
         public string CustomerUri { get; set; } = string.Empty;
 
         /// <summary>Gets or sets the API version string.</summary>
-        public string ApiVersion { get; set; } = "V25_4";
+        public string ApiVersion { get; set; } = "V25_6";
     }
 
     /// <summary>
@@ -70,5 +70,5 @@ public static class ApiConfigLoader {
     }
 
     private static ApiVersion ParseVersion(string? value)
-        => Enum.TryParse<ApiVersion>(value, ignoreCase: true, out var v) ? v : ApiVersion.V25_4;
+        => Enum.TryParse<ApiVersion>(value, ignoreCase: true, out var v) ? v : ApiVersion.V25_6;
 }
