@@ -7,6 +7,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Cancels an order.</summary>
 /// <para>Creates an API client and calls the cancel endpoint.</para>
 [Cmdlet(VerbsLifecycle.Stop, "SectigoOrder")]
+[OutputType(typeof(void))]
 public sealed class StopSectigoOrderCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
     [Parameter(Mandatory = true)]
