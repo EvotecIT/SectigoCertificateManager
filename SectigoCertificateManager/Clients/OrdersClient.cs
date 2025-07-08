@@ -28,6 +28,10 @@ public sealed class OrdersClient {
     /// <param name="orderId">Identifier of the order to retrieve.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Order?> GetAsync(int orderId, CancellationToken cancellationToken = default) {
+        if (orderId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(orderId));
+        }
+
         var response = await _client.GetAsync($"v1/order/{orderId}", cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Order>(s_json, cancellationToken).ConfigureAwait(false);
     }
@@ -84,6 +88,10 @@ public sealed class OrdersClient {
     /// <param name="orderId">Identifier of the order to cancel.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task CancelAsync(int orderId, CancellationToken cancellationToken = default) {
+        if (orderId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(orderId));
+        }
+
         var response = await _client.PostAsync($"v1/order/{orderId}/cancel", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
