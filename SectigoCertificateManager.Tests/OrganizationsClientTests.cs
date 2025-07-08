@@ -60,13 +60,17 @@ public sealed class OrganizationsClientTests {
         var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var organizations = new OrganizationsClient(client);
 
-        var request = new CreateOrganizationRequest { Name = "org" };
+        var request = new CreateOrganizationRequest {
+            Name = "org",
+            StateOrProvince = "NC"
+        };
         var id = await organizations.CreateAsync(request);
 
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/organization", handler.Request!.RequestUri!.ToString());
         Assert.NotNull(handler.Body);
         Assert.Contains("\"name\":\"org\"", handler.Body);
+        Assert.Contains("\"stateOrProvince\":\"NC\"", handler.Body);
         Assert.Equal(10, id);
     }
 
