@@ -54,4 +54,16 @@ public sealed class OrganizationsClient {
 
         return 0;
     }
+
+    /// <summary>
+    /// Retrieves all organizations visible to the user.
+    /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<Organization>> ListOrganizationsAsync(CancellationToken cancellationToken = default) {
+        var response = await _client.GetAsync("v1/organization", cancellationToken).ConfigureAwait(false);
+        var organizations = await response.Content
+            .ReadFromJsonAsync<IReadOnlyList<Organization>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+        return organizations ?? Array.Empty<Organization>();
+    }
 }
