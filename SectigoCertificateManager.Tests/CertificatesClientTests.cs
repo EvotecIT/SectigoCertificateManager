@@ -238,7 +238,9 @@ public sealed class CertificatesClientTests {
                 await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.DownloadAsync(certificateId, path));
             }
         } finally {
-            File.Delete(path);
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
         }
     }
 

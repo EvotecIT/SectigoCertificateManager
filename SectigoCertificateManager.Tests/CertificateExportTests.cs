@@ -35,7 +35,9 @@ public sealed class CertificateExportTests {
             var content = File.ReadAllText(path);
             Assert.Contains("BEGIN CERTIFICATE", content);
         } finally {
-            File.Delete(path);
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
         }
     }
 
@@ -65,7 +67,9 @@ public sealed class CertificateExportTests {
             var bytes = File.ReadAllBytes(path);
             Assert.Equal(cert.RawData, bytes);
         } finally {
-            File.Delete(path);
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
         }
     }
 
@@ -79,7 +83,9 @@ public sealed class CertificateExportTests {
             using var loaded = new X509Certificate2(path, "pwd");
             Assert.Equal(cert.Thumbprint, loaded.Thumbprint);
         } finally {
-            File.Delete(path);
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
         }
     }
 
@@ -99,7 +105,9 @@ public sealed class CertificateExportTests {
             var buffer = CertificateExport.SavePfxForTest(cert, path, "pwd");
             Assert.All(buffer, b => Assert.Equal(0, b));
         } finally {
-            File.Delete(path);
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
         }
     }
 
@@ -140,7 +148,9 @@ public sealed class CertificateExportTests {
             Assert.Contains("BEGIN CERTIFICATE", content);
             Assert.Equal(2, content.Split("-----END CERTIFICATE-----").Length - 1);
         } finally {
-            File.Delete(path);
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
         }
     }
 }
