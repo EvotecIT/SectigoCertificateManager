@@ -36,7 +36,8 @@ public sealed class OrdersClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         var result = await orders.ListOrdersAsync();
@@ -52,7 +53,8 @@ public sealed class OrdersClientTests {
     public async Task CancelAsync_SendsPostRequest() {
         var response = new HttpResponseMessage(HttpStatusCode.NoContent);
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         await orders.CancelAsync(5);
@@ -67,7 +69,8 @@ public sealed class OrdersClientTests {
     [InlineData(-1)]
     public async Task GetAsync_InvalidOrderId_Throws(int orderId) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.GetAsync(orderId));
@@ -78,7 +81,8 @@ public sealed class OrdersClientTests {
     [InlineData(-3)]
     public async Task CancelAsync_InvalidOrderId_Throws(int orderId) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.CancelAsync(orderId));
@@ -107,7 +111,8 @@ public sealed class OrdersClientTests {
         };
 
         var handler = new SequenceHandler(responses);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         var results = new List<Order>();
