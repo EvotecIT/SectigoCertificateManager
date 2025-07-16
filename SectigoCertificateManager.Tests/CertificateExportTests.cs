@@ -1,7 +1,9 @@
 using SectigoCertificateManager.Utilities;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Xunit;
 
 namespace SectigoCertificateManager.Tests;
@@ -147,6 +149,88 @@ public sealed class CertificateExportTests {
             var content = File.ReadAllText(path);
             Assert.Contains("BEGIN CERTIFICATE", content);
             Assert.Equal(2, content.Split("-----END CERTIFICATE-----").Length - 1);
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
+    public void SavePem_UsesUtf8Encoding() {
+        using var cert = CreateCertificate();
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            CertificateExport.SavePem(cert, path);
+            var bytes = File.ReadAllBytes(path);
+            var preamble = Encoding.UTF8.GetPreamble();
+            Assert.True(bytes.Take(preamble.Length).SequenceEqual(preamble));
+            var text = Encoding.UTF8.GetString(bytes, preamble.Length, bytes.Length - preamble.Length);
+            var expected = new StringBuilder()
+                .AppendLine("-----BEGIN CERTIFICATE-----")
+                .AppendLine(Convert.ToBase64String(cert.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks))
+                .AppendLine("-----END CERTIFICATE-----")
+                .ToString();
+            Assert.Equal(expected, text);
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
+    public void SavePemChain_UsesUtf8Encoding() {
+        using var rootKey = RSA.Create(2048);
+#if NET472
+        var rootRequest = new CertificateRequest(
+            new X500DistinguishedName("CN=Root"),
+            rootKey,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+#else
+        var rootRequest = new CertificateRequest("CN=Root", rootKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#endif
+        rootRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+        var now = DateTimeOffset.UtcNow;
+        using var rootCert = rootRequest.CreateSelfSigned(now.AddDays(-1), now.AddDays(2));
+
+        using var leafKey = RSA.Create(2048);
+#if NET472
+        var leafRequest = new CertificateRequest(
+            new X500DistinguishedName("CN=Leaf"),
+            leafKey,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+#else
+        var leafRequest = new CertificateRequest("CN=Leaf", leafKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#endif
+        var serial = new byte[8];
+        RandomNumberGenerator.Fill(serial);
+        var leafCert = leafRequest.Create(rootCert, now.AddDays(-1), now.AddDays(1), serial);
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            CertificateExport.SavePemChain(leafCert, path, new[] { rootCert });
+            var bytes = File.ReadAllBytes(path);
+            var preamble = Encoding.UTF8.GetPreamble();
+            Assert.True(bytes.Take(preamble.Length).SequenceEqual(preamble));
+            var text = Encoding.UTF8.GetString(bytes, preamble.Length, bytes.Length - preamble.Length);
+
+            using var chain = new X509Chain();
+            chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+            chain.ChainPolicy.ExtraStore.Add(rootCert);
+            chain.Build(leafCert);
+
+            var builder = new StringBuilder();
+            foreach (var element in chain.ChainElements) {
+                builder.AppendLine("-----BEGIN CERTIFICATE-----");
+                builder.AppendLine(Convert.ToBase64String(element.Certificate.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks));
+                builder.AppendLine("-----END CERTIFICATE-----");
+            }
+
+            Assert.Equal(builder.ToString(), text);
         } finally {
             if (File.Exists(path)) {
                 File.Delete(path);
