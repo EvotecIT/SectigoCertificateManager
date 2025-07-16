@@ -134,7 +134,7 @@ public sealed class CertificatesClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/certificate", handler.Request!.RequestUri!.ToString());
     }
-  
+
     [Fact]
     public async Task RenewAsync_SendsRequestAndReturnsId() {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
@@ -227,7 +227,7 @@ public sealed class CertificatesClientTests {
     [Theory]
     [InlineData("")]
     [InlineData(null)]
-    public async Task DownloadAsync_InvalidPath_Throws(string path) {
+    public async Task DownloadAsync_InvalidPath_Throws(string? path) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
         var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
