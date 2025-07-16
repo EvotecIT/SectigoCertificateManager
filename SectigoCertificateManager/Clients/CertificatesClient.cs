@@ -54,6 +54,20 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
+    /// Retrieves revocation details for a certificate by identifier.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<CertificateRevocation?> GetRevocationAsync(int certificateId, CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var response = await _client.GetAsync($"v1/certificate/{certificateId}/revocation", cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<CertificateRevocation>(s_json, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Issues a new certificate.
     /// </summary>
     /// <param name="request">Payload describing the certificate to issue.</param>
