@@ -290,6 +290,29 @@ public sealed class CertificatesClientTests {
     }
 
     [Fact]
+    public async Task DownloadAsync_WithBaseUrlPath_UsesCorrectUri() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("DATA")
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/api", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            await certificates.DownloadAsync(2, path);
+            Assert.NotNull(handler.Request);
+            Assert.Equal("https://example.com/api/ssl/v1/collect/2?format=base64", handler.Request!.RequestUri!.ToString());
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
     public async Task GetStatusAsync_ReturnsStatus() {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(new { Status = "Issued" })
