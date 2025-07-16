@@ -42,11 +42,14 @@ public sealed class OrganizationsClient {
             throw new ArgumentNullException(nameof(request));
         }
 
-        var response = await _client.PostAsync("v1/organization", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        var response = await _client
+            .PostAsync("v1/organization", JsonContent.Create(request, options: s_json), cancellationToken)
+            .ConfigureAwait(false);
+
         var location = response.Headers.Location;
         if (location is not null) {
-            var path = location.AbsolutePath.TrimEnd('/');
-            var segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var url = location.ToString().Trim().TrimEnd('/');
+            var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
             if (segments.Length > 0 && int.TryParse(segments[segments.Length - 1], out var id)) {
                 return id;
             }

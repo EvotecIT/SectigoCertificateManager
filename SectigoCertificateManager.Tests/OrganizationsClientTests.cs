@@ -93,6 +93,22 @@ public sealed class OrganizationsClientTests {
     }
 
     [Fact]
+    public async Task CreateAsync_ParsesId_WhenLocationContainsWhitespace() {
+        var response = new HttpResponseMessage(HttpStatusCode.Created);
+        response.Headers.TryAddWithoutValidation("Location", " https://example.com/v1/organization/12/ \t");
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var organizations = new OrganizationsClient(client);
+
+        var request = new CreateOrganizationRequest { Name = "org" };
+        var id = await organizations.CreateAsync(request);
+
+        Assert.Equal(12, id);
+    }
+
+    [Fact]
     public async Task CreateAsync_NullRequest_Throws() {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.Created));
         using var httpClient = new HttpClient(handler);
