@@ -37,6 +37,14 @@ public sealed class ApiConfigBuilder {
     /// <param name="username">User name for API authentication.</param>
     /// <param name="password">Password associated with <paramref name="username"/>.</param>
     public ApiConfigBuilder WithCredentials(string username, string password) {
+        if (string.IsNullOrWhiteSpace(username)) {
+            throw new ArgumentException("Username must not be null or empty.", nameof(username));
+        }
+
+        if (string.IsNullOrWhiteSpace(password)) {
+            throw new ArgumentException("Password must not be null or empty.", nameof(password));
+        }
+
         _username = username;
         _password = password;
         return this;
