@@ -220,7 +220,9 @@ public sealed class CertificatesClientTests {
             Assert.True(File.Exists(path));
             Assert.Equal("DATA", File.ReadAllText(path));
         } finally {
-            File.Delete(path);
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
         }
     }
 
