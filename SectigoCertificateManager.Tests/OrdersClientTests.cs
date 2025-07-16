@@ -157,4 +157,21 @@ public sealed class OrdersClientTests {
         Assert.Equal(3, results.Count);
         Assert.Equal(3, results[2].Id);
     }
+
+    [Fact]
+    public async Task GetAsync_DisposesResponse() {
+        var response = new DisposableResponse {
+            StatusCode = HttpStatusCode.OK,
+            Content = JsonContent.Create(new Order())
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        _ = await orders.GetAsync(1);
+
+        Assert.True(response.Disposed);
+    }
 }

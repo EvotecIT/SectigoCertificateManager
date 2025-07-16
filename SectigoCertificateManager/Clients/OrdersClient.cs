@@ -32,7 +32,7 @@ public sealed class OrdersClient {
             throw new ArgumentOutOfRangeException(nameof(orderId));
         }
 
-        var response = await _client.GetAsync($"v1/order/{orderId}", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/order/{orderId}", cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Order>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -60,7 +60,7 @@ public sealed class OrdersClient {
         var position = 0;
 
         while (true) {
-            var response = await _client
+            using var response = await _client
                 .GetAsync($"v1/order?size={pageSize}&position={position}", cancellationToken)
                 .ConfigureAwait(false);
             var page = await response.Content
@@ -92,7 +92,7 @@ public sealed class OrdersClient {
             throw new ArgumentOutOfRangeException(nameof(orderId));
         }
 
-        var response = await _client.PostAsync($"v1/order/{orderId}/cancel", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync($"v1/order/{orderId}/cancel", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -106,7 +106,7 @@ public sealed class OrdersClient {
             throw new ArgumentOutOfRangeException(nameof(orderId));
         }
 
-        var response = await _client.GetAsync($"v1/order/{orderId}/history", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/order/{orderId}/history", cancellationToken).ConfigureAwait(false);
         var entries = await response.Content.ReadFromJsonAsync<IReadOnlyList<OrderHistoryEntry>>(s_json, cancellationToken).ConfigureAwait(false);
         return entries ?? Array.Empty<OrderHistoryEntry>();
     }

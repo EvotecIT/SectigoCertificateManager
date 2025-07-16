@@ -30,6 +30,7 @@ internal static class ApiErrorHandler {
             Description = response.ReasonPhrase ?? "Request failed",
         };
 
+        response.Dispose();
         throw response.StatusCode switch {
             HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden => new AuthenticationException(error),
             HttpStatusCode.BadRequest => new ValidationException(error),

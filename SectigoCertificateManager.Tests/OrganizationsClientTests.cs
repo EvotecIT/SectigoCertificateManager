@@ -181,4 +181,21 @@ public sealed class OrganizationsClientTests {
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => organizations.UpdateAsync(id, new UpdateOrganizationRequest()));
     }
+
+    [Fact]
+    public async Task GetAsync_DisposesResponse() {
+        var response = new DisposableResponse {
+            StatusCode = HttpStatusCode.OK,
+            Content = JsonContent.Create(new Organization())
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var organizations = new OrganizationsClient(client);
+
+        _ = await organizations.GetAsync(1);
+
+        Assert.True(response.Disposed);
+    }
 }

@@ -27,7 +27,7 @@ public sealed class OrganizationsClient {
     /// <param name="organizationId">Identifier of the organization to retrieve.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Organization?> GetAsync(int organizationId, CancellationToken cancellationToken = default) {
-        var response = await _client.GetAsync($"v1/organization/{organizationId}", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/organization/{organizationId}", cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Organization>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -42,7 +42,7 @@ public sealed class OrganizationsClient {
             throw new ArgumentNullException(nameof(request));
         }
 
-        var response = await _client.PostAsync("v1/organization", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync("v1/organization", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var location = response.Headers.Location;
         if (location is not null) {
             var path = location.AbsolutePath.TrimEnd('/');
@@ -69,7 +69,7 @@ public sealed class OrganizationsClient {
             throw new ArgumentNullException(nameof(request));
         }
 
-        var response = await _client
+        using var response = await _client
             .PutAsync($"v1/organization/{organizationId}", JsonContent.Create(request, options: s_json), cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -80,7 +80,7 @@ public sealed class OrganizationsClient {
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<IReadOnlyList<Organization>> ListOrganizationsAsync(CancellationToken cancellationToken = default) {
-        var response = await _client.GetAsync("v1/organization", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync("v1/organization", cancellationToken).ConfigureAwait(false);
         var organizations = await response.Content
             .ReadFromJsonAsync<IReadOnlyList<Organization>>(s_json, cancellationToken)
             .ConfigureAwait(false);

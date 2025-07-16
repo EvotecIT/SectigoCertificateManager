@@ -99,4 +99,18 @@ public sealed class ProfilesClientTests {
         Assert.NotNull(result);
         Assert.Empty(result);
     }
+
+    [Fact]
+    public async Task GetAsync_DisposesResponse() {
+        var response = new DisposableResponse {
+            StatusCode = HttpStatusCode.OK,
+            Content = JsonContent.Create(new Profile())
+        };
+        var client = new StubClient(response);
+        var profiles = new ProfilesClient(client);
+
+        _ = await profiles.GetAsync(1);
+
+        Assert.True(response.Disposed);
+    }
 }

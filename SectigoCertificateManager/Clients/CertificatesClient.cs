@@ -34,7 +34,7 @@ public sealed class CertificatesClient {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
         }
 
-        var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -48,7 +48,7 @@ public sealed class CertificatesClient {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
         }
 
-        var response = await _client.GetAsync($"v1/certificate/{certificateId}/status", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/certificate/{certificateId}/status", cancellationToken).ConfigureAwait(false);
         var result = await response.Content.ReadFromJsonAsync<StatusResponse>(s_json, cancellationToken).ConfigureAwait(false);
         return result?.Status;
     }
@@ -67,7 +67,7 @@ public sealed class CertificatesClient {
             throw new ArgumentOutOfRangeException(nameof(request.Term));
         }
 
-        var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -81,7 +81,7 @@ public sealed class CertificatesClient {
             throw new ArgumentNullException(nameof(request));
         }
 
-        var response = await _client.PostAsync("v1/certificate/revoke", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync("v1/certificate/revoke", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -97,7 +97,7 @@ public sealed class CertificatesClient {
             throw new ArgumentNullException(nameof(request));
         }
 
-        var response = await _client.PostAsync($"v1/certificate/renewById/{certificateId}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync($"v1/certificate/renewById/{certificateId}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var result = await response.Content.ReadFromJsonAsync<RenewCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
         return result?.SslId ?? 0;
     }
@@ -114,7 +114,7 @@ public sealed class CertificatesClient {
             throw new ArgumentNullException(nameof(request));
         }
 
-        var response = await _client.PostAsync($"v1/certificate/renew/{orderNumber}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync($"v1/certificate/renew/{orderNumber}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var result = await response.Content.ReadFromJsonAsync<RenewCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
         return result?.SslId ?? 0;
     }
@@ -156,7 +156,7 @@ public sealed class CertificatesClient {
 
         try {
             var query = BuildQuery(request);
-            var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
+            using var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
             var page = await response.Content
                 .ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken)
                 .ConfigureAwait(false);
@@ -178,8 +178,8 @@ public sealed class CertificatesClient {
             while (true) {
                 request.Position = position;
                 query = BuildQuery(request);
-                response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
-                page = await response.Content
+                using var nextResponse = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
+                page = await nextResponse.Content
                     .ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken)
                     .ConfigureAwait(false);
                 if (page is null || page.Count == 0) {
@@ -222,7 +222,7 @@ public sealed class CertificatesClient {
         }
 
         var url = $"ssl/v1/collect/{certificateId}?format={Uri.EscapeDataString(format)}";
-        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
         var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         using (stream) {
             using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
@@ -244,7 +244,7 @@ public sealed class CertificatesClient {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
         }
 
-        var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 

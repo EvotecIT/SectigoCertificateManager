@@ -53,4 +53,18 @@ public sealed class InventoryClientTests {
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => inventory.DownloadCsvAsync(null!));
     }
+
+    [Fact]
+    public async Task DownloadCsvAsync_DisposesResponse() {
+        const string csv = "id,commonName\n1,example.com";
+        var response = new DisposableResponse { Content = new StringContent(csv), StatusCode = HttpStatusCode.OK };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var inventory = new InventoryClient(client);
+
+        _ = await inventory.DownloadCsvAsync(new InventoryCsvRequest());
+
+        Assert.True(response.Disposed);
+    }
 }

@@ -25,7 +25,7 @@ public sealed class ProfilesClient {
     /// <param name="profileId">Identifier of the profile to retrieve.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Profile?> GetAsync(int profileId, CancellationToken cancellationToken = default) {
-        var response = await _client.GetAsync($"v1/profile/{profileId}", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/profile/{profileId}", cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Profile>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -34,7 +34,7 @@ public sealed class ProfilesClient {
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<IReadOnlyList<Profile>> ListProfilesAsync(CancellationToken cancellationToken = default) {
-        var response = await _client.GetAsync("v1/profile", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync("v1/profile", cancellationToken).ConfigureAwait(false);
         var profiles = await response.Content
             .ReadFromJsonAsync<IReadOnlyList<Profile>>(s_json, cancellationToken)
             .ConfigureAwait(false);

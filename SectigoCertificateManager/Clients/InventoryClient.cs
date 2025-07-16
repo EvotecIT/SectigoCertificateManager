@@ -29,7 +29,7 @@ public sealed class InventoryClient {
         }
 
         var query = BuildQuery(request);
-        var response = await _client
+        using var response = await _client
             .GetAsync($"v1/inventory.csv{query}", cancellationToken)
             .ConfigureAwait(false);
 #if NETSTANDARD2_0 || NET472

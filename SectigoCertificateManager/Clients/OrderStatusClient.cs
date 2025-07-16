@@ -28,7 +28,7 @@ public sealed class OrderStatusClient {
             throw new ArgumentOutOfRangeException(nameof(orderId));
         }
 
-        var response = await _client.GetAsync($"v1/order/{orderId}/status", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/order/{orderId}/status", cancellationToken).ConfigureAwait(false);
         var result = await response.Content.ReadFromJsonAsync<StatusResponse>(s_json, cancellationToken).ConfigureAwait(false);
         return result?.Status;
     }

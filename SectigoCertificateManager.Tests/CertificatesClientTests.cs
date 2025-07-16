@@ -412,4 +412,21 @@ public sealed class CertificatesClientTests {
         Assert.NotNull(result);
         Assert.Equal(3, result!.Certificates.Count);
     }
+
+    [Fact]
+    public async Task GetAsync_DisposesResponse() {
+        var response = new DisposableResponse {
+            StatusCode = HttpStatusCode.OK,
+            Content = JsonContent.Create(new Certificate())
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        _ = await certificates.GetAsync(1);
+
+        Assert.True(response.Disposed);
+    }
 }
