@@ -92,14 +92,10 @@ public sealed class CertificatesClientTests {
     [Theory]
     [InlineData(0)]
     [InlineData(-5)]
-    public async Task IssueAsync_InvalidTerm_Throws(int term) {
-        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        using var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
-        var certificates = new CertificatesClient(client);
+    public void IssueCertificateRequest_InvalidTerm_Throws(int term) {
+        var request = new IssueCertificateRequest();
 
-        var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = term };
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.IssueAsync(request));
+        Assert.Throws<ArgumentOutOfRangeException>(() => request.Term = term);
     }
 
     [Theory]
