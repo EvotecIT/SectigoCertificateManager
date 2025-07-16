@@ -62,7 +62,9 @@ public static class ApiConfigLoader {
             throw new FileNotFoundException($"Configuration file not found: {path}", path);
         }
 
-        var json = File.ReadAllText(path!);
+        using var stream = File.OpenRead(path!);
+        using var reader = new StreamReader(stream);
+        var json = reader.ReadToEnd();
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var model = JsonSerializer.Deserialize<FileModel>(json, options)
                     ?? throw new InvalidOperationException("Invalid configuration file.");
