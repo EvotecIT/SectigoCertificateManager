@@ -3,6 +3,7 @@ namespace SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -17,6 +18,20 @@ public sealed class CertificatesClient {
     private static readonly JsonSerializerOptions s_json = new() {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
+    private static readonly HashSet<string> s_allowedFormats = new(
+        new[] {
+            "x509",
+            "x509CO",
+            "base64",
+            "bin",
+            "x509IO",
+            "x509IOR",
+            "pem",
+            "pemco",
+            "pemia",
+            "x509R"
+        },
+        StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CertificatesClient"/> class.
@@ -207,7 +222,11 @@ public sealed class CertificatesClient {
     /// </summary>
     /// <param name="certificateId">Identifier of the certificate to download.</param>
     /// <param name="path">Destination file path.</param>
-    /// <param name="format">Certificate format to request. Defaults to <c>base64</c>.</param>
+    /// <param name="format">
+    /// Certificate format to request. Allowed values: <c>x509</c>, <c>x509CO</c>,
+    /// <c>base64</c>, <c>bin</c>, <c>x509IO</c>, <c>x509IOR</c>, <c>pem</c>,
+    /// <c>pemco</c>, <c>pemia</c>, <c>x509R</c>. Defaults to <c>base64</c>.
+    /// </param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task DownloadAsync(
         int certificateId,
@@ -219,6 +238,9 @@ public sealed class CertificatesClient {
         }
         if (string.IsNullOrEmpty(path)) {
             throw new ArgumentException("Path cannot be null or empty.", nameof(path));
+        }
+        if (!s_allowedFormats.Contains(format)) {
+            throw new ArgumentException("Unsupported certificate format.", nameof(format));
         }
 
         var basePath = _client.HttpClient.BaseAddress?.AbsolutePath.Trim('/') ?? string.Empty;

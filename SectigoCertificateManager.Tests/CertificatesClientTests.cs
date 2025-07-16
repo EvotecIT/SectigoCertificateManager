@@ -315,6 +315,50 @@ public sealed class CertificatesClientTests {
         }
     }
 
+    [Theory]
+    [InlineData("x509")]
+    [InlineData("x509CO")]
+    [InlineData("base64")]
+    [InlineData("bin")]
+    [InlineData("x509IO")]
+    [InlineData("x509IOR")]
+    [InlineData("pem")]
+    [InlineData("pemco")]
+    [InlineData("pemia")]
+    [InlineData("x509R")]
+    public async Task DownloadAsync_AllowedFormats_AreUsed(string format) {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("DATA")
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            await certificates.DownloadAsync(2, path, format);
+            Assert.NotNull(handler.Request);
+            Assert.Equal($"https://example.com/ssl/v1/collect/2?format={format}", handler.Request!.RequestUri!.ToString());
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task DownloadAsync_InvalidFormat_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        await Assert.ThrowsAsync<ArgumentException>(() => certificates.DownloadAsync(2, path, "bad"));
+    }
+
     [Fact]
     public async Task GetStatusAsync_ReturnsStatus() {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
