@@ -291,4 +291,63 @@ public sealed class CertificatesClientTests {
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.SearchAsync(null!));
     }
+
+    private sealed class SequenceHandler : HttpMessageHandler {
+        private readonly Queue<HttpResponseMessage> _responses;
+        public List<HttpRequestMessage> Requests { get; } = new();
+
+        public SequenceHandler(IEnumerable<HttpResponseMessage> responses) => _responses = new Queue<HttpResponseMessage>(responses);
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            Requests.Add(request);
+            return Task.FromResult(_responses.Dequeue());
+        }
+    }
+
+    [Fact]
+    public async Task EnumerateSearchAsync_ReturnsPages() {
+        var page1 = new[] { new Certificate { Id = 1 }, new Certificate { Id = 2 } };
+        var page2 = new[] { new Certificate { Id = 3 } };
+
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page1) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page2) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var results = new List<Certificate>();
+        await foreach (var certificate in certificates.EnumerateSearchAsync(new CertificateSearchRequest { Size = 2 })) {
+            results.Add(certificate);
+        }
+
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.Equal("https://example.com/v1/certificate?size=2", handler.Requests[0].RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/certificate?size=2&position=2", handler.Requests[1].RequestUri!.ToString());
+        Assert.Equal(3, results.Count);
+        Assert.Equal(3, results[2].Id);
+    }
+
+    [Fact]
+    public async Task SearchAsync_MultiplePages_ReturnsAllResults() {
+        var page1 = new[] { new Certificate { Id = 1 }, new Certificate { Id = 2 } };
+        var page2 = new[] { new Certificate { Id = 3 } };
+
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page1) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page2) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var request = new CertificateSearchRequest { Size = 2 };
+        var result = await certificates.SearchAsync(request);
+
+        Assert.NotNull(result);
+        Assert.Equal(3, result!.Certificates.Count);
+    }
 }
