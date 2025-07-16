@@ -108,6 +108,9 @@ public sealed class CertificatesClient {
         string path,
         string format = "base64",
         CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
         if (string.IsNullOrEmpty(path)) {
             throw new ArgumentException("Path cannot be null or empty.", nameof(path));
         }
