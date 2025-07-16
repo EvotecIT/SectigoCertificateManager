@@ -36,7 +36,7 @@ public sealed class ApiErrorHandlerTests {
             Content = JsonContent.Create(new ApiError { Code = -16, Description = "Unknown user" })
         };
 
-        var client = CreateClient(response);
+        using var client = CreateClient(response);
 
         var ex = await Assert.ThrowsAsync<AuthenticationException>(() => client.GetAsync("v1/test"));
         Assert.Equal(-16, ex.ErrorCode);
@@ -48,7 +48,7 @@ public sealed class ApiErrorHandlerTests {
             Content = JsonContent.Create(new ApiError { Code = -10, Description = "Invalid" })
         };
 
-        var client = CreateClient(response);
+        using var client = CreateClient(response);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() => client.GetAsync("v1/test"));
         Assert.Equal(-10, ex.ErrorCode);
@@ -60,7 +60,7 @@ public sealed class ApiErrorHandlerTests {
             Content = JsonContent.Create(new ApiError { Code = -2, Description = "Boom" })
         };
 
-        var client = CreateClient(response);
+        using var client = CreateClient(response);
 
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
         Assert.Equal(-2, ex.ErrorCode);
