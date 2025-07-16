@@ -416,51 +416,54 @@ public sealed class CertificatesClientTests {
         Assert.Equal(3, result!.Certificates.Count);
     }
 
+    private const string SampleChain = """
+-----BEGIN CERTIFICATE-----
+MIICnjCCAYagAwIBAgIINw0QYRYciL0wDQYJKoZIhvcNAQELBQAwDzENMAsGA1UEAxMEUm9vdDAe
+Fw0yNTA3MTUxODM2MzdaFw0yNTA3MTcxODM2MzdaMA8xDTALBgNVBAMTBExlYWYwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCtQKeH2fQ0xoDq3kKv9/d+cROYPN1+33raYP6ke1zpXkCH
+lhwfsKWluEfmY4ANOrbH4VxYxu0xkP0e32QyRapRUAnrMiPNtD032E8bpRIwk8vV7Yk2p5IFDjKs
+symHffvfk+V1x8QJw+xfQmjtLv0A09qDDD/ZK3jrS95mcGJocG3afeaOd4t7UJlAEDw4G81EQSJO
+seOf3EggvGrQ5HM3KMbojF5PcTahrZ9p3BjyUIcKE0PUEAX+Ho1FTBRDQCaG486UnfEWTT/iOjo8
+aodxauvm/OUSegkS3tk+kGJfl9Y/idrbnFVUPnLp6NuUgjdMXyMHgItAiL5PWexFDeZlAgMBAAEw
+DQYJKoZIhvcNAQELBQADggEBAImIcyW2H4Tb8iIzZ6x/Vw79KkHzi2/p3ef6cFMylIFa8y1OawNq
+c6cCbF64peB/NVk1kdvidrKaeXnv8UHvOzKnPxsBEDdgh55Vup3sCWJvlpGIz3lwDL8TBvZD14bc
+Pv8G76eXlDAjaJYJUw/Yto//rA0cpw+JAVwTeWBZSDYt6Yv1Fnv+5AG/Tv30ohehT+rW2JONy6Iz
+kV0zfOafKx9mLf0kmAfR+RYaVfdyyQC9GePIei1UYBHupeYgzqYHdlDjS6tWR2i4WcRHO7eMacCw
+C2IYXrcxznTHfCMbOrQ+T9skn5QyHYv7OjMl+4r0nqDTaQTRWOxjpvTOsxQl6u8=
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIICszCCAZugAwIBAgIIcNKwKhnlTYswDQYJKoZIhvcNAQELBQAwDzENMAsGA1UEAxMEUm9vdDAe
+Fw0yNTA3MTUxODM2MzdaFw0yNTA3MTcxODM2MzdaMA8xDTALBgNVBAMTBFJvb3QwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCrn4DQ0je9hcdHgu/Uaun8Sn1iH4vczKxchcUY9xJ2KnRp
+CC54scCCqXft2/4kL1duCty3Iwo4K1lvvd85nqnnvS9rDlD4NYIW6Dvl507JHkQljQZg9FrKMsoJ
+jmZn5Vk+z9QK28QG/zMsmJNFHatAiYZklsTykqIJO6CFMeNICq3HB+DvS6KksM0N0ZWYzqPFzZbA
+dCxSvyIU1S5ZbiGf/oSdUPuDdiCCIiQHM8n39GUSogLW4HREEPdkoc6U34TwBqPxVDQDrldbnD/V
+a0AJWVVTPv9bMSZU50uez9HgXbnTDTQ3nXRn5t65gdSnxmCFpFR7cC9IkLc2cCsZdBxhAgMBAAGj
+EzARMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAFiWpOpUeViVV1FcqqO8CM3w
+NTtsdQlV6EtrQQ9gVwWH9WqNqzoC3F6aCcn6XnoDwWSwJueAZ7CbvIaWTW55stXOxiQ5y3ESuhKF
+/x6hGOTW2BK5FN2fg0QBEb0Tn+ufVOOJCc84EAjQTIREEUQkUOb1etEYBq9BpKtEbOmPu/ORqF/v
+u/7AFj6rIsrb74R1d1LGCBBaunAwFuYvW1esq6bYnmmgFjyhQsNlAKQtXxomkp3gVTzO7ffOzLTn
+G+I6aQATdbeuj5M3O07ojYtJqHZ4E6+nEJ484cEQiLXA/H8eSEpaTES/yX97sKFFtdv4ja9/9tJS
+q7Hf5A8GM5vGFAo=
+-----END CERTIFICATE-----
+""";
+
+    private static X509Certificate2 ParseFirstCert() {
+        const string begin = "-----BEGIN CERTIFICATE-----";
+        const string end = "-----END CERTIFICATE-----";
+        var start = SampleChain.IndexOf(begin, StringComparison.Ordinal) + begin.Length;
+        var finish = SampleChain.IndexOf(end, start, StringComparison.Ordinal);
+        var base64 = SampleChain.Substring(start, finish - start)
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty);
+        var bytes = Convert.FromBase64String(base64);
+        return new X509Certificate2(bytes);
+    }
+
     [Fact]
     public async Task GetChainAsync_ReturnsBuiltChain() {
-        using var rootKey = RSA.Create(2048);
-#if NET472
-        var rootRequest = new CertificateRequest(
-            new X500DistinguishedName("CN=Root"),
-            rootKey,
-            HashAlgorithmName.SHA256,
-            RSASignaturePadding.Pkcs1);
-#else
-        var rootRequest = new CertificateRequest("CN=Root", rootKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-#endif
-        rootRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
-        var now = DateTimeOffset.UtcNow;
-        using var rootCert = rootRequest.CreateSelfSigned(now.AddDays(-1), now.AddDays(1));
-
-        using var leafKey = RSA.Create(2048);
-#if NET472
-        var leafRequest = new CertificateRequest(
-            new X500DistinguishedName("CN=Leaf"),
-            leafKey,
-            HashAlgorithmName.SHA256,
-            RSASignaturePadding.Pkcs1);
-#else
-        var leafRequest = new CertificateRequest("CN=Leaf", leafKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-#endif
-        var serial = new byte[8];
-#if NET472
-        using (var rng = RandomNumberGenerator.Create()) {
-            rng.GetBytes(serial);
-        }
-#else
-        RandomNumberGenerator.Fill(serial);
-#endif
-        using var leafCert = leafRequest.Create(rootCert, now.AddDays(-1), now.AddDays(1), serial);
-
-        var builder = new StringBuilder();
-        foreach (var cert in new[] { leafCert, rootCert }) {
-            builder.AppendLine("-----BEGIN CERTIFICATE-----");
-            builder.AppendLine(Convert.ToBase64String(cert.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks));
-            builder.AppendLine("-----END CERTIFICATE-----");
-        }
-
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
-            Content = new StringContent(builder.ToString())
+            Content = new StringContent(SampleChain)
         };
 
         var handler = new TestHandler(response);
@@ -473,7 +476,8 @@ public sealed class CertificatesClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/certificate/8/chain", handler.Request!.RequestUri!.ToString());
         Assert.Equal(2, chain.ChainElements.Count);
-        Assert.Equal(leafCert.Thumbprint, chain.ChainElements[0].Certificate.Thumbprint);
+        using var expectedLeaf = ParseFirstCert();
+        Assert.Equal(expectedLeaf.Thumbprint, chain.ChainElements[0].Certificate.Thumbprint);
     }
 
     [Theory]
