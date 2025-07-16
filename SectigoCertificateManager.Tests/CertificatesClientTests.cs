@@ -99,6 +99,17 @@ public sealed class CertificatesClientTests {
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.IssueAsync(request));
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-2)]
+    public async Task GetAsync_InvalidCertificateId_Throws(int certificateId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.GetAsync(certificateId));
+    }
+
     [Fact]
     public async Task RevokeAsync_SendsPayload() {
         var response = new HttpResponseMessage(HttpStatusCode.NoContent);
