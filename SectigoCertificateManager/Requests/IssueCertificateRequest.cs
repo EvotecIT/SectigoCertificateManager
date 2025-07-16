@@ -1,5 +1,6 @@
 namespace SectigoCertificateManager.Requests;
 
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -19,7 +20,19 @@ public sealed class IssueCertificateRequest {
     /// <summary>
     /// Gets or sets the term of the certificate.
     /// </summary>
-    public int Term { get; set; }
+    private int _term;
+
+    /// <summary>Gets or sets the term of the certificate.</summary>
+    public int Term {
+        get => _term;
+        set {
+            if (value <= 0) {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+
+            _term = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets subject alternative names.

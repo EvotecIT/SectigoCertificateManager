@@ -3,6 +3,7 @@ using SectigoCertificateManager.Clients;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -26,10 +27,11 @@ public sealed class OrderStatusClientTests {
     }
 
     /// <summary>Fetches order status.</summary>
-    [Fact]
-    public async Task GetStatusAsync_ReturnsOrderStatus() {
+    [Theory]
+    [MemberData(nameof(StatusCases))]
+    public async Task GetStatusAsync_ReturnsOrderStatus(string text, OrderStatus expected) {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
-            Content = JsonContent.Create(new { Status = "Submitted" })
+            Content = JsonContent.Create(new { Status = text })
         };
 
         var handler = new TestHandler(response);
@@ -41,7 +43,13 @@ public sealed class OrderStatusClientTests {
 
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/order/5/status", handler.Request!.RequestUri!.ToString());
-        Assert.Equal(OrderStatus.Submitted, result);
+        Assert.Equal(expected, result);
+    }
+
+    public static IEnumerable<object[]> StatusCases() {
+        foreach (OrderStatus status in Enum.GetValues(typeof(OrderStatus))) {
+            yield return new object[] { status.ToString(), status };
+        }
     }
 
     [Theory]
