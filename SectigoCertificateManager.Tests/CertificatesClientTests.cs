@@ -259,20 +259,23 @@ public sealed class CertificatesClientTests {
         var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var certificates = new CertificatesClient(client);
 
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, Path.GetRandomFileName());
         try {
             if (isValid) {
                 await certificates.DownloadAsync(certificateId, path);
                 Assert.NotNull(handler.Request);
                 Assert.Equal($"https://example.com/ssl/v1/collect/{certificateId}?format=base64", handler.Request!.RequestUri!.ToString());
+                Assert.True(Directory.Exists(dir));
                 Assert.True(File.Exists(path));
                 Assert.Equal("DATA", File.ReadAllText(path));
             } else {
                 await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.DownloadAsync(certificateId, path));
+                Assert.False(Directory.Exists(dir));
             }
         } finally {
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
             }
         }
     }

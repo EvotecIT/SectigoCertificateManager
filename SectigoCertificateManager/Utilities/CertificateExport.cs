@@ -21,6 +21,7 @@ public static class CertificateExport {
         builder.AppendLine("-----BEGIN CERTIFICATE-----");
         builder.AppendLine(Convert.ToBase64String(certificate.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks));
         builder.AppendLine("-----END CERTIFICATE-----");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
     }
 
@@ -31,6 +32,7 @@ public static class CertificateExport {
         if (string.IsNullOrEmpty(path)) {
             throw new ArgumentException("Path cannot be null or empty.", nameof(path));
         }
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllBytes(path, certificate.Export(X509ContentType.Cert));
     }
 
@@ -42,6 +44,7 @@ public static class CertificateExport {
         if (string.IsNullOrEmpty(path)) {
             throw new ArgumentException("Path cannot be null or empty.", nameof(path));
         }
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var bytes = password is null
             ? certificate.Export(X509ContentType.Pfx)
             : certificate.Export(X509ContentType.Pfx, password);
@@ -66,6 +69,7 @@ public static class CertificateExport {
         var bytes = password is null
             ? certificate.Export(X509ContentType.Pfx)
             : certificate.Export(X509ContentType.Pfx, password);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None)) {
             stream.Write(bytes, 0, bytes.Length);
         }
@@ -104,6 +108,7 @@ public static class CertificateExport {
             builder.AppendLine("-----END CERTIFICATE-----");
         }
 
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
     }
 }
