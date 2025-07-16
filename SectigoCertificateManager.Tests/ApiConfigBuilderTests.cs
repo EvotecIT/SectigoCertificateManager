@@ -96,4 +96,18 @@ public sealed class ApiConfigBuilderTests {
         var ex = Assert.Throws<ArgumentNullException>(() => builder.WithHttpClientHandler(null!));
         Assert.Equal("configure", ex.ParamName);
     }
+
+    [Fact]
+    public void WithCredentials_ThrowsForNullUsername() {
+        var builder = new ApiConfigBuilder();
+
+        Assert.Throws<ArgumentException>(() => builder.WithCredentials(null!, "pass"));
+    }
+
+    [Fact]
+    public void WithCredentials_ThrowsForNullPassword() {
+        var builder = new ApiConfigBuilder();
+
+        Assert.Throws<ArgumentException>(() => builder.WithCredentials("user", null!));
+    }
 }
