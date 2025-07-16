@@ -56,6 +56,26 @@ public sealed class OrganizationsClient {
     }
 
     /// <summary>
+    /// Updates an existing organization.
+    /// </summary>
+    /// <param name="organizationId">Identifier of the organization to update.</param>
+    /// <param name="request">Payload describing updated fields.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task UpdateAsync(int organizationId, UpdateOrganizationRequest request, CancellationToken cancellationToken = default) {
+        if (organizationId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(organizationId));
+        }
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var response = await _client
+            .PutAsync($"v1/organization/{organizationId}", JsonContent.Create(request, options: s_json), cancellationToken)
+            .ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
     /// Retrieves all organizations visible to the user.
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>

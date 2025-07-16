@@ -95,4 +95,19 @@ public sealed class OrdersClient {
         var response = await _client.PostAsync($"v1/order/{orderId}/cancel", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
+
+    /// <summary>
+    /// Retrieves the history of an order by identifier.
+    /// </summary>
+    /// <param name="orderId">Identifier of the order.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<OrderHistoryEntry>> GetHistoryAsync(int orderId, CancellationToken cancellationToken = default) {
+        if (orderId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(orderId));
+        }
+
+        var response = await _client.GetAsync($"v1/order/{orderId}/history", cancellationToken).ConfigureAwait(false);
+        var entries = await response.Content.ReadFromJsonAsync<IReadOnlyList<OrderHistoryEntry>>(s_json, cancellationToken).ConfigureAwait(false);
+        return entries ?? Array.Empty<OrderHistoryEntry>();
+    }
 }

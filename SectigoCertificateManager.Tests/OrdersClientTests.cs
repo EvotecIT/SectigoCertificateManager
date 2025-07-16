@@ -36,7 +36,8 @@ public sealed class OrdersClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         var result = await orders.ListOrdersAsync();
@@ -52,7 +53,8 @@ public sealed class OrdersClientTests {
     public async Task CancelAsync_SendsPostRequest() {
         var response = new HttpResponseMessage(HttpStatusCode.NoContent);
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         await orders.CancelAsync(5);
@@ -67,7 +69,8 @@ public sealed class OrdersClientTests {
     [InlineData(-1)]
     public async Task GetAsync_InvalidOrderId_Throws(int orderId) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.GetAsync(orderId));
@@ -78,10 +81,42 @@ public sealed class OrdersClientTests {
     [InlineData(-3)]
     public async Task CancelAsync_InvalidOrderId_Throws(int orderId) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.CancelAsync(orderId));
+    }
+
+    [Fact]
+    public async Task GetHistoryAsync_ReturnsEntries() {
+        var entry = new OrderHistoryEntry { Date = DateTimeOffset.Now, Event = "Created" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { entry })
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var orders = new OrdersClient(client);
+
+        var result = await orders.GetHistoryAsync(7);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/order/7/history", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal("Created", result[0].Event);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-2)]
+    public async Task GetHistoryAsync_InvalidOrderId_Throws(int orderId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var orders = new OrdersClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.GetHistoryAsync(orderId));
     }
 
     private sealed class SequenceHandler : HttpMessageHandler {
@@ -107,7 +142,8 @@ public sealed class OrdersClientTests {
         };
 
         var handler = new SequenceHandler(responses);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
         var results = new List<Order>();
