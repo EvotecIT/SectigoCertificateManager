@@ -217,6 +217,20 @@ public sealed class CertificatesClient {
         }
     }
 
+    /// <summary>
+    /// Deletes a certificate by identifier.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to delete.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task DeleteAsync(int certificateId, CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
     private static string BuildQuery(CertificateSearchRequest request) {
         var builder = new StringBuilder();
 
