@@ -88,6 +88,37 @@ public sealed class OrdersClientTests {
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.CancelAsync(orderId));
     }
 
+    [Fact]
+    public async Task GetHistoryAsync_ReturnsEntries() {
+        var entry = new OrderHistoryEntry { Date = DateTimeOffset.Now, Event = "Created" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { entry })
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var orders = new OrdersClient(client);
+
+        var result = await orders.GetHistoryAsync(7);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/order/7/history", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal("Created", result[0].Event);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-2)]
+    public async Task GetHistoryAsync_InvalidOrderId_Throws(int orderId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var orders = new OrdersClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.GetHistoryAsync(orderId));
+    }
+
     private sealed class SequenceHandler : HttpMessageHandler {
         private readonly Queue<HttpResponseMessage> _responses;
         public List<HttpRequestMessage> Requests { get; } = new();
