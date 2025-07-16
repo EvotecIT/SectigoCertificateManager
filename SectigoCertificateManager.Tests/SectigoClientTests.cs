@@ -39,7 +39,7 @@ public sealed class SectigoClientTests {
     public async Task AddsHeadersAndUsesBaseUrl_WithCredentials() {
         var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4);
         var handler = new TestHandler();
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
 
         await client.GetAsync("v1/test");
@@ -54,7 +54,7 @@ public sealed class SectigoClientTests {
     public async Task AddsBearerHeaderWhenTokenPresent() {
         var config = new ApiConfig("https://example.com/api/", string.Empty, string.Empty, "cst1", ApiVersion.V25_4, token: "tkn");
         var handler = new TestHandler();
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
 
         await client.GetAsync("v1/test");
@@ -70,7 +70,7 @@ public sealed class SectigoClientTests {
     public async Task TokenOverridesCredentialsWhenBothProvided() {
         var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4, token: "tkn");
         var handler = new TestHandler();
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
 
         await client.GetAsync("v1/test");
@@ -121,7 +121,7 @@ public sealed class SectigoClientTests {
     public void DisposeDisposesHttpClient() {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new DisposableHandler();
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
 
         client.Dispose();
@@ -133,7 +133,7 @@ public sealed class SectigoClientTests {
     public void DisposeIsIdempotent() {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new DisposableHandler();
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
 
         client.Dispose();
@@ -146,7 +146,7 @@ public sealed class SectigoClientTests {
     public async Task MethodsThrowAfterDispose() {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new TestHandler();
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
 
         client.Dispose();
@@ -173,7 +173,7 @@ public sealed class SectigoClientTests {
             tokenExpiresAt: expired,
             refreshToken: Refresh);
         var handler = new TestHandler();
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
 
         await client.GetAsync("v1/test");
@@ -201,7 +201,7 @@ public sealed class SectigoClientTests {
             tokenExpiresAt: expires,
             refreshToken: Refresh);
         var handler = new TestHandler();
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
 
         await client.GetAsync("v1/test");
@@ -235,7 +235,7 @@ public sealed class SectigoClientTests {
     [Fact]
     public async Task ConcurrencyIsLimited() {
         var handler = new ThrottleHandler(TimeSpan.FromMilliseconds(50));
-        var httpClient = new HttpClient(handler);
+        using var httpClient = new HttpClient(handler);
         var config = new ApiConfigBuilder()
             .WithBaseUrl("https://example.com/")
             .WithCredentials("u", "p")
