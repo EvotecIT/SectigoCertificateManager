@@ -33,8 +33,7 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
             _profiles = new ProfilesClient(client);
             success = true;
             return Task.CompletedTask;
-        }
-        finally {
+        } finally {
             if (!success) {
                 _server.Stop();
                 _server.Dispose();

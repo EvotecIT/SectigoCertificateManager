@@ -1,5 +1,5 @@
-using SectigoCertificateManager.Models;
 using SectigoCertificateManager;
+using SectigoCertificateManager.Models;
 using System;
 using System.Security.Cryptography.X509Certificates;
 using Xunit;

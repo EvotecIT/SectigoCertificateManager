@@ -42,7 +42,7 @@ public sealed class CertificateExportTests {
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    public void SavePem_InvalidPath_Throws(string path) {
+    public void SavePem_InvalidPath_Throws(string? path) {
         using var cert = CreateCertificate();
         Assert.Throws<ArgumentException>(() => CertificateExport.SavePem(cert, path!));
     }
@@ -50,7 +50,7 @@ public sealed class CertificateExportTests {
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    public void SaveDer_InvalidPath_Throws(string path) {
+    public void SaveDer_InvalidPath_Throws(string? path) {
         using var cert = CreateCertificate();
         Assert.Throws<ArgumentException>(() => CertificateExport.SaveDer(cert, path!));
     }
@@ -86,7 +86,7 @@ public sealed class CertificateExportTests {
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    public void SavePfx_InvalidPath_Throws(string path) {
+    public void SavePfx_InvalidPath_Throws(string? path) {
         using var cert = CreateCertificate();
         Assert.Throws<ArgumentException>(() => CertificateExport.SavePfx(cert, path!, null));
     }
