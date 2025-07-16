@@ -43,7 +43,7 @@ public sealed class CertificatesClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var request = new CertificateSearchRequest {
@@ -72,7 +72,7 @@ public sealed class CertificatesClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = 12 };
@@ -92,7 +92,7 @@ public sealed class CertificatesClientTests {
     [InlineData(-5)]
     public async Task IssueAsync_InvalidTerm_Throws(int term) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = term };
@@ -104,7 +104,7 @@ public sealed class CertificatesClientTests {
     [InlineData(-2)]
     public async Task GetAsync_InvalidCertificateId_Throws(int certificateId) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.GetAsync(certificateId));
@@ -115,7 +115,7 @@ public sealed class CertificatesClientTests {
         var response = new HttpResponseMessage(HttpStatusCode.NoContent);
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var request = new RevokeCertificateRequest { CertId = 5, ReasonCode = 4, Reason = "superseded" };
@@ -136,7 +136,7 @@ public sealed class CertificatesClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var request = new CertificateSearchRequest();
@@ -153,7 +153,7 @@ public sealed class CertificatesClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var request = new RenewCertificateRequest { Csr = "csr", DcvMode = "EMAIL", DcvEmail = "admin@example.com" };
@@ -175,7 +175,7 @@ public sealed class CertificatesClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var request = new CertificateSearchRequest {
@@ -198,7 +198,7 @@ public sealed class CertificatesClientTests {
     [Fact]
     public async Task RevokeAsync_NullRequest_Throws() {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.RevokeAsync(null!));
@@ -207,7 +207,7 @@ public sealed class CertificatesClientTests {
     [Fact]
     public async Task RenewAsync_NullRequest_Throws() {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(new RenewCertificateResponse { SslId = 1 }) });
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.RenewAsync(1, null!));
@@ -223,7 +223,7 @@ public sealed class CertificatesClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -249,7 +249,7 @@ public sealed class CertificatesClientTests {
     [InlineData(null)]
     public async Task DownloadAsync_InvalidPath_Throws(string? path) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentException>(() => certificates.DownloadAsync(1, path!));
@@ -262,7 +262,7 @@ public sealed class CertificatesClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         var result = await certificates.GetStatusAsync(3);
@@ -277,7 +277,7 @@ public sealed class CertificatesClientTests {
     [InlineData(-1)]
     public async Task GetStatusAsync_InvalidCertificateId_Throws(int certificateId) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.GetStatusAsync(certificateId));
@@ -286,7 +286,7 @@ public sealed class CertificatesClientTests {
     [Fact]
     public async Task SearchAsync_NullRequest_Throws() {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Array.Empty<Certificate>()) });
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.SearchAsync(null!));

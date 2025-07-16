@@ -33,7 +33,7 @@ public sealed class OrderStatusClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var statuses = new OrderStatusClient(client);
 
         var result = await statuses.GetStatusAsync(5);
@@ -48,7 +48,7 @@ public sealed class OrderStatusClientTests {
     [InlineData(-2)]
     public async Task GetStatusAsync_InvalidOrderId_Throws(int orderId) {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var client = new SectigoClientFactory().Create(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var statuses = new OrderStatusClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => statuses.GetStatusAsync(orderId));

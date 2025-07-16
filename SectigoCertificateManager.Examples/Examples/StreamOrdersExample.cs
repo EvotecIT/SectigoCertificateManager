@@ -18,7 +18,8 @@ public static class StreamOrdersExample {
             .WithApiVersion(ApiVersion.V25_6)
             .Build();
 
-        var client = new SectigoClient(config);
+        var factory = new SectigoClientFactory();
+        var client = factory.Create(config);
         var orders = new OrdersClient(client);
 
         await foreach (var order in orders.EnumerateOrdersAsync(pageSize: 50)) {

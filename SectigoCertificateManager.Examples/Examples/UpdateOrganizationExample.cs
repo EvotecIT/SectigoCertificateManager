@@ -19,7 +19,8 @@ public static class UpdateOrganizationExample {
             .WithApiVersion(ApiVersion.V25_6)
             .Build();
 
-        var client = new SectigoClient(config);
+        var factory = new SectigoClientFactory();
+        var client = factory.Create(config);
         var organizations = new OrganizationsClient(client);
 
         Console.WriteLine("Updating organization...");

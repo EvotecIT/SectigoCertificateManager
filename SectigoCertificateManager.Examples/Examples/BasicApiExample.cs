@@ -23,7 +23,8 @@ public static class BasicApiExample {
             .WithConcurrencyLimit(2)
             .Build();
 
-        var client = new SectigoClient(config);
+        var factory = new SectigoClientFactory();
+        var client = factory.Create(config);
         var certificates = new CertificatesClient(client);
 
         Console.WriteLine("Requesting certificate details...");

@@ -26,7 +26,7 @@ public sealed class ApiErrorHandlerTests {
     private static SectigoClient CreateClient(HttpResponseMessage response) {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new RespondingHandler(response);
-        return new SectigoClient(config, new HttpClient(handler));
+        return new SectigoClientFactory().Create(config, new HttpClient(handler));
     }
 
     /// <summary>Handles 401 responses correctly.</summary>

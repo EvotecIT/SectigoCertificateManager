@@ -40,7 +40,7 @@ public sealed class SectigoClientTests {
         var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4);
         var handler = new TestHandler();
         var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         await client.GetAsync("v1/test");
 
@@ -55,7 +55,7 @@ public sealed class SectigoClientTests {
         var config = new ApiConfig("https://example.com/api/", string.Empty, string.Empty, "cst1", ApiVersion.V25_4, token: "tkn");
         var handler = new TestHandler();
         var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         await client.GetAsync("v1/test");
 
@@ -71,7 +71,7 @@ public sealed class SectigoClientTests {
         var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4, token: "tkn");
         var handler = new TestHandler();
         var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         await client.GetAsync("v1/test");
 
@@ -122,7 +122,7 @@ public sealed class SectigoClientTests {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new DisposableHandler();
         var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         client.Dispose();
 
@@ -134,7 +134,7 @@ public sealed class SectigoClientTests {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new DisposableHandler();
         var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         client.Dispose();
         client.Dispose();
@@ -147,7 +147,7 @@ public sealed class SectigoClientTests {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new TestHandler();
         var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         client.Dispose();
 
@@ -174,7 +174,7 @@ public sealed class SectigoClientTests {
             refreshToken: Refresh);
         var handler = new TestHandler();
         var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         await client.GetAsync("v1/test");
 
@@ -202,7 +202,7 @@ public sealed class SectigoClientTests {
             refreshToken: Refresh);
         var handler = new TestHandler();
         var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         await client.GetAsync("v1/test");
 
@@ -243,7 +243,7 @@ public sealed class SectigoClientTests {
             .WithConcurrencyLimit(2)
             .Build();
 
-        var client = new SectigoClient(config, httpClient);
+        var client = new SectigoClientFactory().Create(config, httpClient);
 
         await Task.WhenAll(
             client.GetAsync("v1/a"),

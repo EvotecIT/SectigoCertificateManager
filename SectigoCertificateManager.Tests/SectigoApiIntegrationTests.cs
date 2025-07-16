@@ -27,7 +27,7 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
         _server = WireMockServer.Start();
         try {
             var config = new ApiConfig(_server.Url!, "user", "pass", "cst1", ApiVersion.V25_4);
-            var client = new SectigoClient(config, new HttpClient());
+            var client = new SectigoClientFactory().Create(config, new HttpClient());
             _certificates = new CertificatesClient(client);
             _orders = new OrdersClient(client);
             _profiles = new ProfilesClient(client);
