@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -21,9 +22,16 @@ public sealed class OrdersClientTests {
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
-            return Task.FromResult(_response);
+            if (request.Content is not null) {
+#if NETSTANDARD2_0 || NET472
+                await request.Content.CopyToAsync(Stream.Null).ConfigureAwait(false);
+#else
+                await request.Content.CopyToAsync(Stream.Null, cancellationToken).ConfigureAwait(false);
+#endif
+            }
+            return _response;
         }
     }
 
@@ -156,5 +164,42 @@ public sealed class OrdersClientTests {
         Assert.Equal("https://example.com/v1/order?size=2&position=2", handler.Requests[1].RequestUri!.ToString());
         Assert.Equal(3, results.Count);
         Assert.Equal(3, results[2].Id);
+    }
+
+    private sealed class TestProgress : IProgress<double> {
+        public double Value { get; private set; }
+        public void Report(double value) => Value = value;
+    }
+
+    [Fact]
+    public async Task UploadAsync_SendsFile() {
+        using var stream = new MemoryStream(new byte[10]);
+        var response = new HttpResponseMessage(HttpStatusCode.Created);
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        await orders.UploadAsync(stream, "text/csv");
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal("https://example.com/v1/order/bulk", handler.Request.RequestUri!.ToString());
+        Assert.Equal("text/csv", handler.Request.Content!.Headers.ContentType!.MediaType);
+    }
+
+    [Fact]
+    public async Task UploadAsync_ReportsProgress() {
+        using var stream = new MemoryStream(new byte[20]);
+        var response = new HttpResponseMessage(HttpStatusCode.Created);
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+        var progress = new TestProgress();
+
+        await orders.UploadAsync(stream, "application/json", progress);
+
+        Assert.True(progress.Value > 0);
     }
 }

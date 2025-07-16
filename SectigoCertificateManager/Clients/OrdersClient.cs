@@ -83,6 +83,31 @@ public sealed class OrdersClient {
     }
 
     /// <summary>
+    /// Uploads a CSV or JSON file containing multiple orders.
+    /// </summary>
+    /// <param name="stream">Stream providing the order data.</param>
+    /// <param name="contentType">MIME type of the data. Use <c>text/csv</c> or <c>application/json</c>.</param>
+    /// <param name="progress">Optional progress reporter.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task UploadAsync(
+        Stream stream,
+        string contentType,
+        IProgress<double>? progress = null,
+        CancellationToken cancellationToken = default) {
+        if (stream is null) {
+            throw new ArgumentNullException(nameof(stream));
+        }
+        if (string.IsNullOrEmpty(contentType)) {
+            throw new ArgumentException("Content type cannot be null or empty.", nameof(contentType));
+        }
+
+        using var content = new Utilities.ProgressStreamContent(stream, progress);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        var response = await _client.PostAsync("v1/order/bulk", content, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
     /// Cancels an order by identifier.
     /// </summary>
     /// <param name="orderId">Identifier of the order to cancel.</param>
