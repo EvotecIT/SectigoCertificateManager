@@ -376,6 +376,38 @@ public sealed class CertificatesClientTests {
     }
 
     [Fact]
+    public async Task GetRevocationAsync_ReturnsDetails() {
+        var revocation = new CertificateRevocation { Reason = "compromised" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(revocation)
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var result = await certificates.GetRevocationAsync(8);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/certificate/8/revocation", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Equal("compromised", result!.Reason);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-3)]
+    public async Task GetRevocationAsync_InvalidCertificateId_Throws(int certificateId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.GetRevocationAsync(certificateId));
+    }
+
+    [Fact]
     public async Task SearchAsync_NullRequest_Throws() {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Array.Empty<Certificate>()) });
         using var httpClient = new HttpClient(handler);
