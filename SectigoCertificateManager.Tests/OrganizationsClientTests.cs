@@ -135,4 +135,41 @@ public sealed class OrganizationsClientTests {
         Assert.NotNull(result);
         Assert.Empty(result);
     }
+
+    [Fact]
+    public async Task UpdateAsync_SendsPayload() {
+        var response = new HttpResponseMessage(HttpStatusCode.NoContent);
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var organizations = new OrganizationsClient(client);
+
+        var request = new UpdateOrganizationRequest { Name = "new" };
+        await organizations.UpdateAsync(7, request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal(HttpMethod.Put, handler.Request!.Method);
+        Assert.Equal("https://example.com/v1/organization/7", handler.Request.RequestUri!.ToString());
+        Assert.NotNull(handler.Body);
+        Assert.Contains("\"name\":\"new\"", handler.Body);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_NullRequest_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var organizations = new OrganizationsClient(client);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => organizations.UpdateAsync(5, null!));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-3)]
+    public async Task UpdateAsync_InvalidId_Throws(int id) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var organizations = new OrganizationsClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => organizations.UpdateAsync(id, new UpdateOrganizationRequest()));
+    }
 }
