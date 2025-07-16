@@ -1,0 +1,50 @@
+using SectigoCertificateManager;
+using SectigoCertificateManager.Clients;
+using System;
+using System.Management.Automation;
+
+namespace SectigoCertificateManager.PowerShell;
+
+/// <summary>Deletes a certificate.</summary>
+/// <para>Builds an API client and calls the delete endpoint.</para>
+[Cmdlet(VerbsCommon.Remove, "SectigoCertificate")]
+public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
+    /// <summary>The API base URL.</summary>
+    [Parameter(Mandatory = true)]
+    public string BaseUrl { get; set; } = string.Empty;
+
+    /// <summary>The user name for authentication.</summary>
+    [Parameter(Mandatory = true)]
+    public string Username { get; set; } = string.Empty;
+
+    /// <summary>The password for authentication.</summary>
+    [Parameter(Mandatory = true)]
+    public string Password { get; set; } = string.Empty;
+
+    /// <summary>The customer URI assigned by Sectigo.</summary>
+    [Parameter(Mandatory = true)]
+    public string CustomerUri { get; set; } = string.Empty;
+
+    /// <summary>The API version to use.</summary>
+    [Parameter]
+    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
+
+    /// <summary>The identifier of the certificate to delete.</summary>
+    [Parameter(Mandatory = true, Position = 0)]
+    public int CertificateId { get; set; }
+
+    /// <summary>Deletes a certificate.</summary>
+    /// <para>Builds an API client and calls the delete endpoint.</para>
+    protected override void ProcessRecord() {
+        if (CertificateId <= 0) {
+            var ex = new ArgumentOutOfRangeException(nameof(CertificateId));
+            var record = new ErrorRecord(ex, "InvalidCertificateId", ErrorCategory.InvalidArgument, CertificateId);
+            ThrowTerminatingError(record);
+        }
+
+        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+        var client = new SectigoClient(config);
+        var certificates = new CertificatesClient(client);
+        certificates.DeleteAsync(CertificateId).GetAwaiter().GetResult();
+    }
+}

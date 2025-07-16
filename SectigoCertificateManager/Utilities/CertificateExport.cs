@@ -21,7 +21,7 @@ public static class CertificateExport {
         builder.AppendLine("-----BEGIN CERTIFICATE-----");
         builder.AppendLine(Convert.ToBase64String(certificate.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks));
         builder.AppendLine("-----END CERTIFICATE-----");
-        File.WriteAllText(path, builder.ToString());
+        File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
     }
 
     /// <summary>Saves the certificate in DER format.</summary>
@@ -104,6 +104,6 @@ public static class CertificateExport {
             builder.AppendLine("-----END CERTIFICATE-----");
         }
 
-        File.WriteAllText(path, builder.ToString());
+        File.WriteAllText(path, builder.ToString(), Encoding.UTF8);
     }
 }

@@ -40,7 +40,8 @@ public sealed class OrganizationsClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var organizations = new OrganizationsClient(client);
 
         var result = await organizations.GetAsync(3);
@@ -57,7 +58,8 @@ public sealed class OrganizationsClientTests {
         response.Headers.Location = new System.Uri("https://example.com/v1/organization/10");
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var organizations = new OrganizationsClient(client);
 
         var request = new CreateOrganizationRequest {
@@ -80,7 +82,8 @@ public sealed class OrganizationsClientTests {
         response.Headers.Location = new System.Uri("https://example.com/v1/organization/11/");
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var organizations = new OrganizationsClient(client);
 
         var request = new CreateOrganizationRequest { Name = "org" };
@@ -92,7 +95,8 @@ public sealed class OrganizationsClientTests {
     [Fact]
     public async Task CreateAsync_NullRequest_Throws() {
         var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.Created));
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var organizations = new OrganizationsClient(client);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => organizations.CreateAsync(null!));
@@ -106,7 +110,8 @@ public sealed class OrganizationsClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var organizations = new OrganizationsClient(client);
 
         var result = await organizations.ListOrganizationsAsync();
@@ -125,7 +130,8 @@ public sealed class OrganizationsClientTests {
         };
 
         var handler = new TestHandler(response);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var organizations = new OrganizationsClient(client);
 
         var result = await organizations.ListOrganizationsAsync();
@@ -134,5 +140,45 @@ public sealed class OrganizationsClientTests {
         Assert.Equal("https://example.com/v1/organization", handler.Request!.RequestUri!.ToString());
         Assert.NotNull(result);
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_SendsPayload() {
+        var response = new HttpResponseMessage(HttpStatusCode.NoContent);
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var organizations = new OrganizationsClient(client);
+
+        var request = new UpdateOrganizationRequest { Name = "new" };
+        await organizations.UpdateAsync(7, request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal(HttpMethod.Put, handler.Request!.Method);
+        Assert.Equal("https://example.com/v1/organization/7", handler.Request.RequestUri!.ToString());
+        Assert.NotNull(handler.Body);
+        Assert.Contains("\"name\":\"new\"", handler.Body);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_NullRequest_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var organizations = new OrganizationsClient(client);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => organizations.UpdateAsync(5, null!));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-3)]
+    public async Task UpdateAsync_InvalidId_Throws(int id) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var organizations = new OrganizationsClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => organizations.UpdateAsync(id, new UpdateOrganizationRequest()));
     }
 }
