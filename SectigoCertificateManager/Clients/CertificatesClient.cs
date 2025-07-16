@@ -4,6 +4,8 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -264,6 +266,37 @@ public sealed class CertificatesClient {
 
         var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Imports certificates using a zip archive.
+    /// </summary>
+    /// <param name="orgId">Identifier of the organization.</param>
+    /// <param name="stream">Zip archive containing certificates.</param>
+    /// <param name="fileName">File name to use for the upload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<ImportCertificateResponse?> ImportAsync(
+        int orgId,
+        Stream stream,
+        string fileName,
+        CancellationToken cancellationToken = default) {
+        if (orgId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(orgId));
+        }
+        if (stream is null) {
+            throw new ArgumentNullException(nameof(stream));
+        }
+        if (string.IsNullOrEmpty(fileName)) {
+            throw new ArgumentException("File name cannot be null or empty.", nameof(fileName));
+        }
+
+        var content = new MultipartFormDataContent();
+        var fileContent = new StreamContent(stream);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+        content.Add(fileContent, "file", fileName);
+
+        var response = await _client.PostAsync($"v1/certificate/import?orgId={orgId}", content, cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<ImportCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
     }
 
     private static string BuildQuery(CertificateSearchRequest request) {
