@@ -225,6 +225,7 @@ public sealed class CertificatesClient {
         var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
         var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         using (stream) {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
 #if NETSTANDARD2_0 || NET472
             await stream.CopyToAsync(file).ConfigureAwait(false);

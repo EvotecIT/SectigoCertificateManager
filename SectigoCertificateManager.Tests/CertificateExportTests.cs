@@ -30,15 +30,17 @@ public sealed class CertificateExportTests {
     [Fact]
     public void SavePem_WritesFile() {
         using var cert = CreateCertificate();
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, Path.GetRandomFileName());
         try {
             CertificateExport.SavePem(cert, path);
+            Assert.True(Directory.Exists(dir));
             Assert.True(File.Exists(path));
             var content = File.ReadAllText(path);
             Assert.Contains("BEGIN CERTIFICATE", content);
         } finally {
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
             }
         }
     }
@@ -62,15 +64,17 @@ public sealed class CertificateExportTests {
     [Fact]
     public void SaveDer_WritesFile() {
         using var cert = CreateCertificate();
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, Path.GetRandomFileName());
         try {
             CertificateExport.SaveDer(cert, path);
+            Assert.True(Directory.Exists(dir));
             Assert.True(File.Exists(path));
             var bytes = File.ReadAllBytes(path);
             Assert.Equal(cert.RawData, bytes);
         } finally {
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
             }
         }
     }
@@ -78,15 +82,17 @@ public sealed class CertificateExportTests {
     [Fact]
     public void SavePfx_WritesFile() {
         using var cert = CreateCertificate();
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, Path.GetRandomFileName());
         try {
             CertificateExport.SavePfx(cert, path, "pwd");
+            Assert.True(Directory.Exists(dir));
             Assert.True(File.Exists(path));
             using var loaded = new X509Certificate2(path, "pwd");
             Assert.Equal(cert.Thumbprint, loaded.Thumbprint);
         } finally {
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
             }
         }
     }
@@ -102,13 +108,15 @@ public sealed class CertificateExportTests {
     [Fact]
     public void SavePfxForTest_ClearsBuffer() {
         using var cert = CreateCertificate();
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, Path.GetRandomFileName());
         try {
             var buffer = CertificateExport.SavePfxForTest(cert, path, "pwd");
+            Assert.True(Directory.Exists(dir));
             Assert.All(buffer, b => Assert.Equal(0, b));
         } finally {
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
             }
         }
     }
@@ -143,15 +151,17 @@ public sealed class CertificateExportTests {
         RandomNumberGenerator.Fill(serial);
         var leafCert = leafRequest.Create(rootCert, now.AddDays(-1), now.AddDays(1), serial);
 
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, Path.GetRandomFileName());
         try {
             CertificateExport.SavePemChain(leafCert, path, new[] { rootCert });
+            Assert.True(Directory.Exists(dir));
             var content = File.ReadAllText(path);
             Assert.Contains("BEGIN CERTIFICATE", content);
             Assert.Equal(2, content.Split("-----END CERTIFICATE-----").Length - 1);
         } finally {
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
             }
         }
     }
@@ -159,7 +169,8 @@ public sealed class CertificateExportTests {
     [Fact]
     public void SavePem_UsesUtf8Encoding() {
         using var cert = CreateCertificate();
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, Path.GetRandomFileName());
         try {
             CertificateExport.SavePem(cert, path);
             var bytes = File.ReadAllBytes(path);
@@ -209,7 +220,8 @@ public sealed class CertificateExportTests {
         RandomNumberGenerator.Fill(serial);
         var leafCert = leafRequest.Create(rootCert, now.AddDays(-1), now.AddDays(1), serial);
 
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, Path.GetRandomFileName());
         try {
             CertificateExport.SavePemChain(leafCert, path, new[] { rootCert });
             var bytes = File.ReadAllBytes(path);
@@ -232,8 +244,8 @@ public sealed class CertificateExportTests {
 
             Assert.Equal(builder.ToString(), text);
         } finally {
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
             }
         }
     }
