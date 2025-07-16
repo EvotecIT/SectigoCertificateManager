@@ -4,9 +4,11 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System.IO;
+using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
 /// <summary>
@@ -51,6 +53,38 @@ public sealed class CertificatesClient {
         var response = await _client.GetAsync($"v1/certificate/{certificateId}/status", cancellationToken).ConfigureAwait(false);
         var result = await response.Content.ReadFromJsonAsync<StatusResponse>(s_json, cancellationToken).ConfigureAwait(false);
         return result?.Status;
+    }
+
+    /// <summary>
+    /// Retrieves the certificate chain for a certificate by identifier.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<X509Chain> GetChainAsync(int certificateId, CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var response = await _client.GetAsync($"v1/certificate/{certificateId}/chain", cancellationToken).ConfigureAwait(false);
+#if NETSTANDARD2_0 || NET472
+        var pem = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+        var pem = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
+
+        var certificates = ParsePemCertificates(pem);
+        var chain = new X509Chain();
+        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+
+        if (certificates.Count > 0) {
+            for (var i = 1; i < certificates.Count; i++) {
+                chain.ChainPolicy.ExtraStore.Add(certificates[i]);
+            }
+            chain.Build(certificates[0]);
+        }
+
+        return chain;
     }
 
     /// <summary>
@@ -246,6 +280,35 @@ public sealed class CertificatesClient {
 
         var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
+    }
+
+    private static List<X509Certificate2> ParsePemCertificates(string pem) {
+        var list = new List<X509Certificate2>();
+        const string begin = "-----BEGIN CERTIFICATE-----";
+        const string end = "-----END CERTIFICATE-----";
+        var position = 0;
+
+        while (true) {
+            var start = pem.IndexOf(begin, position, StringComparison.Ordinal);
+            if (start < 0) {
+                break;
+            }
+
+            start += begin.Length;
+            var finish = pem.IndexOf(end, start, StringComparison.Ordinal);
+            if (finish < 0) {
+                break;
+            }
+
+            var base64 = pem.Substring(start, finish - start)
+                .Replace("\r", string.Empty)
+                .Replace("\n", string.Empty);
+            var bytes = Convert.FromBase64String(base64);
+            list.Add(new X509Certificate2(bytes));
+            position = finish + end.Length;
+        }
+
+        return list;
     }
 
     private static string BuildQuery(CertificateSearchRequest request) {

@@ -8,6 +8,9 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -411,5 +414,77 @@ public sealed class CertificatesClientTests {
 
         Assert.NotNull(result);
         Assert.Equal(3, result!.Certificates.Count);
+    }
+
+    [Fact]
+    public async Task GetChainAsync_ReturnsBuiltChain() {
+        using var rootKey = RSA.Create(2048);
+#if NET472
+        var rootRequest = new CertificateRequest(
+            new X500DistinguishedName("CN=Root"),
+            rootKey,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+#else
+        var rootRequest = new CertificateRequest("CN=Root", rootKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#endif
+        rootRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+        var now = DateTimeOffset.UtcNow;
+        using var rootCert = rootRequest.CreateSelfSigned(now.AddDays(-1), now.AddDays(1));
+
+        using var leafKey = RSA.Create(2048);
+#if NET472
+        var leafRequest = new CertificateRequest(
+            new X500DistinguishedName("CN=Leaf"),
+            leafKey,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+#else
+        var leafRequest = new CertificateRequest("CN=Leaf", leafKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#endif
+        var serial = new byte[8];
+#if NET472
+        using (var rng = RandomNumberGenerator.Create()) {
+            rng.GetBytes(serial);
+        }
+#else
+        RandomNumberGenerator.Fill(serial);
+#endif
+        using var leafCert = leafRequest.Create(rootCert, now.AddDays(-1), now.AddDays(1), serial);
+
+        var builder = new StringBuilder();
+        foreach (var cert in new[] { leafCert, rootCert }) {
+            builder.AppendLine("-----BEGIN CERTIFICATE-----");
+            builder.AppendLine(Convert.ToBase64String(cert.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks));
+            builder.AppendLine("-----END CERTIFICATE-----");
+        }
+
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent(builder.ToString())
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        using var chain = await certificates.GetChainAsync(8);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/certificate/8/chain", handler.Request!.RequestUri!.ToString());
+        Assert.Equal(2, chain.ChainElements.Count);
+        Assert.Equal(leafCert.Thumbprint, chain.ChainElements[0].Certificate.Thumbprint);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-4)]
+    public async Task GetChainAsync_InvalidId_Throws(int certificateId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.GetChainAsync(certificateId));
     }
 }
