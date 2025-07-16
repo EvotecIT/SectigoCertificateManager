@@ -8,6 +8,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -437,5 +438,42 @@ public sealed class CertificatesClientTests {
 
         Assert.NotNull(result);
         Assert.Equal(3, result!.Certificates.Count);
+    }
+
+    [Fact]
+    public async Task ImportAsync_SendsMultipartRequest() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new ImportCertificateResponse { ProcessedCount = 2, Errors = new[] { "err" } })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("DATA"));
+        var result = await certificates.ImportAsync(10, stream, "certs.zip");
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal("https://example.com/v1/certificate/import?orgId=10", handler.Request.RequestUri!.ToString());
+        Assert.NotNull(handler.Request.Content);
+        Assert.StartsWith("multipart/form-data", handler.Request.Content!.Headers.ContentType!.MediaType);
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.ProcessedCount);
+        Assert.Single(result.Errors);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task ImportAsync_InvalidOrgId_Throws(int orgId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        using var stream = new MemoryStream();
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.ImportAsync(orgId, stream, "certs.zip"));
     }
 }
