@@ -5,6 +5,7 @@ using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System.IO;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 
@@ -29,8 +30,27 @@ public sealed class CertificatesClient {
     /// <param name="certificateId">Identifier of the certificate to retrieve.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> GetAsync(int certificateId, CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
         var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Retrieves the status of a certificate by identifier.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<CertificateStatus?> GetStatusAsync(int certificateId, CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var response = await _client.GetAsync($"v1/certificate/{certificateId}/status", cancellationToken).ConfigureAwait(false);
+        var result = await response.Content.ReadFromJsonAsync<StatusResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        return result?.Status;
     }
 
     /// <summary>
@@ -83,17 +103,103 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
-    /// Searches for certificates using the provided filter.
+    /// Renews a certificate by order number.
     /// </summary>
-    public async Task<CertificateResponse?> SearchAsync(CertificateSearchRequest request, CancellationToken cancellationToken = default) {
+    /// <param name="orderNumber">Order number used to identify the certificate.</param>
+    /// <param name="request">Payload describing renewal parameters.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The identifier of the newly issued certificate.</returns>
+    public async Task<int> RenewByOrderNumberAsync(long orderNumber, RenewCertificateRequest request, CancellationToken cancellationToken = default) {
         if (request is null) {
             throw new ArgumentNullException(nameof(request));
         }
 
-        var query = BuildQuery(request);
-        var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken);
-        var items = await response.Content.ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken);
-        return items is null ? null : new CertificateResponse { Certificates = items };
+        var response = await _client.PostAsync($"v1/certificate/renew/{orderNumber}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        var result = await response.Content.ReadFromJsonAsync<RenewCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        return result?.SslId ?? 0;
+    }
+
+    /// <summary>
+    /// Searches for certificates using the provided filter.
+    /// </summary>
+    public async Task<CertificateResponse?> SearchAsync(
+        CertificateSearchRequest request,
+        CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var list = new List<Certificate>();
+        await foreach (var certificate in EnumerateSearchAsync(request, cancellationToken: cancellationToken).ConfigureAwait(false)) {
+            list.Add(certificate);
+        }
+
+        return list.Count == 0 ? null : new CertificateResponse { Certificates = list };
+    }
+
+    /// <summary>
+    /// Streams search results page by page.
+    /// </summary>
+    /// <param name="request">Filter describing certificates to retrieve.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async IAsyncEnumerable<Certificate> EnumerateSearchAsync(
+        CertificateSearchRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var originalSize = request.Size;
+        var originalPosition = request.Position;
+        var pageSize = request.Size ?? 200;
+        var position = request.Position ?? 0;
+
+        try {
+            var query = BuildQuery(request);
+            var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
+            var page = await response.Content
+                .ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken)
+                .ConfigureAwait(false);
+            if (page is null || page.Count == 0) {
+                yield break;
+            }
+
+            foreach (var certificate in page) {
+                yield return certificate;
+            }
+
+            if (page.Count < pageSize) {
+                yield break;
+            }
+
+            request.Size = pageSize;
+            position += pageSize;
+
+            while (true) {
+                request.Position = position;
+                query = BuildQuery(request);
+                response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
+                page = await response.Content
+                    .ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken)
+                    .ConfigureAwait(false);
+                if (page is null || page.Count == 0) {
+                    yield break;
+                }
+
+                foreach (var certificate in page) {
+                    yield return certificate;
+                }
+
+                if (page.Count < pageSize) {
+                    yield break;
+                }
+
+                position += pageSize;
+            }
+        } finally {
+            request.Size = originalSize;
+            request.Position = originalPosition;
+        }
     }
 
     /// <summary>
@@ -108,6 +214,9 @@ public sealed class CertificatesClient {
         string path,
         string format = "base64",
         CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
         if (string.IsNullOrEmpty(path)) {
             throw new ArgumentException("Path cannot be null or empty.", nameof(path));
         }
@@ -123,6 +232,20 @@ public sealed class CertificatesClient {
             await stream.CopyToAsync(file, cancellationToken).ConfigureAwait(false);
 #endif
         }
+    }
+
+    /// <summary>
+    /// Deletes a certificate by identifier.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to delete.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task DeleteAsync(int certificateId, CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
     }
 
     private static string BuildQuery(CertificateSearchRequest request) {
@@ -204,5 +327,10 @@ public sealed class CertificatesClient {
         AppendDate("dateTo", request.DateTo);
 
         return builder.ToString();
+    }
+
+    private sealed class StatusResponse {
+        /// <summary>Gets or sets the certificate status.</summary>
+        public CertificateStatus Status { get; set; }
     }
 }
