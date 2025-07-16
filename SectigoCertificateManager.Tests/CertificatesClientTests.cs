@@ -8,6 +8,8 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -92,14 +94,10 @@ public sealed class CertificatesClientTests {
     [Theory]
     [InlineData(0)]
     [InlineData(-5)]
-    public async Task IssueAsync_InvalidTerm_Throws(int term) {
-        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        using var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
-        var certificates = new CertificatesClient(client);
+    public void IssueCertificateRequest_InvalidTerm_Throws(int term) {
+        var request = new IssueCertificateRequest();
 
-        var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = term };
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.IssueAsync(request));
+        Assert.Throws<ArgumentOutOfRangeException>(() => request.Term = term);
     }
 
     [Theory]
@@ -315,10 +313,11 @@ public sealed class CertificatesClientTests {
         }
     }
 
-    [Fact]
-    public async Task GetStatusAsync_ReturnsStatus() {
+    [Theory]
+    [MemberData(nameof(StatusCases))]
+    public async Task GetStatusAsync_ReturnsStatus(string text, CertificateStatus expected) {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
-            Content = JsonContent.Create(new { Status = "Issued" })
+            Content = JsonContent.Create(new { Status = text })
         };
 
         var handler = new TestHandler(response);
@@ -330,7 +329,13 @@ public sealed class CertificatesClientTests {
 
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/certificate/3/status", handler.Request!.RequestUri!.ToString());
-        Assert.Equal(CertificateStatus.Issued, result);
+        Assert.Equal(expected, result);
+    }
+
+    public static IEnumerable<object[]> StatusCases() {
+        foreach (CertificateStatus status in Enum.GetValues(typeof(CertificateStatus))) {
+            yield return new object[] { status.ToString(), status };
+        }
     }
 
     [Theory]
@@ -368,6 +373,38 @@ public sealed class CertificatesClientTests {
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.DeleteAsync(certificateId));
+    }
+
+    [Fact]
+    public async Task GetRevocationAsync_ReturnsDetails() {
+        var revocation = new CertificateRevocation { Reason = "compromised" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(revocation)
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var result = await certificates.GetRevocationAsync(8);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/certificate/8/revocation", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Equal("compromised", result!.Reason);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-3)]
+    public async Task GetRevocationAsync_InvalidCertificateId_Throws(int certificateId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.GetRevocationAsync(certificateId));
     }
 
     [Fact]
@@ -437,5 +474,42 @@ public sealed class CertificatesClientTests {
 
         Assert.NotNull(result);
         Assert.Equal(3, result!.Certificates.Count);
+    }
+
+    [Fact]
+    public async Task ImportAsync_SendsMultipartRequest() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new ImportCertificateResponse { ProcessedCount = 2, Errors = new[] { "err" } })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("DATA"));
+        var result = await certificates.ImportAsync(10, stream, "certs.zip");
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal("https://example.com/v1/certificate/import?orgId=10", handler.Request.RequestUri!.ToString());
+        Assert.NotNull(handler.Request.Content);
+        Assert.StartsWith("multipart/form-data", handler.Request.Content!.Headers.ContentType!.MediaType);
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.ProcessedCount);
+        Assert.Single(result.Errors);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task ImportAsync_InvalidOrgId_Throws(int orgId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        using var stream = new MemoryStream();
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.ImportAsync(orgId, stream, "certs.zip"));
     }
 }
