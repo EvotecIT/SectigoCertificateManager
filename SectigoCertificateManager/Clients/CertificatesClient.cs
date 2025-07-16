@@ -3,8 +3,8 @@ namespace SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
-using System.Net.Http.Json;
 using System.IO;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
