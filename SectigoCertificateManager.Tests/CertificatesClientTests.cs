@@ -213,8 +213,11 @@ public sealed class CertificatesClientTests {
         await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.RenewAsync(1, null!));
     }
 
-    [Fact]
-    public async Task DownloadAsync_WritesFile() {
+    [Theory]
+    [InlineData(2, true)]
+    [InlineData(0, false)]
+    [InlineData(-1, false)]
+    public async Task DownloadAsync_WritesFile(int certificateId, bool isValid) {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = new StringContent("DATA")
         };
@@ -225,11 +228,15 @@ public sealed class CertificatesClientTests {
 
         var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         try {
-            await certificates.DownloadAsync(2, path);
-            Assert.NotNull(handler.Request);
-            Assert.Equal("https://example.com/ssl/v1/collect/2?format=base64", handler.Request!.RequestUri!.ToString());
-            Assert.True(File.Exists(path));
-            Assert.Equal("DATA", File.ReadAllText(path));
+            if (isValid) {
+                await certificates.DownloadAsync(certificateId, path);
+                Assert.NotNull(handler.Request);
+                Assert.Equal($"https://example.com/ssl/v1/collect/{certificateId}?format=base64", handler.Request!.RequestUri!.ToString());
+                Assert.True(File.Exists(path));
+                Assert.Equal("DATA", File.ReadAllText(path));
+            } else {
+                await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.DownloadAsync(certificateId, path));
+            }
         } finally {
             File.Delete(path);
         }
