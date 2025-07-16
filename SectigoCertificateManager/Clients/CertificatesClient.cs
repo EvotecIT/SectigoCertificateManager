@@ -38,6 +38,21 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
+    /// Retrieves the status of a certificate by identifier.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<CertificateStatus?> GetStatusAsync(int certificateId, CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var response = await _client.GetAsync($"v1/certificate/{certificateId}/status", cancellationToken).ConfigureAwait(false);
+        var result = await response.Content.ReadFromJsonAsync<StatusResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        return result?.Status;
+    }
+
+    /// <summary>
     /// Issues a new certificate.
     /// </summary>
     /// <param name="request">Payload describing the certificate to issue.</param>
@@ -211,5 +226,10 @@ public sealed class CertificatesClient {
         AppendDate("dateTo", request.DateTo);
 
         return builder.ToString();
+    }
+
+    private sealed class StatusResponse {
+        /// <summary>Gets or sets the certificate status.</summary>
+        public CertificateStatus Status { get; set; }
     }
 }
