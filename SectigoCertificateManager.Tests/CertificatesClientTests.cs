@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -93,14 +94,10 @@ public sealed class CertificatesClientTests {
     [Theory]
     [InlineData(0)]
     [InlineData(-5)]
-    public async Task IssueAsync_InvalidTerm_Throws(int term) {
-        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        using var httpClient = new HttpClient(handler);
-        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
-        var certificates = new CertificatesClient(client);
+    public void IssueCertificateRequest_InvalidTerm_Throws(int term) {
+        var request = new IssueCertificateRequest();
 
-        var request = new IssueCertificateRequest { CommonName = "example.com", ProfileId = 1, Term = term };
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.IssueAsync(request));
+        Assert.Throws<ArgumentOutOfRangeException>(() => request.Term = term);
     }
 
     [Theory]
@@ -316,10 +313,11 @@ public sealed class CertificatesClientTests {
         }
     }
 
-    [Fact]
-    public async Task GetStatusAsync_ReturnsStatus() {
+    [Theory]
+    [MemberData(nameof(StatusCases))]
+    public async Task GetStatusAsync_ReturnsStatus(string text, CertificateStatus expected) {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
-            Content = JsonContent.Create(new { Status = "Issued" })
+            Content = JsonContent.Create(new { Status = text })
         };
 
         var handler = new TestHandler(response);
@@ -331,7 +329,13 @@ public sealed class CertificatesClientTests {
 
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/certificate/3/status", handler.Request!.RequestUri!.ToString());
-        Assert.Equal(CertificateStatus.Issued, result);
+        Assert.Equal(expected, result);
+    }
+
+    public static IEnumerable<object[]> StatusCases() {
+        foreach (CertificateStatus status in Enum.GetValues(typeof(CertificateStatus))) {
+            yield return new object[] { status.ToString(), status };
+        }
     }
 
     [Theory]
