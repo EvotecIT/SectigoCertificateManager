@@ -169,6 +169,28 @@ public sealed class CertificatesClientTests {
     }
 
     [Fact]
+    public async Task RenewByOrderNumberAsync_SendsRequestAndReturnsId() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new RenewCertificateResponse { SslId = 11 })
+        };
+
+        var handler = new TestHandler(response);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var request = new RenewCertificateRequest { Csr = "csr", DcvMode = "EMAIL", DcvEmail = "admin@example.com" };
+        var result = await certificates.RenewByOrderNumberAsync(555, request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/certificate/renew/555", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(handler.Body);
+        Assert.Contains("\"csr\":\"csr\"", handler.Body);
+        Assert.Contains("\"dcvMode\":\"EMAIL\"", handler.Body);
+        Assert.Contains("\"dcvEmail\":\"admin@example.com\"", handler.Body);
+        Assert.Equal(11, result);
+    }
+
+    [Fact]
     public async Task SearchAsync_EncodesAndOrdersQueryParameters() {
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(Array.Empty<Certificate>())

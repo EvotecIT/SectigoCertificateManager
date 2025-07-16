@@ -102,6 +102,23 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
+    /// Renews a certificate by order number.
+    /// </summary>
+    /// <param name="orderNumber">Order number used to identify the certificate.</param>
+    /// <param name="request">Payload describing renewal parameters.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The identifier of the newly issued certificate.</returns>
+    public async Task<int> RenewByOrderNumberAsync(long orderNumber, RenewCertificateRequest request, CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var response = await _client.PostAsync($"v1/certificate/renew/{orderNumber}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        var result = await response.Content.ReadFromJsonAsync<RenewCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        return result?.SslId ?? 0;
+    }
+
+    /// <summary>
     /// Searches for certificates using the provided filter.
     /// </summary>
     public async Task<CertificateResponse?> SearchAsync(CertificateSearchRequest request, CancellationToken cancellationToken = default) {
