@@ -50,6 +50,14 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
     /// <summary>Issues a certificate using provided parameters.</summary>
     /// <para>Builds an API client and submits an <see cref="IssueCertificateRequest"/>.</para>
     protected override void ProcessRecord() {
+        foreach (var san in SubjectAlternativeNames) {
+            if (string.IsNullOrWhiteSpace(san)) {
+                var ex = new ArgumentException("Value cannot be empty.", nameof(SubjectAlternativeNames));
+                var record = new ErrorRecord(ex, "InvalidSubjectAlternativeName", ErrorCategory.InvalidArgument, san);
+                ThrowTerminatingError(record);
+            }
+        }
+
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);
