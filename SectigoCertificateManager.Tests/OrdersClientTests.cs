@@ -166,6 +166,31 @@ public sealed class OrdersClientTests {
         Assert.Equal(3, results[2].Id);
     }
 
+    [Fact]
+    public async Task EnumerateOrdersAsync_CanBeCancelled() {
+        var page1 = new[] { new Order { Id = 1 } };
+        var page2 = new[] { new Order { Id = 2 } };
+
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page1) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page2) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        using var cts = new CancellationTokenSource();
+        var enumerator = orders.EnumerateOrdersAsync(pageSize: 1, cancellationToken: cts.Token).GetAsyncEnumerator();
+
+        Assert.True(await enumerator.MoveNextAsync());
+        Assert.Equal(1, enumerator.Current.Id);
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => await enumerator.MoveNextAsync());
+    }
+
     private sealed class TestProgress : IProgress<double> {
         public double Value { get; private set; }
         public void Report(double value) => Value = value;
