@@ -269,6 +269,26 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
+    /// Validates a certificate request without issuing it.
+    /// </summary>
+    /// <param name="request">Payload describing the certificate to validate.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<ValidateCertificateResponse?> ValidateCertificateRequestAsync(
+        ValidateCertificateRequest request,
+        CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var response = await _client
+            .PostAsync("v1/certificate/validate", JsonContent.Create(request, options: s_json), cancellationToken)
+            .ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsync<ValidateCertificateResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Imports certificates using a zip archive.
     /// </summary>
     /// <param name="orgId">Identifier of the organization.</param>
