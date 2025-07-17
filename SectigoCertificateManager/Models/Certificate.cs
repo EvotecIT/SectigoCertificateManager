@@ -122,6 +122,10 @@ public sealed class Certificate {
             }
         }
 
+        if (progress is not null && total > 0) {
+            progress.Report(1d);
+        }
+
         return FromBase64(builder.ToString());
     }
 }
