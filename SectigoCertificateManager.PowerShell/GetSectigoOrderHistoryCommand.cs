@@ -7,6 +7,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Retrieves order history.</summary>
 /// <para>Creates an API client and returns history entries for an order.</para>
 [Cmdlet(VerbsCommon.Get, "SectigoOrderHistory")]
+[CmdletBinding()]
 [OutputType(typeof(Models.OrderHistoryEntry))]
 public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>

@@ -7,6 +7,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Retrieves a profile.</summary>
 /// <para>Creates an API client and returns profile details using the identifier.</para>
 [Cmdlet(VerbsCommon.Get, "SectigoProfile")]
+[CmdletBinding()]
 [OutputType(typeof(Models.Profile))]
 public sealed class GetSectigoProfileCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
