@@ -512,4 +512,36 @@ public sealed class CertificatesClientTests {
         using var stream = new MemoryStream();
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.ImportAsync(orgId, stream, "certs.zip"));
     }
+
+    [Fact]
+    public async Task ValidateCertificateRequestAsync_SendsRequest() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new ValidateCertificateResponse { IsValid = true })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var request = new ValidateCertificateRequest { Csr = "csrdata" };
+        var result = await certificates.ValidateCertificateRequestAsync(request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/certificate/validate", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(handler.Body);
+        Assert.Contains("\"csr\":\"csrdata\"", handler.Body);
+        Assert.NotNull(result);
+        Assert.True(result!.IsValid);
+    }
+
+    [Fact]
+    public async Task ValidateCertificateRequestAsync_NullRequest_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(new ValidateCertificateResponse()) });
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.ValidateCertificateRequestAsync(null!));
+    }
 }
