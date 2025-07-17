@@ -41,11 +41,11 @@ public static class ApiConfigLoader {
         string? version = Environment.GetEnvironmentVariable("SECTIGO_API_VERSION");
 
         if (baseUrl is not null && token is not null && customerUri is not null) {
-            return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ParseVersion(version), token: token);
+            return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ApiVersionHelper.Parse(version), token: token);
         }
 
         if (baseUrl is not null && username is not null && password is not null && customerUri is not null) {
-            return new ApiConfig(baseUrl, username, password, customerUri, ParseVersion(version));
+            return new ApiConfig(baseUrl, username, password, customerUri, ApiVersionHelper.Parse(version));
         }
 
         if (string.IsNullOrEmpty(path)) {
@@ -68,9 +68,6 @@ public static class ApiConfigLoader {
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var model = JsonSerializer.Deserialize<FileModel>(json, options)
                     ?? throw new InvalidOperationException("Invalid configuration file.");
-        return new ApiConfig(model.BaseUrl, model.Username, model.Password, model.CustomerUri, ParseVersion(model.ApiVersion), token: model.Token);
+        return new ApiConfig(model.BaseUrl, model.Username, model.Password, model.CustomerUri, ApiVersionHelper.Parse(model.ApiVersion), token: model.Token);
     }
-
-    private static ApiVersion ParseVersion(string? value)
-        => Enum.TryParse<ApiVersion>(value, ignoreCase: true, out var v) ? v : ApiVersion.V25_6;
 }
