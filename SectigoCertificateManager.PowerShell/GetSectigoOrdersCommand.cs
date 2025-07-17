@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -8,7 +9,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <para>Creates an API client and lists all orders for the account.</para>
 [Cmdlet(VerbsCommon.Get, "SectigoOrders")]
 [OutputType(typeof(Models.Order))]
-public sealed class GetSectigoOrdersCommand : PSCmdlet {
+public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
     /// <summary>The API base URL.</summary>
     [Parameter(Mandatory = true)]
     public string BaseUrl { get; set; } = string.Empty;
@@ -31,18 +32,13 @@ public sealed class GetSectigoOrdersCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and outputs all orders.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var orders = new OrdersClient(client);
-        var enumerator = orders.EnumerateOrdersAsync().GetAsyncEnumerator();
 
-        try {
-            while (enumerator.MoveNextAsync().GetAwaiter().GetResult()) {
-                WriteObject(enumerator.Current);
-            }
-        } finally {
-            enumerator.DisposeAsync().GetAwaiter().GetResult();
+        await foreach (var order in orders.EnumerateOrdersAsync(cancellationToken: CancelToken).ConfigureAwait(false)) {
+            WriteObject(order);
         }
     }
 }
