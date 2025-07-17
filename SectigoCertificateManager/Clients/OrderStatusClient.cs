@@ -33,6 +33,34 @@ public sealed class OrderStatusClient {
         return result?.Status;
     }
 
+    /// <summary>
+    /// Polls order status until it reaches a terminal value.
+    /// </summary>
+    /// <param name="orderId">Identifier of the order to watch.</param>
+    /// <param name="pollInterval">Delay between status checks.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<OrderStatus?> WatchAsync(
+        int orderId,
+        TimeSpan pollInterval,
+        CancellationToken cancellationToken = default) {
+        if (orderId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(orderId));
+        }
+
+        OrderStatus? status = await GetStatusAsync(orderId, cancellationToken).ConfigureAwait(false);
+        while (status is OrderStatus.NotInitiated or OrderStatus.Submitted) {
+            if (pollInterval > TimeSpan.Zero) {
+                await Task.Delay(pollInterval, cancellationToken).ConfigureAwait(false);
+            } else {
+                await Task.Yield();
+            }
+
+            status = await GetStatusAsync(orderId, cancellationToken).ConfigureAwait(false);
+        }
+
+        return status;
+    }
+
     private sealed class StatusResponse {
         /// <summary>Gets or sets the order status.</summary>
         public OrderStatus Status { get; set; }
