@@ -52,7 +52,11 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         }
 
         _client = httpClient;
-        _client.BaseAddress = new Uri(config.BaseUrl);
+        string baseUrl = config.BaseUrl;
+        if (!baseUrl.EndsWith("/", StringComparison.Ordinal)) {
+            baseUrl += "/";
+        }
+        _client.BaseAddress = new Uri(baseUrl);
         _refreshToken = config.RefreshToken;
         _token = config.Token;
         _tokenExpiresAt = config.TokenExpiresAt;

@@ -237,9 +237,7 @@ public sealed class CertificatesClient {
             throw new ArgumentException("Path cannot be null or empty.", nameof(path));
         }
 
-        var basePath = _client.HttpClient.BaseAddress?.AbsolutePath.Trim('/') ?? string.Empty;
-        var segments = new[] { basePath, "ssl", "v1", "collect", certificateId.ToString() };
-        var endpoint = string.Join("/", segments.Where(s => !string.IsNullOrEmpty(s)));
+        var endpoint = $"ssl/v1/collect/{certificateId}";
         var url = $"{endpoint}?format={Uri.EscapeDataString(format)}";
         var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
         var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
