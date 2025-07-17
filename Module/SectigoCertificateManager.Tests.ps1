@@ -53,6 +53,12 @@ try {
     throw "Failed to import module $ModuleName"
 }
 
+$testFiles = Get-ChildItem -Path "$PSScriptRoot\Tests" -Filter '*.Tests.ps1' -Recurse -ErrorAction SilentlyContinue
+if (-not $testFiles) {
+    Write-Warning 'No Pester tests found. Skipping.'
+    return
+}
+
 $Configuration = [PesterConfiguration]::Default
 $Configuration.Run.Path = "$PSScriptRoot\Tests"
 $Configuration.Run.Exit = $true
