@@ -85,6 +85,28 @@ public sealed class ApiConfigBuilder {
         return this;
     }
 
+    /// <summary>
+    /// Detects the API version by querying the server's <c>/version</c> endpoint.
+    /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<ApiConfigBuilder> WithVersionFromServerAsync(CancellationToken cancellationToken = default) {
+        if (string.IsNullOrWhiteSpace(_baseUrl)) {
+            throw new InvalidOperationException("Base URL must be configured before detecting API version.");
+        }
+
+        using var client = new HttpClient();
+        var uri = new Uri(new Uri(_baseUrl), "version");
+        var response = await client.GetAsync(uri, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+#if NETSTANDARD2_0 || NET472
+        var text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+        var text = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
+        _apiVersion = ApiVersionHelper.Parse(text);
+        return this;
+    }
+
     /// <summary>Attaches a client certificate for mutual TLS authentication.</summary>
     /// <param name="certificate">The certificate used for client authentication.</param>
     public ApiConfigBuilder WithClientCertificate(X509Certificate2 certificate) {
