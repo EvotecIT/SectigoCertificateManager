@@ -149,6 +149,9 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         _client.DefaultRequestHeaders.Add("customerUri", cfg.CustomerUri);
 
+        _client.DefaultRequestHeaders.Remove("login");
+        _client.DefaultRequestHeaders.Remove("password");
+
         if (cfg.Token is not null && cfg.Token.Length > 0) {
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", cfg.Token);
         } else {

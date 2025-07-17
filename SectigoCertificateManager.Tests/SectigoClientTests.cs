@@ -51,6 +51,25 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
+    public async Task CredentialsHeadersAreNotDuplicatedAcrossRequests() {
+        var config = new ApiConfig("https://example.com/api/", "u", "p", "c", ApiVersion.V25_4);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+        await client.GetAsync("v1/test2");
+
+        var loginValues = httpClient.DefaultRequestHeaders.GetValues("login").ToList();
+        var passwordValues = httpClient.DefaultRequestHeaders.GetValues("password").ToList();
+
+        Assert.Single(loginValues);
+        Assert.Single(passwordValues);
+        Assert.Equal("u", loginValues[0]);
+        Assert.Equal("p", passwordValues[0]);
+    }
+
+    [Fact]
     public async Task AddsBearerHeaderWhenTokenPresent() {
         var config = new ApiConfig("https://example.com/api/", string.Empty, string.Empty, "cst1", ApiVersion.V25_4, token: "tkn");
         var handler = new TestHandler();
