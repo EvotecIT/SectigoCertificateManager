@@ -51,6 +51,18 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
+    public async Task UsesBaseUrlWithoutTrailingSlash() {
+        var config = new ApiConfig("https://example.com/api", "user", "pass", "cst1", ApiVersion.V25_4);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        Assert.Equal(new Uri("https://example.com/api/v1/test"), handler.Request!.RequestUri);
+    }
+
+    [Fact]
     public async Task AddsBearerHeaderWhenTokenPresent() {
         var config = new ApiConfig("https://example.com/api/", string.Empty, string.Empty, "cst1", ApiVersion.V25_4, token: "tkn");
         var handler = new TestHandler();
