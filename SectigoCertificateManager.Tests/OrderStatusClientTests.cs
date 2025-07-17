@@ -97,4 +97,16 @@ public sealed class OrderStatusClientTests {
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => statuses.GetStatusAsync(orderId));
     }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task WatchAsync_InvalidOrderId_Throws(int orderId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var statuses = new OrderStatusClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => statuses.WatchAsync(orderId, TimeSpan.Zero));
+    }
 }
