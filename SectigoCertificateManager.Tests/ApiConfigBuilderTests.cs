@@ -1,6 +1,9 @@
 using SectigoCertificateManager;
 using System;
 using Xunit;
+using WireMock.RequestBuilders;
+using WireMock.ResponseBuilders;
+using WireMock.Server;
 
 namespace SectigoCertificateManager.Tests;
 
@@ -109,5 +112,24 @@ public sealed class ApiConfigBuilderTests {
         var builder = new ApiConfigBuilder();
 
         Assert.Throws<ArgumentException>(() => builder.WithCredentials("user", null!));
+    }
+
+    [Fact]
+    public async Task WithVersionFromServerAsync_SetsApiVersion() {
+        using var server = WireMockServer.Start();
+        server.Given(Request.Create().WithPath("/version").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithBody("25.5"));
+
+        var builder = new ApiConfigBuilder()
+            .WithBaseUrl(server.Url!)
+            .WithToken("tok")
+            .WithCustomerUri("cst1");
+
+        await builder.WithVersionFromServerAsync();
+        var config = builder.Build();
+
+        Assert.Equal(ApiVersion.V25_5, config.ApiVersion);
     }
 }
