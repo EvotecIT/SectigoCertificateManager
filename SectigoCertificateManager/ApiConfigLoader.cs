@@ -66,8 +66,13 @@ public static class ApiConfigLoader {
         using var reader = new StreamReader(stream);
         var json = reader.ReadToEnd();
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        var model = JsonSerializer.Deserialize<FileModel>(json, options)
-                    ?? throw new InvalidOperationException("Invalid configuration file.");
+        FileModel model;
+        try {
+            model = JsonSerializer.Deserialize<FileModel>(json, options)
+                    ?? throw new InvalidOperationException();
+        } catch (Exception ex) when (ex is JsonException || ex is InvalidOperationException) {
+            throw new ConfigParseException(path!, ex);
+        }
         return new ApiConfig(model.BaseUrl, model.Username, model.Password, model.CustomerUri, ParseVersion(model.ApiVersion), token: model.Token);
     }
 

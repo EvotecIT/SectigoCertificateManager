@@ -100,4 +100,17 @@ public sealed class ApiConfigLoaderTests {
         var ex = Assert.Throws<FileNotFoundException>(() => ApiConfigLoader.Load(path));
         Assert.Contains(path, ex.Message);
     }
+
+    [Fact]
+    public void Load_WithInvalidJson_Throws() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var path = Path.Combine(tempDir, "cred.json");
+        File.WriteAllText(path, "{invalid}");
+
+        var ex = Assert.Throws<ConfigParseException>(() => ApiConfigLoader.Load(path));
+        Assert.Contains(path, ex.Message);
+
+        Directory.Delete(tempDir, true);
+    }
 }
