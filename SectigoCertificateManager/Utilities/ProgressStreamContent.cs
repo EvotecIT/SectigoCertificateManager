@@ -63,6 +63,10 @@ internal sealed class ProgressStreamContent : HttpContent {
                 _progress.Report((double)uploaded / total);
             }
         }
+
+        if (_progress is not null && total > 0) {
+            _progress.Report(1d);
+        }
     }
 
     protected override bool TryComputeLength(out long length) {
