@@ -3,6 +3,7 @@ namespace SectigoCertificateManager;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -13,14 +14,14 @@ internal static class ApiErrorHandler {
     /// Throws an exception if the response indicates an error.
     /// </summary>
     /// <param name="response">HTTP response message.</param>
-    public static async Task ThrowIfErrorAsync(HttpResponseMessage response) {
+    public static async Task ThrowIfErrorAsync(HttpResponseMessage response, CancellationToken cancellationToken = default) {
         if (response.IsSuccessStatusCode) {
             return;
         }
 
         ApiError? error = null;
         try {
-            error = await response.Content.ReadFromJsonAsync<ApiError>().ConfigureAwait(false);
+            error = await response.Content.ReadFromJsonAsync<ApiError>(cancellationToken).ConfigureAwait(false);
         } catch {
             // ignore parsing errors
         }
