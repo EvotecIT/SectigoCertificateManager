@@ -52,3 +52,10 @@ Update-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Passw
 ```
 
 Use `-SubjectAlternativeNames` to specify multiple SAN values when placing an order.
+
+Validate a certificate request before issuing it:
+
+```csharp
+var validation = await certificates.ValidateCertificateRequestAsync(
+    new ValidateCertificateRequest { Csr = "<csr>" });
+```
