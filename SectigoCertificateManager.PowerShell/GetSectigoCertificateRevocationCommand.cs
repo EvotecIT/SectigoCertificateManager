@@ -7,6 +7,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Retrieves certificate revocation information.</summary>
 /// <para>Creates an API client and returns revocation details for the specified certificate.</para>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateRevocation")]
+[CmdletBinding()]
 [OutputType(typeof(Models.CertificateRevocation))]
 public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet
 {
