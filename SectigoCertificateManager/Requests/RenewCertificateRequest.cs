@@ -41,6 +41,10 @@ public sealed class RenewCertificateRequest {
             }
         }
 
+        if (progress is not null && total > 0) {
+            progress.Report(1d);
+        }
+
         Csr = builder.ToString();
     }
 }
