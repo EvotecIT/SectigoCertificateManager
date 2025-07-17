@@ -225,6 +225,6 @@ public sealed class OrdersClientTests {
 
         await orders.UploadAsync(stream, "application/json", progress);
 
-        Assert.True(progress.Value > 0);
+        Assert.Equal(1d, progress.Value, 3);
     }
 }
