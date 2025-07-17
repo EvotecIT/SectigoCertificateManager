@@ -8,6 +8,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Creates a new certificate order.</summary>
 /// <para>Builds an API client and submits an <see cref="IssueCertificateRequest"/>.</para>
 [Cmdlet(VerbsCommon.New, "SectigoOrder")]
+[CmdletBinding()]
 [OutputType(typeof(Models.Certificate))]
 public sealed class NewSectigoOrderCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>

@@ -9,6 +9,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Creates a new organization.</summary>
 /// <para>Builds an API client and submits a <see cref="CreateOrganizationRequest"/>.</para>
 [Cmdlet(VerbsCommon.New, "SectigoOrganization")]
+[CmdletBinding()]
 [OutputType(typeof(int))]
 public sealed class NewSectigoOrganizationCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
