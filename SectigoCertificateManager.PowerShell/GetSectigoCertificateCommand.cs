@@ -7,6 +7,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Retrieves certificate details.</summary>
 /// <para>Builds an API client and returns the certificate for the specified identifier.</para>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificate")]
+[CmdletBinding()]
 [OutputType(typeof(Models.Certificate))]
 public sealed class GetSectigoCertificateCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>

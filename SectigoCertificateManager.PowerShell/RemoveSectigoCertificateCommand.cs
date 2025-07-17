@@ -8,6 +8,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Deletes a certificate.</summary>
 /// <para>Builds an API client and calls the delete endpoint.</para>
 [Cmdlet(VerbsCommon.Remove, "SectigoCertificate")]
+[CmdletBinding()]
 public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
     [Parameter(Mandatory = true)]

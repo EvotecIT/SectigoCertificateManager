@@ -8,6 +8,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>Retrieves certificate orders.</summary>
 /// <para>Creates an API client and lists all orders for the account.</para>
 [Cmdlet(VerbsCommon.Get, "SectigoOrders")]
+[CmdletBinding()]
 [OutputType(typeof(Models.Order))]
 public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
     /// <summary>The API base URL.</summary>

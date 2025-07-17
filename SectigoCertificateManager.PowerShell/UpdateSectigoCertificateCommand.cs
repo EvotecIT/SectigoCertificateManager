@@ -9,6 +9,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// Updates an existing certificate using the renew endpoint.
 /// </summary>
 [Cmdlet(VerbsData.Update, "SectigoCertificate")]
+[CmdletBinding()]
 [OutputType(typeof(int))]
 public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
