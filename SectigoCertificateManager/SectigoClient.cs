@@ -75,7 +75,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         }
         try {
             var response = await _client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
-            await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+            await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
             _throttle?.Release();
@@ -96,7 +96,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         }
         try {
             var response = await _client.PostAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
-            await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+            await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
             _throttle?.Release();
@@ -117,7 +117,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         }
         try {
             var response = await _client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
-            await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+            await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
             _throttle?.Release();
@@ -137,7 +137,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         }
         try {
             var response = await _client.DeleteAsync(requestUri, cancellationToken).ConfigureAwait(false);
-            await ApiErrorHandler.ThrowIfErrorAsync(response).ConfigureAwait(false);
+            await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
             _throttle?.Release();
