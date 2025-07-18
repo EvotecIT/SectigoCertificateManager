@@ -342,6 +342,56 @@ public sealed class CertificatesClientTests {
         }
     }
 
+    [Fact]
+    public async Task GetCaChainAsync_WritesFile() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("CHAIN")
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var path = Path.Combine(dir, "chain.pem");
+        try {
+            await certificates.GetCaChainAsync(5, path);
+            Assert.NotNull(handler.Request);
+            Assert.Equal("https://example.com/ssl/v1/collect/5?format=x509IO", handler.Request!.RequestUri!.ToString());
+            Assert.True(File.Exists(path));
+            Assert.Equal("CHAIN", File.ReadAllText(path));
+        } finally {
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-4)]
+    public async Task GetCaChainAsync_InvalidCertificateId_Throws(int certificateId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.GetCaChainAsync(certificateId, "path"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public async Task GetCaChainAsync_InvalidPath_Throws(string? path) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => certificates.GetCaChainAsync(1, path!));
+    }
+
     [Theory]
     [MemberData(nameof(StatusCases))]
     public async Task GetStatusAsync_ReturnsStatus(string text, CertificateStatus expected) {

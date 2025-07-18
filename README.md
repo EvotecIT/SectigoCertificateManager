@@ -59,3 +59,11 @@ Validate a certificate request before issuing it:
 var validation = await certificates.ValidateCertificateRequestAsync(
     new ValidateCertificateRequest { Csr = "<csr>" });
 ```
+
+## CLI
+
+Download the issuing chain for a certificate:
+
+```bash
+dotnet run --project SectigoCertificateManager.CLI get-ca-chain 123 ./chain.pem
+```
