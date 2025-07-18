@@ -319,12 +319,10 @@ public sealed class CertificatesClient {
         var endpoint = $"ssl/v1/collect/{certificateId}";
         var url = $"{endpoint}?format={Uri.EscapeDataString(format)}";
         var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
-#if NETSTANDARD2_0 || NET472
-        var data = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#else
-        var data = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-#endif
-        return Certificate.FromBase64(data);
+        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        using (stream) {
+            return Certificate.FromBase64(stream);
+        }
     }
 
     /// <summary>
