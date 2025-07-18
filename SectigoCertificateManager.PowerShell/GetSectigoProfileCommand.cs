@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -34,13 +35,19 @@ public sealed class GetSectigoProfileCommand : PSCmdlet {
     [Parameter(Mandatory = true, Position = 0)]
     public int ProfileId { get; set; }
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and retrieves the profile.</para>
     protected override void ProcessRecord() {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var profiles = new ProfilesClient(client);
-        var profile = profiles.GetAsync(ProfileId).GetAwaiter().GetResult();
+        var profile = profiles.GetAsync(ProfileId, CancellationToken)
+            .GetAwaiter()
+            .GetResult();
         WriteObject(profile);
     }
 }

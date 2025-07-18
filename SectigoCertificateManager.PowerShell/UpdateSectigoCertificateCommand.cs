@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Requests;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -48,6 +49,10 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
     [Parameter]
     public string? DcvEmail { get; set; }
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Renews a certificate using provided parameters.</summary>
     /// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/>.</para>
     protected override void ProcessRecord() {
@@ -59,7 +64,9 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
             DcvMode = DcvMode,
             DcvEmail = DcvEmail
         };
-        var newId = certificates.RenewAsync(CertificateId, request).GetAwaiter().GetResult();
+        var newId = certificates.RenewAsync(CertificateId, request, CancellationToken)
+            .GetAwaiter()
+            .GetResult();
         WriteObject(newId);
     }
 }

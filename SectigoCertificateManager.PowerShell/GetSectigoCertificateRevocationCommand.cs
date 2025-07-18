@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -35,6 +36,10 @@ public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet
     [Parameter(Mandatory = true, Position = 0)]
     public int CertificateId { get; set; }
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and retrieves certificate revocation details.</para>
     protected override void ProcessRecord()
@@ -42,7 +47,9 @@ public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);
-        var revocation = certificates.GetRevocationAsync(CertificateId).GetAwaiter().GetResult();
+        var revocation = certificates.GetRevocationAsync(CertificateId, CancellationToken)
+            .GetAwaiter()
+            .GetResult();
         WriteObject(revocation);
     }
 }
