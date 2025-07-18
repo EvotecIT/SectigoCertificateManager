@@ -1,7 +1,7 @@
 ﻿@{
     AliasesToExport      = @()
     Author               = 'Przemyslaw Klys'
-    CmdletsToExport      = @('Get-SectigoCertificate', 'Get-SectigoOrders', 'Get-SectigoOrganizations', 'Get-SectigoProfile', 'Get-SectigoProfiles', 'New-SectigoOrder', 'Stop-SectigoOrder', 'Update-SectigoCertificate', 'Remove-SectigoCertificate')
+    CmdletsToExport      = @('Get-SectigoCertificate', 'Get-SectigoOrders', 'Get-SectigoOrganizations', 'Get-SectigoProfile', 'Get-SectigoProfiles', 'New-SectigoOrder', 'Stop-SectigoOrder', 'Update-SectigoCertificate', 'Remove-SectigoCertificate', 'Wait-SectigoOrder')
     CompanyName          = 'Evotec'
     CompatiblePSEditions = @('Desktop', 'Core')
     Copyright            = '(c) 2011 - 2025 Przemyslaw Klys @ Evotec. All rights reserved.'
