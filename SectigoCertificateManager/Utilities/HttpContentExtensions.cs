@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// Extension methods for <see cref="HttpContent"/>.
 /// </summary>
-internal static class HttpContentExtensions {
+public static class HttpContentExtensions {
     public static async Task<T?> ReadFromJsonAsyncSafe<T>(
         this HttpContent content,
         JsonSerializerOptions options,
