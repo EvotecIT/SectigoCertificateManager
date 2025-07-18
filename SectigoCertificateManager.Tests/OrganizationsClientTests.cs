@@ -197,4 +197,45 @@ public sealed class OrganizationsClientTests {
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => organizations.UpdateAsync(id, new UpdateOrganizationRequest()));
     }
+
+    [Fact]
+    public async Task UpdateAsync_WithRequest_SendsPayload() {
+        var response = new HttpResponseMessage(HttpStatusCode.NoContent);
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var organizations = new OrganizationsClient(client);
+
+        var request = new UpdateOrganizationRequest { Id = 7, Name = "new" };
+        await organizations.UpdateAsync(request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal(HttpMethod.Put, handler.Request!.Method);
+        Assert.Equal("https://example.com/v1/organization/7", handler.Request.RequestUri!.ToString());
+        Assert.NotNull(handler.Body);
+        Assert.Contains("\"name\":\"new\"", handler.Body);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_RequestNull_Throws() {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var organizations = new OrganizationsClient(client);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => organizations.UpdateAsync(null!));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-3)]
+    public async Task UpdateAsync_RequestInvalidId_Throws(int id) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.NoContent));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var organizations = new OrganizationsClient(client);
+
+        var request = new UpdateOrganizationRequest { Id = id };
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => organizations.UpdateAsync(request));
+    }
 }
