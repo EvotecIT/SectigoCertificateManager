@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager.Clients;
 
 using SectigoCertificateManager.Models;
+using SectigoCertificateManager.Utilities;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -26,7 +27,9 @@ public sealed class ProfilesClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Profile?> GetAsync(int profileId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/profile/{profileId}", cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<Profile>(s_json, cancellationToken).ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsyncSafe<Profile>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -36,7 +39,7 @@ public sealed class ProfilesClient {
     public async Task<IReadOnlyList<Profile>> ListProfilesAsync(CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync("v1/profile", cancellationToken).ConfigureAwait(false);
         return await response.Content
-            .ReadFromJsonAsync<IReadOnlyList<Profile>>(s_json, cancellationToken)
+            .ReadFromJsonAsyncSafe<IReadOnlyList<Profile>>(s_json, cancellationToken)
             .ConfigureAwait(false) ?? Array.Empty<Profile>();
     }
 }

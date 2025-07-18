@@ -1,6 +1,8 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Net.Http.Json;
+using System.Text.Json;
+using SectigoCertificateManager.Utilities;
 
 namespace SectigoCertificateManager.Examples.Examples;
 
@@ -8,6 +10,9 @@ namespace SectigoCertificateManager.Examples.Examples;
 /// Demonstrates automatically refreshing the authentication token.
 /// </summary>
 public static class TokenRefreshExample {
+    private static readonly JsonSerializerOptions s_json = new() {
+        PropertyNameCaseInsensitive = true
+    };
     /// <summary>Runs the example using <see cref="ApiConfigBuilder.WithTokenRefresh"/>.</summary>
     public static async Task RunAsync() {
         var config = new ApiConfigBuilder()
@@ -35,7 +40,9 @@ public static class TokenRefreshExample {
 
         var response = await http.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        var data = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken: cancellationToken);
+        var data = await response.Content
+            .ReadFromJsonAsyncSafe<LoginResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
         var expires = DateTimeOffset.UtcNow.AddSeconds(data!.Expires);
         return new TokenInfo(data.Token, expires);
     }

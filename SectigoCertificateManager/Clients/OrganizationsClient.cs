@@ -5,6 +5,7 @@ using SectigoCertificateManager.Requests;
 using System;
 using System.Net.Http.Json;
 using System.Text.Json;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Provides access to organization related endpoints.
@@ -28,7 +29,9 @@ public sealed class OrganizationsClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Organization?> GetAsync(int organizationId, CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync($"v1/organization/{organizationId}", cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<Organization>(s_json, cancellationToken).ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsyncSafe<Organization>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -85,7 +88,7 @@ public sealed class OrganizationsClient {
     public async Task<IReadOnlyList<Organization>> ListOrganizationsAsync(CancellationToken cancellationToken = default) {
         var response = await _client.GetAsync("v1/organization", cancellationToken).ConfigureAwait(false);
         var organizations = await response.Content
-            .ReadFromJsonAsync<IReadOnlyList<Organization>>(s_json, cancellationToken)
+            .ReadFromJsonAsyncSafe<IReadOnlyList<Organization>>(s_json, cancellationToken)
             .ConfigureAwait(false);
         return organizations ?? Array.Empty<Organization>();
     }

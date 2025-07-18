@@ -3,6 +3,7 @@ namespace SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using System.Net.Http.Json;
 using System.Text.Json;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Provides access to certificate type information.
@@ -34,7 +35,7 @@ public sealed class CertificateTypesClient {
 
         var response = await _client.GetAsync(endpoint, cancellationToken).ConfigureAwait(false);
         var types = await response.Content
-            .ReadFromJsonAsync<IReadOnlyList<CertificateType>>(s_json, cancellationToken)
+            .ReadFromJsonAsyncSafe<IReadOnlyList<CertificateType>>(s_json, cancellationToken)
             .ConfigureAwait(false);
         return types ?? Array.Empty<CertificateType>();
     }
