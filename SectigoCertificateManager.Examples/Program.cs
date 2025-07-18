@@ -12,3 +12,4 @@ await ListCertificateTypesExample.RunAsync();
 await UpsertCertificateTypeExample.RunAsync();
 await WatchOrdersExample.RunAsync();
 CsrGeneratorExample.Run();
+HttpClientPropertyExample.Run();
