@@ -20,8 +20,9 @@ public static class DownloadCertificateExample {
 
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);
+        var progress = new Progress<double>(p => Console.WriteLine($"Downloaded {p:P0}"));
 
         Console.WriteLine("Downloading certificate...");
-        await certificates.DownloadAsync(12345, "certificate.p7b");
+        await certificates.DownloadAsync(12345, "certificate.p7b", progress: progress);
     }
 }
