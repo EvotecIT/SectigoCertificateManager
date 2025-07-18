@@ -9,3 +9,4 @@ await GetCertificateRevocationExample.RunAsync();
 await ImportCertificatesExample.RunAsync();
 await ListCertificateTypesExample.RunAsync();
 await WatchOrdersExample.RunAsync();
+CsrGeneratorExample.Run();
