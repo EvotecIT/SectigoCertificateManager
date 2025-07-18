@@ -5,6 +5,8 @@ using SectigoCertificateManager.Models;
 /// Request payload used to update an organization.
 /// </summary>
 public sealed class UpdateOrganizationRequest {
+    /// <summary>Gets or sets the organization identifier.</summary>
+    public int Id { get; set; }
     /// <summary>Gets or sets the organization name.</summary>
     public string? Name { get; set; }
 

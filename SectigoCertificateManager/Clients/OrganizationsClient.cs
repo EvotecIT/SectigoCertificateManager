@@ -82,6 +82,22 @@ public sealed class OrganizationsClient {
     }
 
     /// <summary>
+    /// Updates an existing organization.
+    /// </summary>
+    /// <param name="request">Payload describing updated fields including identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public Task UpdateAsync(UpdateOrganizationRequest request, CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+        if (request.Id <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(request.Id));
+        }
+
+        return UpdateAsync(request.Id, request, cancellationToken);
+    }
+
+    /// <summary>
     /// Retrieves all organizations visible to the user.
     /// </summary>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
