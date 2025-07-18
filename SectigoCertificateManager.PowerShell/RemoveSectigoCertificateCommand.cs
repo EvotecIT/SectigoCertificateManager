@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -34,6 +35,10 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
     [Parameter(Mandatory = true, Position = 0)]
     public int CertificateId { get; set; }
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Deletes a certificate.</summary>
     /// <para>Builds an API client and calls the delete endpoint.</para>
     protected override void ProcessRecord() {
@@ -46,6 +51,8 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);
-        certificates.DeleteAsync(CertificateId).GetAwaiter().GetResult();
+        certificates.DeleteAsync(CertificateId, CancellationToken)
+            .GetAwaiter()
+            .GetResult();
     }
 }
