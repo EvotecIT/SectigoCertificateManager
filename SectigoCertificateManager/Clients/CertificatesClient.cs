@@ -427,6 +427,7 @@ public sealed class CertificatesClient {
         Append("installStatus", request.InstallStatus);
         Append("renewalStatus", request.RenewalStatus);
         Append("issuer", request.Issuer);
+        Append("issuerDN", request.IssuerDn);
         Append("serialNumber", request.SerialNumber);
         Append("requester", request.Requester);
         Append("externalRequester", request.ExternalRequester);
