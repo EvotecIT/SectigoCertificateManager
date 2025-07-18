@@ -65,4 +65,16 @@ public sealed class ApiErrorHandlerTests {
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
         Assert.Equal(-2, ex.ErrorCode);
     }
+
+    [Fact]
+    public async Task ThrowsApiException_WhenErrorBodyInvalid() {
+        var response = new HttpResponseMessage(HttpStatusCode.BadRequest) {
+            Content = new StringContent("oops")
+        };
+
+        using var client = CreateClient(response);
+
+        var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
+        Assert.Equal(-1, ex.ErrorCode);
+    }
 }

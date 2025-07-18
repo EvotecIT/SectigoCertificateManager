@@ -99,4 +99,15 @@ public sealed class ProfilesClientTests {
         Assert.NotNull(result);
         Assert.Empty(result);
     }
+
+    [Fact]
+    public async Task GetAsync_InvalidJson_ThrowsApiException() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("not json")
+        };
+        var client = new StubClient(response);
+        var profiles = new ProfilesClient(client);
+
+        await Assert.ThrowsAsync<ApiException>(() => profiles.GetAsync(1));
+    }
 }
