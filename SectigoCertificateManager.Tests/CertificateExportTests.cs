@@ -88,7 +88,10 @@ public sealed class CertificateExportTests {
             CertificateExport.SavePfx(cert, path, "pwd");
             Assert.True(Directory.Exists(dir));
             Assert.True(File.Exists(path));
+            // X509Certificate2 constructor is obsolete on .NET 9.0 and later.
+#pragma warning disable SYSLIB0057
             using var loaded = new X509Certificate2(path, "pwd");
+#pragma warning restore SYSLIB0057
             Assert.Equal(cert.Thumbprint, loaded.Thumbprint);
         } finally {
             if (Directory.Exists(dir)) {

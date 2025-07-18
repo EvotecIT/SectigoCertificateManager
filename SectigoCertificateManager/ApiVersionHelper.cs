@@ -13,7 +13,7 @@ public static class ApiVersionHelper {
             return ApiVersion.V25_6;
         }
 
-        var trimmed = value.Trim();
+        var trimmed = value!.Trim();
         if (trimmed.StartsWith("v", StringComparison.OrdinalIgnoreCase)) {
             trimmed = trimmed.Substring(1);
         }
