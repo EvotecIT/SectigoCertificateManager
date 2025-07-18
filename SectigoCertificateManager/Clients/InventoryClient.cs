@@ -48,10 +48,14 @@ public sealed class InventoryClient {
         if (header is null) {
             return list;
         }
-        var columns = SplitCsvLine(header);
+
+        var buffer = new List<string>();
+        var builder = new StringBuilder();
+
+        var columns = SplitCsvLine(header, buffer, builder);
         string? line;
         while ((line = reader.ReadLine()) != null) {
-            var values = SplitCsvLine(line);
+            var values = SplitCsvLine(line, buffer, builder);
             var record = new InventoryRecord();
             for (var i = 0; i < columns.Length && i < values.Length; i++) {
                 var value = values[i];
@@ -80,9 +84,12 @@ public sealed class InventoryClient {
         return list;
     }
 
-    private static string[] SplitCsvLine(string line) {
-        var values = new List<string>();
-        var builder = new StringBuilder();
+    private static string[] SplitCsvLine(
+        string line,
+        List<string> values,
+        StringBuilder builder) {
+        values.Clear();
+        builder.Clear();
         var inQuotes = false;
         for (var i = 0; i < line.Length; i++) {
             var ch = line[i];
