@@ -1,8 +1,10 @@
 namespace SectigoCertificateManager;
 
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,9 +23,14 @@ internal static class ApiErrorHandler {
 
         ApiError? error = null;
         try {
-            error = await response.Content.ReadFromJsonAsync<ApiError>(cancellationToken).ConfigureAwait(false);
-        } catch {
-            // ignore parsing errors
+            error = await response.Content
+                .ReadFromJsonAsync<ApiError>(cancellationToken)
+                .ConfigureAwait(false);
+        } catch (Exception ex) when (ex is JsonException or NotSupportedException) {
+            throw new ApiException(new ApiError {
+                Code = -1,
+                Description = $"Failed to parse ApiError from response: {ex.Message}"
+            });
         }
 
         error ??= new ApiError {

@@ -5,6 +5,7 @@ using SectigoCertificateManager.Requests;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Provides access to user related endpoints.
@@ -32,7 +33,9 @@ public sealed class UsersClient {
         }
 
         var response = await _client.GetAsync($"v1/user/{userId}", cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<User>(s_json, cancellationToken).ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsyncSafe<User>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -65,7 +68,9 @@ public sealed class UsersClient {
             filter.Position = position;
             var query = BuildQuery(filter);
             var response = await _client.GetAsync($"v1/user{query}", cancellationToken).ConfigureAwait(false);
-            var page = await response.Content.ReadFromJsonAsync<IReadOnlyList<User>>(s_json, cancellationToken).ConfigureAwait(false);
+            var page = await response.Content
+                .ReadFromJsonAsyncSafe<IReadOnlyList<User>>(s_json, cancellationToken)
+                .ConfigureAwait(false);
             if (page is null || page.Count == 0) {
                 yield break;
             }

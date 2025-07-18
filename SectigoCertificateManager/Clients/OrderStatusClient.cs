@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.Clients;
 
 using System.Net.Http.Json;
 using System.Text.Json;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Provides access to order status information.
@@ -29,7 +30,9 @@ public sealed class OrderStatusClient {
         }
 
         var response = await _client.GetAsync($"v1/order/{orderId}/status", cancellationToken).ConfigureAwait(false);
-        var result = await response.Content.ReadFromJsonAsync<StatusResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        var result = await response.Content
+            .ReadFromJsonAsyncSafe<StatusResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
         return result?.Status;
     }
 

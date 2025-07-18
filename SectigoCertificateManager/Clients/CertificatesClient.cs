@@ -10,6 +10,7 @@ using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Provides access to certificate related endpoints.
@@ -37,7 +38,9 @@ public sealed class CertificatesClient {
         }
 
         var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsyncSafe<Certificate>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -51,7 +54,9 @@ public sealed class CertificatesClient {
         }
 
         var response = await _client.GetAsync($"v1/certificate/{certificateId}/status", cancellationToken).ConfigureAwait(false);
-        var result = await response.Content.ReadFromJsonAsync<StatusResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        var result = await response.Content
+            .ReadFromJsonAsyncSafe<StatusResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
         return result?.Status;
     }
 
@@ -66,7 +71,9 @@ public sealed class CertificatesClient {
         }
 
         var response = await _client.GetAsync($"v1/certificate/{certificateId}/revocation", cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<CertificateRevocation>(s_json, cancellationToken).ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsyncSafe<CertificateRevocation>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -84,7 +91,9 @@ public sealed class CertificatesClient {
         }
 
         var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<Certificate>(s_json, cancellationToken).ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsyncSafe<Certificate>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -114,7 +123,9 @@ public sealed class CertificatesClient {
         }
 
         var response = await _client.PostAsync($"v1/certificate/renewById/{certificateId}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
-        var result = await response.Content.ReadFromJsonAsync<RenewCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        var result = await response.Content
+            .ReadFromJsonAsyncSafe<RenewCertificateResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
         return result?.SslId ?? 0;
     }
 
@@ -131,7 +142,9 @@ public sealed class CertificatesClient {
         }
 
         var response = await _client.PostAsync($"v1/certificate/renew/{orderNumber}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
-        var result = await response.Content.ReadFromJsonAsync<RenewCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        var result = await response.Content
+            .ReadFromJsonAsyncSafe<RenewCertificateResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
         return result?.SslId ?? 0;
     }
 
@@ -174,7 +187,7 @@ public sealed class CertificatesClient {
             var query = BuildQuery(request);
             var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
             var page = await response.Content
-                .ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken)
+                .ReadFromJsonAsyncSafe<IReadOnlyList<Certificate>>(s_json, cancellationToken)
                 .ConfigureAwait(false);
             if (page is null || page.Count == 0) {
                 yield break;
@@ -196,7 +209,7 @@ public sealed class CertificatesClient {
                 query = BuildQuery(request);
                 response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
                 page = await response.Content
-                    .ReadFromJsonAsync<IReadOnlyList<Certificate>>(s_json, cancellationToken)
+                    .ReadFromJsonAsyncSafe<IReadOnlyList<Certificate>>(s_json, cancellationToken)
                     .ConfigureAwait(false);
                 if (page is null || page.Count == 0) {
                     yield break;
@@ -282,7 +295,7 @@ public sealed class CertificatesClient {
             .PostAsync("v1/certificate/validate", JsonContent.Create(request, options: s_json), cancellationToken)
             .ConfigureAwait(false);
         return await response.Content
-            .ReadFromJsonAsync<ValidateCertificateResponse>(s_json, cancellationToken)
+            .ReadFromJsonAsyncSafe<ValidateCertificateResponse>(s_json, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -314,7 +327,9 @@ public sealed class CertificatesClient {
         content.Add(fileContent, "file", fileName);
 
         var response = await _client.PostAsync($"v1/certificate/import?orgId={orgId}", content, cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<ImportCertificateResponse>(s_json, cancellationToken).ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsyncSafe<ImportCertificateResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private static string BuildQuery(CertificateSearchRequest request) {
