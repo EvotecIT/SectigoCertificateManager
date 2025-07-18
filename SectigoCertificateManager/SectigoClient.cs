@@ -1,8 +1,10 @@
 namespace SectigoCertificateManager;
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +17,9 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly Func<CancellationToken, Task<TokenInfo>>? _refreshToken;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private readonly SemaphoreSlim? _throttle;
+    private const int s_retryLimit = 5;
+    private const double s_initialBackoffSeconds = 1d;
+    internal Func<TimeSpan, CancellationToken, Task>? DelayAsync { get; set; }
     private string? _token;
     private DateTimeOffset? _tokenExpiresAt;
     private bool _disposed;
@@ -78,7 +83,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
             await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         try {
-            var response = await _client.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            var response = await SendWithRetryAsync(ct => _client.GetAsync(requestUri, ct), cancellationToken).ConfigureAwait(false);
             await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
@@ -99,7 +104,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
             await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         try {
-            var response = await _client.PostAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
+            var response = await SendWithRetryAsync(ct => _client.PostAsync(requestUri, content, ct), cancellationToken).ConfigureAwait(false);
             await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
@@ -120,7 +125,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
             await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         try {
-            var response = await _client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
+            var response = await SendWithRetryAsync(ct => _client.PutAsync(requestUri, content, ct), cancellationToken).ConfigureAwait(false);
             await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
@@ -140,11 +145,48 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
             await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         try {
-            var response = await _client.DeleteAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            var response = await SendWithRetryAsync(ct => _client.DeleteAsync(requestUri, ct), cancellationToken).ConfigureAwait(false);
             await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
             _throttle?.Release();
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendWithRetryAsync(
+        Func<CancellationToken, Task<HttpResponseMessage>> send,
+        CancellationToken cancellationToken) {
+        var attempt = 0;
+        var delay = TimeSpan.FromSeconds(s_initialBackoffSeconds);
+        while (true) {
+            var response = await send(cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode != (HttpStatusCode)429 || attempt >= s_retryLimit - 1) {
+                return response;
+            }
+
+            var wait = delay;
+            if (response.Headers.TryGetValues("Retry-After", out var values)) {
+                var value = values.FirstOrDefault();
+                if (int.TryParse(value, out var seconds)) {
+                    wait = TimeSpan.FromSeconds(seconds);
+                } else if (DateTimeOffset.TryParse(value, out var date)) {
+                    wait = date - DateTimeOffset.UtcNow;
+                    if (wait < TimeSpan.Zero) {
+                        wait = TimeSpan.Zero;
+                    }
+                }
+            }
+
+            response.Dispose();
+
+            if (DelayAsync is null) {
+                await Task.Delay(wait, cancellationToken).ConfigureAwait(false);
+            } else {
+                await DelayAsync(wait, cancellationToken).ConfigureAwait(false);
+            }
+
+            attempt++;
+            delay = TimeSpan.FromSeconds(delay.TotalSeconds * 2);
         }
     }
 
