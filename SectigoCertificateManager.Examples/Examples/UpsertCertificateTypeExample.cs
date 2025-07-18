@@ -1,15 +1,15 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
-using SectigoCertificateManager.Requests;
+using SectigoCertificateManager.Models;
 
 namespace SectigoCertificateManager.Examples.Examples;
 
 /// <summary>
-/// Demonstrates updating an organization using <see cref="OrganizationsClient"/>.
+/// Demonstrates creating or updating a certificate type using <see cref="CertificateTypesClient"/>.
 /// </summary>
-public static class UpdateOrganizationExample {
+public static class UpsertCertificateTypeExample {
     /// <summary>
-    /// Executes the example that updates an organization.
+    /// Executes the example that upserts a certificate type.
     /// </summary>
     public static async Task RunAsync() {
         var config = new ApiConfigBuilder()
@@ -20,10 +20,10 @@ public static class UpdateOrganizationExample {
             .Build();
 
         var client = new SectigoClient(config);
-        var organizations = new OrganizationsClient(client);
+        var types = new CertificateTypesClient(client);
 
-        Console.WriteLine("Updating organization...");
-        var request = new UpdateOrganizationRequest { Id = 123, Name = "New Name" };
-        await organizations.UpdateAsync(request);
+        var type = new CertificateType { Name = "My Custom Type" };
+        var result = await types.UpsertAsync(type);
+        Console.WriteLine($"Created certificate type with ID: {result?.Id}");
     }
 }

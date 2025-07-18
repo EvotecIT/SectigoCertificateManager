@@ -1,16 +1,16 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
-using System;
 using System.Management.Automation;
 using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
-/// <summary>Cancels an order.</summary>
-/// <para>Creates an API client and calls the cancel endpoint.</para>
-[Cmdlet(VerbsLifecycle.Stop, "SectigoOrder", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
+/// <summary>Waits for an order to reach a terminal status.</summary>
+/// <para>Creates an API client and polls the order status until it is completed or cancelled.</para>
+[Cmdlet(VerbsLifecycle.Wait, "SectigoOrder")]
 [CmdletBinding()]
-public sealed class StopSectigoOrderCommand : PSCmdlet {
+[OutputType(typeof(OrderStatus))]
+public sealed class WaitSectigoOrderCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
     [Parameter(Mandatory = true)]
     public string BaseUrl { get; set; } = string.Empty;
@@ -31,16 +31,20 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
 
-    /// <summary>The identifier of the order to cancel.</summary>
+    /// <summary>The identifier of the order to wait on.</summary>
     [Parameter(Mandatory = true, Position = 0)]
     public int OrderId { get; set; }
+
+    /// <summary>Delay between status checks.</summary>
+    [Parameter]
+    public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>Optional cancellation token.</summary>
     [Parameter]
     public CancellationToken CancellationToken { get; set; }
 
-    /// <summary>Cancels an order.</summary>
-    /// <para>Builds an API client and calls the cancel endpoint.</para>
+    /// <summary>Executes the cmdlet.</summary>
+    /// <para>Polls the order status until it reaches a terminal value.</para>
     protected override void ProcessRecord() {
         if (OrderId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(OrderId));
@@ -48,15 +52,13 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
             ThrowTerminatingError(record);
         }
 
-        if (!ShouldProcess($"Order {OrderId}", "Cancel")) {
-            return;
-        }
-
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
-        var orders = new OrdersClient(client);
-        orders.CancelAsync(OrderId, CancellationToken)
+        var statuses = new OrderStatusClient(client);
+        var status = statuses
+            .WatchAsync(OrderId, PollInterval, CancellationToken)
             .GetAwaiter()
             .GetResult();
+        WriteObject(status);
     }
 }

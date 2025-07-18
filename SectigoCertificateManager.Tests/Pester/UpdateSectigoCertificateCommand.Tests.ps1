@@ -9,4 +9,10 @@ Describe "Update-SectigoCertificate" {
         $cmd = Get-Command Update-SectigoCertificate -ErrorAction Stop
         $cmd | Should -Not -BeNullOrEmpty
     }
+
+    It "supports ShouldProcess" {
+        $cmd = Get-Command Update-SectigoCertificate -ErrorAction Stop
+        $meta = [System.Management.Automation.CommandMetadata]::new($cmd.ImplementingType)
+        $meta.SupportsShouldProcess | Should -BeTrue
+    }
 }

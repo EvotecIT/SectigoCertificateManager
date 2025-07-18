@@ -9,7 +9,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <summary>
 /// Updates an existing certificate using the renew endpoint.
 /// </summary>
-[Cmdlet(VerbsData.Update, "SectigoCertificate")]
+[Cmdlet(VerbsData.Update, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
 [CmdletBinding()]
 [OutputType(typeof(int))]
 public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
@@ -56,6 +56,10 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
     /// <summary>Renews a certificate using provided parameters.</summary>
     /// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/>.</para>
     protected override void ProcessRecord() {
+        if (!ShouldProcess($"Certificate {CertificateId}", "Update")) {
+            return;
+        }
+
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);

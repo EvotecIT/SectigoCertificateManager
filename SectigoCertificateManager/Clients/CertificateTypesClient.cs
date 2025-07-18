@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager.Clients;
 
 using SectigoCertificateManager.Models;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using SectigoCertificateManager.Utilities;
@@ -38,5 +39,30 @@ public sealed class CertificateTypesClient {
             .ReadFromJsonAsyncSafe<IReadOnlyList<CertificateType>>(s_json, cancellationToken)
             .ConfigureAwait(false);
         return types ?? Array.Empty<CertificateType>();
+    }
+
+    /// <summary>
+    /// Creates or updates a certificate type.
+    /// </summary>
+    /// <param name="type">Certificate type information.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<CertificateType?> UpsertAsync(
+        CertificateType type,
+        CancellationToken cancellationToken = default) {
+        if (type is null) {
+            throw new ArgumentNullException(nameof(type));
+        }
+
+        var content = JsonContent.Create(type, options: s_json);
+        HttpResponseMessage response;
+        if (type.Id <= 0) {
+            response = await _client.PostAsync("v1/certificate/type", content, cancellationToken).ConfigureAwait(false);
+        } else {
+            response = await _client.PutAsync($"v1/certificate/type/{type.Id}", content, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<CertificateType>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 }
