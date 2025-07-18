@@ -18,7 +18,8 @@ public sealed class ApiConfigBuilderTests {
             .WithCredentials("user", "pass")
             .WithCustomerUri("cst1");
 
-        Assert.Throws<ArgumentException>(() => builder.Build());
+        var ex = Assert.Throws<ArgumentException>(() => builder.Build());
+        Assert.Equal("baseUrl", ex.ParamName);
     }
 
     [Fact]
@@ -36,7 +37,8 @@ public sealed class ApiConfigBuilderTests {
             .WithBaseUrl("https://example.com")
             .WithCredentials("user", "pass");
 
-        Assert.Throws<ArgumentException>(() => builder.Build());
+        var exCust = Assert.Throws<ArgumentException>(() => builder.Build());
+        Assert.Equal("customerUri", exCust.ParamName);
     }
 
     [Fact]
@@ -55,7 +57,8 @@ public sealed class ApiConfigBuilderTests {
     public void WithBaseUrl_ThrowsForInvalidUri() {
         var builder = new ApiConfigBuilder();
 
-        Assert.Throws<ArgumentException>(() => builder.WithBaseUrl("not a url"));
+        var exInvalid = Assert.Throws<ArgumentException>(() => builder.WithBaseUrl("not a url"));
+        Assert.Equal("baseUrl", exInvalid.ParamName);
     }
 
     [Fact]
@@ -104,14 +107,16 @@ public sealed class ApiConfigBuilderTests {
     public void WithCredentials_ThrowsForNullUsername() {
         var builder = new ApiConfigBuilder();
 
-        Assert.Throws<ArgumentException>(() => builder.WithCredentials(null!, "pass"));
+        var exUser = Assert.Throws<ArgumentException>(() => builder.WithCredentials(null!, "pass"));
+        Assert.Equal("username", exUser.ParamName);
     }
 
     [Fact]
     public void WithCredentials_ThrowsForNullPassword() {
         var builder = new ApiConfigBuilder();
 
-        Assert.Throws<ArgumentException>(() => builder.WithCredentials("user", null!));
+        var exPass = Assert.Throws<ArgumentException>(() => builder.WithCredentials("user", null!));
+        Assert.Equal("password", exPass.ParamName);
     }
 
     [Fact]

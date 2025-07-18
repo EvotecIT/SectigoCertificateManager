@@ -135,7 +135,7 @@ public sealed class ApiConfigBuilder {
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build() {
         if (string.IsNullOrWhiteSpace(_baseUrl)) {
-            throw new ArgumentException("Base URL is required.", nameof(_baseUrl));
+            throw new ArgumentException("Base URL is required.", "baseUrl");
         }
 
         var hasToken = !string.IsNullOrWhiteSpace(_token);
@@ -147,16 +147,16 @@ public sealed class ApiConfigBuilder {
 
         if (!hasToken) {
             if (string.IsNullOrWhiteSpace(_username)) {
-                throw new ArgumentException("User name is required.", nameof(_username));
+                throw new ArgumentException("User name is required.", "username");
             }
 
             if (string.IsNullOrWhiteSpace(_password)) {
-                throw new ArgumentException("Password is required.", nameof(_password));
+                throw new ArgumentException("Password is required.", "password");
             }
         }
 
         if (string.IsNullOrWhiteSpace(_customerUri)) {
-            throw new ArgumentException("Customer URI is required.", nameof(_customerUri));
+            throw new ArgumentException("Customer URI is required.", "customerUri");
         }
 
         return new ApiConfig(
