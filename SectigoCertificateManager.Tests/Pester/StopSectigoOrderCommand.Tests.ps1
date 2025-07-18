@@ -8,4 +8,10 @@ Describe "Stop-SectigoOrder" {
     It "throws when OrderId is less than or equal to zero" {
         { Stop-SectigoOrder -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -OrderId 0 } | Should -Throw
     }
+
+    It "supports ShouldProcess" {
+        $cmd = Get-Command Stop-SectigoOrder -ErrorAction Stop
+        $meta = [System.Management.Automation.CommandMetadata]::new($cmd.ImplementingType)
+        $meta.SupportsShouldProcess | Should -BeTrue
+    }
 }

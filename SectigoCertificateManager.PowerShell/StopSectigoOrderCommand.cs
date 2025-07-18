@@ -8,7 +8,7 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Cancels an order.</summary>
 /// <para>Creates an API client and calls the cancel endpoint.</para>
-[Cmdlet(VerbsLifecycle.Stop, "SectigoOrder")]
+[Cmdlet(VerbsLifecycle.Stop, "SectigoOrder", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
 public sealed class StopSectigoOrderCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
@@ -46,6 +46,10 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
             var ex = new ArgumentOutOfRangeException(nameof(OrderId));
             var record = new ErrorRecord(ex, "InvalidOrderId", ErrorCategory.InvalidArgument, OrderId);
             ThrowTerminatingError(record);
+        }
+
+        if (!ShouldProcess($"Order {OrderId}", "Cancel")) {
+            return;
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
