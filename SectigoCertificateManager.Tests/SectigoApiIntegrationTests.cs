@@ -15,11 +15,13 @@ namespace SectigoCertificateManager.Tests;
 /// <summary>
 /// Integration tests using a mock API server.
 /// </summary>
+#if !NET472
 public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
     private WireMockServer _server = null!;
     private CertificatesClient _certificates = null!;
     private OrdersClient _orders = null!;
     private ProfilesClient _profiles = null!;
+    private UsersClient _users = null!;
 
     /// <summary>Sets up the mock server.</summary>
     public Task InitializeAsync() {
@@ -31,6 +33,7 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
             _certificates = new CertificatesClient(client);
             _orders = new OrdersClient(client);
             _profiles = new ProfilesClient(client);
+            _users = new UsersClient(client);
             success = true;
             return Task.CompletedTask;
         } finally {
@@ -147,4 +150,20 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
 
         Assert.Equal(2, list.Count);
     }
+
+    [Fact]
+    public async Task UsersClient_List_ReturnsUsers() {
+        _server.Given(Request.Create().WithPath("/v1/user").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("[{\"id\":7,\"email\":\"a@b.c\"}]"));
+
+        var result = await _users.ListUsersAsync();
+
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal(7, result[0].Id);
+    }
 }
+#endif
