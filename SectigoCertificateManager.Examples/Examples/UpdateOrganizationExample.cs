@@ -23,7 +23,7 @@ public static class UpdateOrganizationExample {
         var organizations = new OrganizationsClient(client);
 
         Console.WriteLine("Updating organization...");
-        var request = new UpdateOrganizationRequest { Name = "New Name" };
-        await organizations.UpdateAsync(123, request);
+        var request = new UpdateOrganizationRequest { Id = 123, Name = "New Name" };
+        await organizations.UpdateAsync(request);
     }
 }
