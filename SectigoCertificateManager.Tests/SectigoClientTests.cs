@@ -1,8 +1,10 @@
 using SectigoCertificateManager;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -264,7 +266,58 @@ public sealed class SectigoClientTests {
 
         Assert.True(handler.MaxObserved <= 2);
     }
+    
+    private sealed class RetryHandler : HttpMessageHandler {
+        private readonly Queue<HttpResponseMessage> _responses;
+        public List<HttpRequestMessage> Requests { get; } = new();
 
+        public RetryHandler(IEnumerable<HttpResponseMessage> responses) => _responses = new Queue<HttpResponseMessage>(responses);
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            Requests.Add(request);
+            return Task.FromResult(_responses.Dequeue());
+        }
+    }
+
+    [Fact]
+    public async Task RetriesWhenRateLimited() {
+        var responses = new[] {
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
+            new HttpResponseMessage(HttpStatusCode.OK)
+        };
+
+        var handler = new RetryHandler(responses);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient) {
+            DelayAsync = (_, _) => Task.CompletedTask
+        };
+
+        await client.GetAsync("v1/test");
+
+        Assert.Equal(3, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task FailsAfterMaximumRetries() {
+        var responses = new[] {
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) }
+        };
+
+        var handler = new RetryHandler(responses);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient) {
+            DelayAsync = (_, _) => Task.CompletedTask
+        };
+
+        await Assert.ThrowsAnyAsync<Exception>(() => client.GetAsync("v1/test"));
+        Assert.Equal(5, handler.Requests.Count);
+    }
+     
     [Fact]
     public void HttpClientProperty_ReturnsProvidedInstance() {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
