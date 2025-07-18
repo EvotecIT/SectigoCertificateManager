@@ -43,6 +43,7 @@ public sealed class SectigoClientTests {
         var client = new SectigoClient(config, httpClient);
 
         await client.GetAsync("v1/test");
+        await client.GetAsync("v1/test");
 
         Assert.Equal(new Uri("https://example.com/api/v1/test"), handler.Request!.RequestUri);
         Assert.Equal("user", httpClient.DefaultRequestHeaders.GetValues("login").Single());
@@ -219,6 +220,35 @@ public sealed class SectigoClientTests {
         await client.GetAsync("v1/test");
 
         Assert.False(called);
+        Assert.Equal("old", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
+    }
+
+    [Fact]
+    public async Task FailedRefreshIsNotRetried() {
+        var expired = DateTimeOffset.UtcNow.AddMinutes(-1);
+        var attempts = 0;
+        Task<TokenInfo> Refresh(CancellationToken ct) {
+            attempts++;
+            return Task.FromException<TokenInfo>(new InvalidOperationException());
+        }
+
+        var config = new ApiConfig(
+            "https://example.com/",
+            string.Empty,
+            string.Empty,
+            "c",
+            ApiVersion.V25_4,
+            token: "old",
+            tokenExpiresAt: expired,
+            refreshToken: Refresh);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+        await client.GetAsync("v1/test");
+
+        Assert.Equal(1, attempts);
         Assert.Equal("old", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
     }
 
