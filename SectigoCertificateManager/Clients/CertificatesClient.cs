@@ -154,6 +154,18 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
+    /// Streams all certificates visible to the caller.
+    /// </summary>
+    /// <param name="pageSize">Number of certificates to request per page.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public IAsyncEnumerable<Certificate> EnumerateCertificatesAsync(
+        int pageSize = 200,
+        CancellationToken cancellationToken = default) {
+        var request = new CertificateSearchRequest { Size = pageSize };
+        return EnumerateSearchAsync(request, cancellationToken);
+    }
+
+    /// <summary>
     /// Streams search results page by page.
     /// </summary>
     /// <param name="request">Filter describing certificates to retrieve.</param>
