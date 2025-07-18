@@ -302,6 +302,27 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
+    /// Downloads the issuing certificate chain and saves it to disk.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate.</param>
+    /// <param name="path">Destination file path.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task GetCaChainAsync(
+        int certificateId,
+        string path,
+        CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+        if (string.IsNullOrEmpty(path)) {
+            throw new ArgumentException("Path cannot be null or empty.", nameof(path));
+        }
+
+        await DownloadAsync(certificateId, path, format: "x509IO", cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Deletes a certificate by identifier.
     /// </summary>
     /// <param name="certificateId">Identifier of the certificate to delete.</param>
