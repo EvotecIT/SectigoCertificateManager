@@ -90,7 +90,11 @@ public sealed class Certificate {
             });
         }
 
+        // X509Certificate2 constructor is obsolete beginning with .NET 9.0,
+        // but remains necessary for earlier target frameworks.
+#pragma warning disable SYSLIB0057
         return new X509Certificate2(bytes);
+#pragma warning restore SYSLIB0057
     }
 
     /// <summary>
