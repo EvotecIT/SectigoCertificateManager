@@ -10,6 +10,7 @@ using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Security.Cryptography.X509Certificates;
 using SectigoCertificateManager.Utilities;
 
 /// <summary>
@@ -241,6 +242,29 @@ public sealed class CertificatesClient {
             request.Size = originalSize;
             request.Position = originalPosition;
         }
+    }
+
+    /// <summary>
+    /// Downloads an issued certificate and returns an <see cref="X509Certificate2"/> instance.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to download.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<X509Certificate2> DownloadAsync(
+        int certificateId,
+        CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var endpoint = $"ssl/v1/collect/{certificateId}";
+        var url = $"{endpoint}?format=base64";
+        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+#if NETSTANDARD2_0 || NET472
+        var base64 = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+        var base64 = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
+        return Certificate.FromBase64(base64);
     }
 
     /// <summary>
