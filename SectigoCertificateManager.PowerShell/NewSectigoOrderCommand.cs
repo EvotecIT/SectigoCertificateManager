@@ -59,6 +59,12 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
             }
         }
 
+        if (string.IsNullOrWhiteSpace(CommonName)) {
+            var ex = new ArgumentException("Value cannot be empty.", nameof(CommonName));
+            var record = new ErrorRecord(ex, "InvalidCommonName", ErrorCategory.InvalidArgument, CommonName);
+            ThrowTerminatingError(record);
+        }
+
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);
