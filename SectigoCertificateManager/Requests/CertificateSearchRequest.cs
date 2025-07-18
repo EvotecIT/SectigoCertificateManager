@@ -40,6 +40,9 @@ public sealed class CertificateSearchRequest {
     /// <summary>Gets or sets the issuer name filter.</summary>
     public string? Issuer { get; set; }
 
+    /// <summary>Gets or sets the issuer distinguished name filter.</summary>
+    public string? IssuerDn { get; set; }
+
     /// <summary>Gets or sets the certificate serial number filter.</summary>
     public string? SerialNumber { get; set; }
 

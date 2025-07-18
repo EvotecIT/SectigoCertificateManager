@@ -218,6 +218,7 @@ public sealed class CertificatesClientTests {
             Status = CertificateStatus.Issued,
             SslTypeId = 2,
             Issuer = "A&B",
+            IssuerDn = "CN=te st",
             KeyAlgorithm = "RSA/DSA",
             DateFrom = new DateTime(2023, 7, 1),
             DateTo = new DateTime(2023, 7, 31)
@@ -225,7 +226,7 @@ public sealed class CertificatesClientTests {
         await certificates.SearchAsync(request);
 
         Assert.NotNull(handler.Request);
-        Assert.Equal("https://example.com/v1/certificate?size=10&position=5&commonName=te%20st&status=Issued&sslTypeId=2&issuer=A%26B&keyAlgorithm=RSA%2FDSA&dateFrom=2023-07-01&dateTo=2023-07-31", handler.Request!.RequestUri!.AbsoluteUri);
+        Assert.Equal("https://example.com/v1/certificate?size=10&position=5&commonName=te%20st&status=Issued&sslTypeId=2&issuer=A%26B&issuerDN=CN%3Dte%20st&keyAlgorithm=RSA%2FDSA&dateFrom=2023-07-01&dateTo=2023-07-31", handler.Request!.RequestUri!.AbsoluteUri);
     }
 
     [Fact]
