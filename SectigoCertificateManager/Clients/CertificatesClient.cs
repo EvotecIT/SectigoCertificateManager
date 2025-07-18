@@ -4,6 +4,7 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -299,6 +300,31 @@ public sealed class CertificatesClient {
                 progress.Report(1d);
             }
         }
+    }
+
+    /// <summary>
+    /// Downloads an issued certificate and returns an <see cref="X509Certificate2"/>.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to download.</param>
+    /// <param name="format">Certificate format to request. Defaults to <c>base64</c>.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<X509Certificate2> DownloadX509Async(
+        int certificateId,
+        string format = "base64",
+        CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var endpoint = $"ssl/v1/collect/{certificateId}";
+        var url = $"{endpoint}?format={Uri.EscapeDataString(format)}";
+        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+#if NETSTANDARD2_0 || NET472
+        var data = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+        var data = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
+        return Certificate.FromBase64(data);
     }
 
     /// <summary>
