@@ -15,13 +15,14 @@ public static class TokenRefreshExample {
     };
     /// <summary>Runs the example using <see cref="ApiConfigBuilder.WithTokenRefresh"/>.</summary>
     public static async Task RunAsync() {
-        var config = new ApiConfigBuilder()
+        var builder = new ApiConfigBuilder()
             .WithBaseUrl("https://cert-manager.com/api")
             .WithCustomerUri("<customer uri>")
             .WithToken("<initial token>")
             .WithTokenExpiration(DateTimeOffset.UtcNow.AddMinutes(30))
-            .WithTokenRefresh(RefreshTokenAsync)
-            .Build();
+            .WithTokenRefresh(RefreshTokenAsync);
+
+        var config = builder.Build();
 
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);

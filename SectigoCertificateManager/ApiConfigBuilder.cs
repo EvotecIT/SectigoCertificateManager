@@ -64,7 +64,9 @@ public sealed class ApiConfigBuilder {
         return this;
     }
 
-    /// <summary>Sets the delegate used to refresh the token when expired.</summary>
+    /// <summary>
+    /// Sets the delegate used to refresh the token when expired and returns the builder for chaining.
+    /// </summary>
     /// <param name="refresh">Delegate invoked to obtain a new token.</param>
     public ApiConfigBuilder WithTokenRefresh(Func<CancellationToken, Task<TokenInfo>> refresh) {
         _refreshToken = refresh;
