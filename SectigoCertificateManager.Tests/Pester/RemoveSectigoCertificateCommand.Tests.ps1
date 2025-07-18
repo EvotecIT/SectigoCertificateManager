@@ -8,4 +8,10 @@ Describe "Remove-SectigoCertificate" {
     It "throws when CertificateId is less than or equal to zero" {
         { Remove-SectigoCertificate -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -CertificateId 0 } | Should -Throw
     }
+
+    It "supports ShouldProcess" {
+        $cmd = Get-Command Remove-SectigoCertificate -ErrorAction Stop
+        $meta = [System.Management.Automation.CommandMetadata]::new($cmd.ImplementingType)
+        $meta.SupportsShouldProcess | Should -BeTrue
+    }
 }

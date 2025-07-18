@@ -8,7 +8,7 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Deletes a certificate.</summary>
 /// <para>Builds an API client and calls the delete endpoint.</para>
-[Cmdlet(VerbsCommon.Remove, "SectigoCertificate")]
+[Cmdlet(VerbsCommon.Remove, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
 public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
@@ -46,6 +46,10 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
             var ex = new ArgumentOutOfRangeException(nameof(CertificateId));
             var record = new ErrorRecord(ex, "InvalidCertificateId", ErrorCategory.InvalidArgument, CertificateId);
             ThrowTerminatingError(record);
+        }
+
+        if (!ShouldProcess($"Certificate {CertificateId}", "Delete")) {
+            return;
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
