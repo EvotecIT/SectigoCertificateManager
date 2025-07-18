@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Requests;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -48,6 +49,10 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
     [Alias("SubjectAlternativeName", "San")]
     public string[] SubjectAlternativeNames { get; set; } = System.Array.Empty<string>();
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Issues a certificate using provided parameters.</summary>
     /// <para>Builds an API client and submits an <see cref="IssueCertificateRequest"/>.</para>
     protected override void ProcessRecord() {
@@ -74,7 +79,9 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
             Term = Term,
             SubjectAlternativeNames = SubjectAlternativeNames
         };
-        var certificate = certificates.IssueAsync(request).GetAwaiter().GetResult();
+        var certificate = certificates.IssueAsync(request, CancellationToken)
+            .GetAwaiter()
+            .GetResult();
         WriteObject(certificate);
     }
 }

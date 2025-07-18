@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -34,6 +35,10 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
     [Parameter(Mandatory = true, Position = 0)]
     public int OrderId { get; set; }
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Cancels an order.</summary>
     /// <para>Builds an API client and calls the cancel endpoint.</para>
     protected override void ProcessRecord() {
@@ -46,6 +51,8 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var orders = new OrdersClient(client);
-        orders.CancelAsync(OrderId).GetAwaiter().GetResult();
+        orders.CancelAsync(OrderId, CancellationToken)
+            .GetAwaiter()
+            .GetResult();
     }
 }

@@ -3,6 +3,7 @@ using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Requests;
 using System;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -40,6 +41,10 @@ public sealed class NewSectigoOrganizationCommand : PSCmdlet {
     [Parameter]
     public string? StateOrProvince { get; set; }
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an organization and outputs its identifier.</para>
     protected override void ProcessRecord() {
@@ -56,7 +61,9 @@ public sealed class NewSectigoOrganizationCommand : PSCmdlet {
             Name = Name,
             StateOrProvince = StateOrProvince
         };
-        var id = organizations.CreateAsync(request).GetAwaiter().GetResult();
+        var id = organizations.CreateAsync(request, CancellationToken)
+            .GetAwaiter()
+            .GetResult();
         WriteObject(id);
     }
 }

@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -34,6 +35,10 @@ public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
     [Parameter(Mandatory = true, Position = 0)]
     public int OrderId { get; set; }
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and retrieves the history for the specified order.</para>
     protected override void ProcessRecord() {
@@ -46,7 +51,9 @@ public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var orders = new OrdersClient(client);
-        var history = orders.GetHistoryAsync(OrderId).GetAwaiter().GetResult();
+        var history = orders.GetHistoryAsync(OrderId, CancellationToken)
+            .GetAwaiter()
+            .GetResult();
         WriteObject(history, true);
     }
 }

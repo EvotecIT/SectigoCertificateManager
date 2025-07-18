@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
+using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -29,13 +30,19 @@ public sealed class GetSectigoOrganizationsCommand : PSCmdlet {
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and outputs all organizations.</para>
     protected override void ProcessRecord() {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
         var client = new SectigoClient(config);
         var organizations = new OrganizationsClient(client);
-        var list = organizations.ListOrganizationsAsync().GetAwaiter().GetResult();
+        var list = organizations.ListOrganizationsAsync(CancellationToken)
+            .GetAwaiter()
+            .GetResult();
         foreach (var org in list) {
             WriteObject(org);
         }

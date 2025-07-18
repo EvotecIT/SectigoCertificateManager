@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
@@ -31,6 +32,10 @@ public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
 
+    /// <summary>Optional cancellation token.</summary>
+    [Parameter]
+    public CancellationToken CancellationToken { get; set; }
+
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and outputs all orders.</para>
     protected override async Task ProcessRecordAsync() {
@@ -38,7 +43,8 @@ public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
         var client = new SectigoClient(config);
         var orders = new OrdersClient(client);
 
-        await foreach (var order in orders.EnumerateOrdersAsync(cancellationToken: CancelToken).ConfigureAwait(false)) {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        await foreach (var order in orders.EnumerateOrdersAsync(cancellationToken: linked.Token).ConfigureAwait(false)) {
             WriteObject(order);
         }
     }
