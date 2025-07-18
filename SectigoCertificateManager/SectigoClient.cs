@@ -17,6 +17,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly SemaphoreSlim? _throttle;
     private string? _token;
     private DateTimeOffset? _tokenExpiresAt;
+    private bool _refreshFailed;
     private bool _disposed;
 
     private void ThrowIfDisposed() {
@@ -162,7 +163,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     }
 
     private async Task EnsureValidTokenAsync(CancellationToken cancellationToken) {
-        if (_refreshToken is null) {
+        if (_refreshToken is null || _refreshFailed) {
             return;
         }
 
@@ -176,12 +177,18 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
                 return;
             }
 
-            var info = await _refreshToken(cancellationToken).ConfigureAwait(false);
-            _token = info.Token;
-            _tokenExpiresAt = info.ExpiresAt;
-            _client.DefaultRequestHeaders.Remove("login");
-            _client.DefaultRequestHeaders.Remove("password");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", info.Token);
+            try {
+                var info = await _refreshToken(cancellationToken).ConfigureAwait(false);
+                _token = info.Token;
+                _tokenExpiresAt = info.ExpiresAt;
+                _client.DefaultRequestHeaders.Remove("login");
+                _client.DefaultRequestHeaders.Remove("password");
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", info.Token);
+                _refreshFailed = false;
+            } catch {
+                _refreshFailed = true;
+                throw;
+            }
         } finally {
             _refreshLock.Release();
         }
