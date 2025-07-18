@@ -21,6 +21,7 @@ public static class SearchCertificatesExample {
 
         var request = new CertificateSearchRequest {
             CommonName = "example.com",
+            IssuerDn = "CN=Sectigo" ,
             DateFrom = DateTime.UtcNow.AddDays(-7),
             DateTo = DateTime.UtcNow
         };
