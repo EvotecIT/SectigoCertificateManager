@@ -21,6 +21,7 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
     private CertificatesClient _certificates = null!;
     private OrdersClient _orders = null!;
     private ProfilesClient _profiles = null!;
+    private CertificateTypesClient _types = null!;
     private UsersClient _users = null!;
 
     /// <summary>Sets up the mock server.</summary>
@@ -33,6 +34,7 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
             _certificates = new CertificatesClient(client);
             _orders = new OrdersClient(client);
             _profiles = new ProfilesClient(client);
+            _types = new CertificateTypesClient(client);
             _users = new UsersClient(client);
             success = true;
             return Task.CompletedTask;
@@ -164,6 +166,29 @@ public sealed class SectigoApiIntegrationTests : IAsyncLifetime {
         Assert.NotNull(result);
         Assert.Single(result);
         Assert.Equal(7, result[0].Id);
+    }
+
+    [Fact]
+    public async Task CertificateTypesClient_Upsert_CreatesAndUpdates() {
+        _server.Given(Request.Create().WithPath("/v1/certificate/type").UsingPost())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("{\"id\":10}"));
+
+        _server.Given(Request.Create().WithPath("/v1/certificate/type/10").UsingPut())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody("{\"id\":10,\"name\":\"up\"}"));
+
+        var created = await _types.UpsertAsync(new CertificateType { Name = "new" });
+        var updated = await _types.UpsertAsync(new CertificateType { Id = 10, Name = "up" });
+
+        Assert.NotNull(created);
+        Assert.Equal(10, created!.Id);
+        Assert.NotNull(updated);
+        Assert.Equal("up", updated!.Name);
     }
 }
 #endif
