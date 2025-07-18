@@ -36,6 +36,11 @@ public sealed class CertificatesClientTests {
         }
     }
 
+    private sealed class TestProgress : IProgress<double> {
+        public double Value { get; private set; }
+        public void Report(double value) => Value = value;
+    }
+
     /// <summary>Parses search results.</summary>
     [Fact]
     public async Task SearchAsync_BuildsQueryAndParsesResponse() {
@@ -306,6 +311,29 @@ public sealed class CertificatesClientTests {
             await certificates.DownloadAsync(2, path);
             Assert.NotNull(handler.Request);
             Assert.Equal("https://example.com/api/ssl/v1/collect/2?format=base64", handler.Request!.RequestUri!.ToString());
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task DownloadAsync_ReportsProgress() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("0123456789")
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+        var progress = new TestProgress();
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            await certificates.DownloadAsync(2, path, progress: progress);
+            Assert.Equal(1d, progress.Value, 3);
         } finally {
             if (File.Exists(path)) {
                 File.Delete(path);

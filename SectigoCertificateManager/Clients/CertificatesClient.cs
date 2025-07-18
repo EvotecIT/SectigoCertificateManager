@@ -249,11 +249,13 @@ public sealed class CertificatesClient {
     /// <param name="certificateId">Identifier of the certificate to download.</param>
     /// <param name="path">Destination file path.</param>
     /// <param name="format">Certificate format to request. Defaults to <c>base64</c>.</param>
+    /// <param name="progress">Optional progress reporter.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task DownloadAsync(
         int certificateId,
         string path,
         string format = "base64",
+        IProgress<double>? progress = null,
         CancellationToken cancellationToken = default) {
         if (certificateId <= 0) {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
@@ -269,11 +271,33 @@ public sealed class CertificatesClient {
         using (stream) {
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+            var buffer = new byte[81920];
+            long total = response.Content.Headers.ContentLength ?? (stream.CanSeek ? stream.Length : -1);
+            long copied = 0;
+            int count;
+            while (true) {
 #if NETSTANDARD2_0 || NET472
-            await stream.CopyToAsync(file).ConfigureAwait(false);
+                count = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 #else
-            await stream.CopyToAsync(file, cancellationToken).ConfigureAwait(false);
+                count = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false);
 #endif
+                if (count == 0) {
+                    break;
+                }
+#if NETSTANDARD2_0 || NET472
+                await file.WriteAsync(buffer, 0, count).ConfigureAwait(false);
+#else
+                await file.WriteAsync(buffer.AsMemory(0, count), cancellationToken).ConfigureAwait(false);
+#endif
+                copied += count;
+                if (progress is not null && total > 0) {
+                    progress.Report((double)copied / total);
+                }
+            }
+
+            if (progress is not null && total > 0) {
+                progress.Report(1d);
+            }
         }
     }
 
