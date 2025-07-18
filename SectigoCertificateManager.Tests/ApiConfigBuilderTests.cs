@@ -90,6 +90,16 @@ public sealed class ApiConfigBuilderTests {
     }
 
     [Fact]
+    public void WithTokenRefresh_ReturnsBuilderInstance() {
+        var builder = new ApiConfigBuilder();
+        Func<CancellationToken, Task<TokenInfo>> del = _ => Task.FromResult(new TokenInfo("tok", DateTimeOffset.UtcNow));
+
+        var returned = builder.WithTokenRefresh(del);
+
+        Assert.Same(builder, returned);
+    }
+
+    [Fact]
     public void WithHttpClientHandler_ThrowsForNullDelegate() {
         var builder = new ApiConfigBuilder();
         Assert.Throws<ArgumentNullException>(() => builder.WithHttpClientHandler(null!));
