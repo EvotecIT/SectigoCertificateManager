@@ -5,6 +5,7 @@ using SectigoCertificateManager.Responses;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using SectigoCertificateManager.Utilities;
 using System.Text.Json;
 
 /// <summary>
@@ -33,7 +34,9 @@ public sealed class OrdersClient {
         }
 
         var response = await _client.GetAsync($"v1/order/{orderId}", cancellationToken).ConfigureAwait(false);
-        return await response.Content.ReadFromJsonAsync<Order>(s_json, cancellationToken).ConfigureAwait(false);
+        return await response.Content
+            .ReadFromJsonAsyncSafe<Order>(s_json, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -64,7 +67,7 @@ public sealed class OrdersClient {
                 .GetAsync($"v1/order?size={pageSize}&position={position}", cancellationToken)
                 .ConfigureAwait(false);
             var page = await response.Content
-                .ReadFromJsonAsync<IReadOnlyList<Order>>(s_json, cancellationToken)
+                .ReadFromJsonAsyncSafe<IReadOnlyList<Order>>(s_json, cancellationToken)
                 .ConfigureAwait(false);
             if (page is null || page.Count == 0) {
                 yield break;
@@ -132,7 +135,9 @@ public sealed class OrdersClient {
         }
 
         var response = await _client.GetAsync($"v1/order/{orderId}/history", cancellationToken).ConfigureAwait(false);
-        var entries = await response.Content.ReadFromJsonAsync<IReadOnlyList<OrderHistoryEntry>>(s_json, cancellationToken).ConfigureAwait(false);
+        var entries = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<OrderHistoryEntry>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
         return entries ?? Array.Empty<OrderHistoryEntry>();
     }
 }
