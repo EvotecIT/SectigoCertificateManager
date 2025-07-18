@@ -264,4 +264,25 @@ public sealed class SectigoClientTests {
 
         Assert.True(handler.MaxObserved <= 2);
     }
+
+    [Fact]
+    public void HttpClientProperty_ReturnsProvidedInstance() {
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        Assert.Same(httpClient, client.HttpClient);
+    }
+
+    [Fact]
+    public void HttpClientProperty_ThrowsAfterDispose() {
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+        using var httpClient = new HttpClient(new TestHandler());
+        var client = new SectigoClient(config, httpClient);
+
+        client.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => _ = client.HttpClient);
+    }
 }
