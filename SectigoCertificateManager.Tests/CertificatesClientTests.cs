@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -680,5 +681,37 @@ public sealed class CertificatesClientTests {
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => certificates.DownloadAsync(certificateId));
+    }
+
+    [Fact]
+    public async Task StreamCertificatesAsync_ReturnsCertificates() {
+        var page1 = new[] { new Certificate { Id = 1 }, new Certificate { Id = 2 } };
+        var page2 = new[] { new Certificate { Id = 3 } };
+
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page1) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page2) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var results = new List<X509Certificate2>();
+        await foreach (var cert in certificates.StreamCertificatesAsync(pageSize: 2)) {
+            results.Add(cert);
+        }
+
+        Assert.Equal(5, handler.Requests.Count);
+        Assert.Equal("https://example.com/v1/certificate?size=2", handler.Requests[0].RequestUri!.ToString());
+        Assert.Equal("https://example.com/ssl/v1/collect/1?format=base64", handler.Requests[1].RequestUri!.ToString());
+        Assert.Equal("https://example.com/ssl/v1/collect/2?format=base64", handler.Requests[2].RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/certificate?size=2&position=2", handler.Requests[3].RequestUri!.ToString());
+        Assert.Equal("https://example.com/ssl/v1/collect/3?format=base64", handler.Requests[4].RequestUri!.ToString());
+        Assert.Equal(3, results.Count);
+        Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", results[0].Thumbprint);
     }
 }
