@@ -21,8 +21,8 @@ public static class StreamCertificatesExample {
         var client = new SectigoClient(config);
         var certificates = new CertificatesClient(client);
 
-        await foreach (var certificate in certificates.EnumerateCertificatesAsync(pageSize: 50)) {
-            Console.WriteLine($"Certificate ID: {certificate.Id}");
+        await foreach (var certificate in certificates.StreamCertificatesAsync(pageSize: 50)) {
+            Console.WriteLine($"Certificate subject: {certificate.Subject}");
         }
     }
 }
