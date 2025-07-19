@@ -100,4 +100,45 @@ public sealed class ApiConfigLoaderTests {
         var ex = Assert.Throws<FileNotFoundException>(() => ApiConfigLoader.Load(path));
         Assert.Contains(path, ex.Message);
     }
+
+    [Fact]
+    public void TokenCache_Roundtrip() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var path = Path.Combine(tempDir, "token.json");
+
+        var info = new TokenInfo("tok", DateTimeOffset.UtcNow.AddMinutes(10));
+        ApiConfigLoader.WriteToken(info, path);
+
+        var loaded = ApiConfigLoader.ReadToken(path);
+
+        Assert.NotNull(loaded);
+        Assert.Equal(info.Token, loaded!.Token);
+        Assert.Equal(info.ExpiresAt, loaded.ExpiresAt);
+
+        Directory.Delete(tempDir, true);
+    }
+
+    [Fact]
+    public void Load_FromTokenCache() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var tokenPath = Path.Combine(tempDir, "token.json");
+        var info = new TokenInfo("tok", DateTimeOffset.UtcNow.AddMinutes(5));
+        ApiConfigLoader.WriteToken(info, tokenPath);
+
+        Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", "https://example.com");
+        Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", "cst1");
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", tokenPath);
+
+        var config = ApiConfigLoader.Load();
+
+        Assert.Equal("tok", config.Token);
+        Assert.Equal(info.ExpiresAt, config.TokenExpiresAt);
+
+        Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", null);
+        Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", null);
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", null);
+        Directory.Delete(tempDir, true);
+    }
 }
