@@ -180,6 +180,35 @@ public sealed class CertificatesClient {
     }
 
     /// <summary>
+    /// Streams issued certificates page by page and downloads each one.
+    /// </summary>
+    /// <param name="pageSize">Number of certificates to request per page.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public IAsyncEnumerable<X509Certificate2> StreamCertificatesAsync(
+        int pageSize = 200,
+        CancellationToken cancellationToken = default) {
+        var request = new CertificateSearchRequest { Size = pageSize };
+        return StreamCertificatesAsync(request, cancellationToken);
+    }
+
+    /// <summary>
+    /// Streams issued certificates matching the provided filter.
+    /// </summary>
+    /// <param name="request">Filter describing certificates to retrieve.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async IAsyncEnumerable<X509Certificate2> StreamCertificatesAsync(
+        CertificateSearchRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        await foreach (var certificate in EnumerateSearchAsync(request, cancellationToken).ConfigureAwait(false)) {
+            yield return await DownloadAsync(certificate.Id, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
     /// Streams search results page by page.
     /// </summary>
     /// <param name="request">Filter describing certificates to retrieve.</param>
