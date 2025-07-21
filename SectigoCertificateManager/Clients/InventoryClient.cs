@@ -7,14 +7,14 @@ using System.Text;
 /// <summary>
 /// Provides access to inventory related endpoints.
 /// </summary>
-public sealed class InventoryClient {
-    private readonly ISectigoClient _client;
+public sealed class InventoryClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InventoryClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public InventoryClient(ISectigoClient client) => _client = client;
+    public InventoryClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Downloads certificate inventory in CSV format.

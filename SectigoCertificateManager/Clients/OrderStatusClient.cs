@@ -7,17 +7,14 @@ using SectigoCertificateManager.Utilities;
 /// <summary>
 /// Provides access to order status information.
 /// </summary>
-public sealed class OrderStatusClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed class OrderStatusClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OrderStatusClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public OrderStatusClient(ISectigoClient client) => _client = client;
+    public OrderStatusClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Retrieves the status of an order by identifier.

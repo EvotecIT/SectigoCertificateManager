@@ -14,17 +14,14 @@ using SectigoCertificateManager.Utilities;
 /// <summary>
 /// Provides access to IdP template endpoints.
 /// </summary>
-public sealed class AdminTemplatesClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed class AdminTemplatesClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AdminTemplatesClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public AdminTemplatesClient(ISectigoClient client) => _client = client;
+    public AdminTemplatesClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>Retrieves template details by identifier.</summary>
     public async Task<IdpTemplate?> GetAsync(int templateId, CancellationToken cancellationToken = default) {
