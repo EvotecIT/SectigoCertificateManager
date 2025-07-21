@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Provides a builder for creating instances of <see cref="ApiConfig"/> using a fluent API.
@@ -37,13 +38,8 @@ public sealed class ApiConfigBuilder {
     /// <param name="username">User name for API authentication.</param>
     /// <param name="password">Password associated with <paramref name="username"/>.</param>
     public ApiConfigBuilder WithCredentials(string username, string password) {
-        if (string.IsNullOrWhiteSpace(username)) {
-            throw new ArgumentException("Username must not be null or empty.", nameof(username));
-        }
-
-        if (string.IsNullOrWhiteSpace(password)) {
-            throw new ArgumentException("Password must not be null or empty.", nameof(password));
-        }
+        Guard.AgainstNullOrWhiteSpace(username, nameof(username), "Username must not be null or empty.");
+        Guard.AgainstNullOrWhiteSpace(password, nameof(password), "Password must not be null or empty.");
 
         _username = username;
         _password = password;
@@ -119,7 +115,7 @@ public sealed class ApiConfigBuilder {
     /// <summary>Allows configuration of the <see cref="HttpClientHandler"/> used by <see cref="SectigoClient"/>.</summary>
     /// <param name="configure">Delegate used to configure the handler.</param>
     public ApiConfigBuilder WithHttpClientHandler(Action<HttpClientHandler> configure) {
-        _configureHandler = configure ?? throw new ArgumentNullException(nameof(configure));
+        _configureHandler = Guard.AgainstNull(configure, nameof(configure));
         return this;
     }
 
@@ -136,9 +132,7 @@ public sealed class ApiConfigBuilder {
 
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build() {
-        if (string.IsNullOrWhiteSpace(_baseUrl)) {
-            throw new ArgumentException("Base URL is required.", "baseUrl");
-        }
+        Guard.AgainstNullOrWhiteSpace(_baseUrl, "baseUrl", "Base URL is required.");
 
         var hasToken = !string.IsNullOrWhiteSpace(_token);
         var hasCredentials = !string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_password);
@@ -148,18 +142,11 @@ public sealed class ApiConfigBuilder {
         }
 
         if (!hasToken) {
-            if (string.IsNullOrWhiteSpace(_username)) {
-                throw new ArgumentException("User name is required.", "username");
-            }
-
-            if (string.IsNullOrWhiteSpace(_password)) {
-                throw new ArgumentException("Password is required.", "password");
-            }
+            Guard.AgainstNullOrWhiteSpace(_username, "username", "User name is required.");
+            Guard.AgainstNullOrWhiteSpace(_password, "password", "Password is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(_customerUri)) {
-            throw new ArgumentException("Customer URI is required.", "customerUri");
-        }
+        Guard.AgainstNullOrWhiteSpace(_customerUri, "customerUri", "Customer URI is required.");
 
         return new ApiConfig(
             _baseUrl,

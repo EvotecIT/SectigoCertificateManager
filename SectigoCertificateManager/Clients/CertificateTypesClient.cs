@@ -46,9 +46,7 @@ public sealed class CertificateTypesClient : BaseClient {
     public async Task<CertificateType?> UpsertAsync(
         CertificateType type,
         CancellationToken cancellationToken = default) {
-        if (type is null) {
-            throw new ArgumentNullException(nameof(type));
-        }
+        Guard.AgainstNull(type, nameof(type));
 
         var content = JsonContent.Create(type, options: s_json);
         HttpResponseMessage response;

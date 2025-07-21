@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Provides an <see cref="HttpContent"/> implementation that reports upload progress.
@@ -21,7 +22,7 @@ internal sealed class ProgressStreamContent : HttpContent {
     /// <param name="progress">Optional progress reporter.</param>
     /// <param name="bufferSize">Buffer size used when reading the stream.</param>
     public ProgressStreamContent(Stream stream, IProgress<double>? progress = null, int bufferSize = 81920) {
-        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        _stream = Guard.AgainstNull(stream, nameof(stream));
         _progress = progress;
         _bufferSize = bufferSize;
     }
