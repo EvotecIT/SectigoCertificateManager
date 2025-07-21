@@ -18,7 +18,7 @@ public sealed class CertificateRevocation
     public DateTimeOffset? RevokeDate { get; set; }
 
     /// <summary>Gets or sets the revocation reason code.</summary>
-    public int ReasonCode { get; set; }
+    public RevocationReason ReasonCode { get; set; }
 
     /// <summary>Gets or sets the revocation reason message.</summary>
     public string? Reason { get; set; }
