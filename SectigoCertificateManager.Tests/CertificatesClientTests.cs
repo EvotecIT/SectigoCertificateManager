@@ -129,7 +129,11 @@ public sealed class CertificatesClientTests {
         var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var certificates = new CertificatesClient(client);
 
-        var request = new RevokeCertificateRequest { CertId = 5, ReasonCode = 4, Reason = "superseded" };
+        var request = new RevokeCertificateRequest {
+            CertId = 5,
+            ReasonCode = RevocationReason.Superseded,
+            Reason = "superseded"
+        };
         await certificates.RevokeAsync(request);
 
         Assert.NotNull(handler.Request);
