@@ -29,9 +29,7 @@ public static class CertificateExport {
     /// <param name="certificate">Certificate to export.</param>
     /// <param name="path">Destination file path.</param>
     public static void SaveDer(X509Certificate2 certificate, string path) {
-        if (string.IsNullOrEmpty(path)) {
-            throw new ArgumentException("Path cannot be null or empty.", nameof(path));
-        }
+        Guard.AgainstNullOrEmpty(path, nameof(path), "Path cannot be null or empty.");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllBytes(path, certificate.Export(X509ContentType.Cert));
     }
@@ -41,9 +39,7 @@ public static class CertificateExport {
     /// <param name="path">Destination file path.</param>
     /// <param name="password">Optional password protecting the PFX.</param>
     public static void SavePfx(X509Certificate2 certificate, string path, string? password = null) {
-        if (string.IsNullOrEmpty(path)) {
-            throw new ArgumentException("Path cannot be null or empty.", nameof(path));
-        }
+        Guard.AgainstNullOrEmpty(path, nameof(path), "Path cannot be null or empty.");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var bytes = password is null
             ? certificate.Export(X509ContentType.Pfx)

@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.Clients;
 
 using System;
 using System.Text.Json;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Base class for API clients.
@@ -24,6 +25,6 @@ public abstract class BaseClient {
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
     protected BaseClient(ISectigoClient client) {
-        _client = client ?? throw new ArgumentNullException(nameof(client));
+        _client = Guard.AgainstNull(client, nameof(client));
     }
 }

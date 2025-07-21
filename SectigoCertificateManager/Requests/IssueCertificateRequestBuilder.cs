@@ -3,6 +3,7 @@ namespace SectigoCertificateManager.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Builds <see cref="IssueCertificateRequest"/> instances using a fluent API.
@@ -16,7 +17,7 @@ public sealed class IssueCertificateRequestBuilder {
     /// </summary>
     /// <param name="allowedTerms">List of allowed certificate terms.</param>
     public IssueCertificateRequestBuilder(IReadOnlyList<int> allowedTerms) {
-        _allowedTerms = allowedTerms ?? throw new ArgumentNullException(nameof(allowedTerms));
+        _allowedTerms = Guard.AgainstNull(allowedTerms, nameof(allowedTerms));
     }
 
     /// <summary>Sets the certificate common name.</summary>

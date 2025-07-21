@@ -19,10 +19,7 @@ public static class X509Certificate2Extensions
     /// <summary>Gets AuthorityInfoAccess data from the certificate.</summary>
     public static AuthorityInfoAccess GetAuthorityInfoAccess(this X509Certificate2 certificate)
     {
-        if (certificate is null)
-        {
-            throw new ArgumentNullException(nameof(certificate));
-        }
+        Guard.AgainstNull(certificate, nameof(certificate));
 #if NET8_0_OR_GREATER
         if (certificate.Extensions[AuthorityInfoAccessOid] is X509AuthorityInformationAccessExtension aia)
         {

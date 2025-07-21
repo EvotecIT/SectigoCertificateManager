@@ -26,9 +26,7 @@ public sealed class CustomFieldsClient : BaseClient {
     public async Task<CustomField?> CreateAsync(
         CreateCustomFieldRequest request,
         CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client.PostAsync(
             "v1/customfield",
@@ -48,9 +46,7 @@ public sealed class CustomFieldsClient : BaseClient {
     public async Task<CustomField?> UpdateAsync(
         UpdateCustomFieldRequest request,
         CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
         if (request.Id <= 0) {
             throw new ArgumentOutOfRangeException(nameof(request.Id));
         }

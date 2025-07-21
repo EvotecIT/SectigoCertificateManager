@@ -16,9 +16,7 @@ public sealed partial class CertificatesClient : BaseClient {
     public async Task<CertificateResponse?> SearchAsync(
         CertificateSearchRequest request,
         CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var list = new List<Certificate>();
         await foreach (var certificate in EnumerateSearchAsync(request, cancellationToken: cancellationToken).ConfigureAwait(false)) {
@@ -60,9 +58,7 @@ public sealed partial class CertificatesClient : BaseClient {
     public async IAsyncEnumerable<X509Certificate2> StreamCertificatesAsync(
         CertificateSearchRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         await foreach (var certificate in EnumerateSearchAsync(request, cancellationToken).ConfigureAwait(false)) {
             yield return await DownloadAsync(certificate.Id, cancellationToken).ConfigureAwait(false);
@@ -77,9 +73,7 @@ public sealed partial class CertificatesClient : BaseClient {
     public async IAsyncEnumerable<Certificate> EnumerateSearchAsync(
         CertificateSearchRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var originalSize = request.Size;
         var originalPosition = request.Position;

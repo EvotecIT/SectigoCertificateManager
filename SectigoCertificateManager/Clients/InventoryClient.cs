@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.Clients;
 
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
+using SectigoCertificateManager.Utilities;
 using System.Text;
 
 /// <summary>
@@ -24,9 +25,7 @@ public sealed class InventoryClient : BaseClient {
     public async Task<IReadOnlyList<InventoryRecord>> DownloadCsvAsync(
         InventoryCsvRequest request,
         CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var query = BuildQuery(request);
         var response = await _client

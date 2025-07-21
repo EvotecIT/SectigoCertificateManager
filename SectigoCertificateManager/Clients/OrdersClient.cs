@@ -94,12 +94,8 @@ public sealed class OrdersClient : BaseClient {
         string contentType,
         IProgress<double>? progress = null,
         CancellationToken cancellationToken = default) {
-        if (stream is null) {
-            throw new ArgumentNullException(nameof(stream));
-        }
-        if (string.IsNullOrEmpty(contentType)) {
-            throw new ArgumentException("Content type cannot be null or empty.", nameof(contentType));
-        }
+        Guard.AgainstNull(stream, nameof(stream));
+        Guard.AgainstNullOrEmpty(contentType, nameof(contentType), "Content type cannot be null or empty.");
 
         using var content = new Utilities.ProgressStreamContent(stream, progress);
         content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);

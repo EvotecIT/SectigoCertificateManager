@@ -91,9 +91,7 @@ public sealed class UsersClient : BaseClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The identifier of the created user.</returns>
     public async Task<int> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client.PostAsync("v1/user", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var location = response.Headers.Location;
@@ -118,9 +116,7 @@ public sealed class UsersClient : BaseClient {
         if (userId <= 0) {
             throw new ArgumentOutOfRangeException(nameof(userId));
         }
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client.PutAsync($"v1/user/{userId}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
