@@ -11,17 +11,14 @@ using System.Text.Json;
 /// <summary>
 /// Provides access to order related endpoints.
 /// </summary>
-public sealed class OrdersClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed class OrdersClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OrdersClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public OrdersClient(ISectigoClient client) => _client = client;
+    public OrdersClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Retrieves an order by identifier.
