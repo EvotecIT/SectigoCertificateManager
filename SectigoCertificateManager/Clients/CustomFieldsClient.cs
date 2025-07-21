@@ -9,17 +9,14 @@ using System.Text.Json;
 /// <summary>
 /// Provides access to custom field endpoints.
 /// </summary>
-public sealed class CustomFieldsClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed class CustomFieldsClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CustomFieldsClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public CustomFieldsClient(ISectigoClient client) => _client = client;
+    public CustomFieldsClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Creates a new custom field.

@@ -10,17 +10,14 @@ using SectigoCertificateManager.Utilities;
 /// <summary>
 /// Provides access to organization related endpoints.
 /// </summary>
-public sealed class OrganizationsClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed class OrganizationsClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OrganizationsClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public OrganizationsClient(ISectigoClient client) => _client = client;
+    public OrganizationsClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Retrieves an organization by identifier.

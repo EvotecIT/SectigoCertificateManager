@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using SectigoCertificateManager.Utilities;
 
-public sealed partial class CertificatesClient {
+public sealed partial class CertificatesClient : BaseClient {
     /// <summary>
     /// Searches for certificates using the provided filter.
     /// </summary>
