@@ -7,8 +7,8 @@ public static class RevocationReasonExample {
     /// Demonstrates retrieving a revocation reason description.
     /// </summary>
     public static void Run() {
-        const int code = 4;
+        const RevocationReason code = RevocationReason.Superseded;
         var description = RevocationReasons.GetRevocationReasonDescription(code);
-        Console.WriteLine($"Reason {code}: {description}");
+        Console.WriteLine($"Reason {(int)code}: {description}");
     }
 }
