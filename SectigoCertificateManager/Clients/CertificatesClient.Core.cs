@@ -79,9 +79,7 @@ public sealed partial class CertificatesClient : BaseClient {
     /// <param name="request">Payload describing the certificate to issue.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<Certificate?> IssueAsync(IssueCertificateRequest request, CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         if (request.Term <= 0) {
             throw new ArgumentOutOfRangeException(nameof(request.Term));
@@ -99,9 +97,7 @@ public sealed partial class CertificatesClient : BaseClient {
     /// <param name="request">Payload describing the certificate to revoke.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task RevokeAsync(RevokeCertificateRequest request, CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client.PostAsync("v1/certificate/revoke", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
@@ -115,9 +111,7 @@ public sealed partial class CertificatesClient : BaseClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The identifier of the newly issued certificate.</returns>
     public async Task<int> RenewAsync(int certificateId, RenewCertificateRequest request, CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client.PostAsync($"v1/certificate/renewById/{certificateId}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var result = await response.Content
@@ -134,9 +128,7 @@ public sealed partial class CertificatesClient : BaseClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The identifier of the newly issued certificate.</returns>
     public async Task<int> RenewByOrderNumberAsync(long orderNumber, RenewCertificateRequest request, CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client.PostAsync($"v1/certificate/renew/{orderNumber}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var result = await response.Content
@@ -167,9 +159,7 @@ public sealed partial class CertificatesClient : BaseClient {
     public async Task<ValidateCertificateResponse?> ValidateCertificateRequestAsync(
         ValidateCertificateRequest request,
         CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client
             .PostAsync("v1/certificate/validate", JsonContent.Create(request, options: s_json), cancellationToken)
@@ -194,12 +184,8 @@ public sealed partial class CertificatesClient : BaseClient {
         if (orgId <= 0) {
             throw new ArgumentOutOfRangeException(nameof(orgId));
         }
-        if (stream is null) {
-            throw new ArgumentNullException(nameof(stream));
-        }
-        if (string.IsNullOrEmpty(fileName)) {
-            throw new ArgumentException("File name cannot be null or empty.", nameof(fileName));
-        }
+        Guard.AgainstNull(stream, nameof(stream));
+        Guard.AgainstNullOrEmpty(fileName, nameof(fileName), "File name cannot be null or empty.");
 
         var content = new MultipartFormDataContent();
         var fileContent = new StreamContent(stream);

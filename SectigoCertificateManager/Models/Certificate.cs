@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Represents a certificate returned by the Sectigo API.
@@ -103,9 +104,7 @@ public sealed class Certificate {
     /// <param name="stream">Stream providing base64 encoded certificate bytes.</param>
     /// <param name="progress">Optional progress reporter.</param>
     public static X509Certificate2 FromBase64(Stream stream, IProgress<double>? progress = null) {
-        if (stream is null) {
-            throw new ArgumentNullException(nameof(stream));
-        }
+        Guard.AgainstNull(stream, nameof(stream));
 
         if (stream.CanSeek) {
             stream.Seek(0, SeekOrigin.Begin);

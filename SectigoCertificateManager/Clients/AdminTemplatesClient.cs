@@ -72,9 +72,7 @@ public sealed class AdminTemplatesClient : BaseClient {
 
     /// <summary>Creates a new template.</summary>
     public async Task<int> CreateAsync(CreateIdpTemplateRequest request, CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client.PostAsync("admin-template/v1/", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         var location = response.Headers.Location;
@@ -94,9 +92,7 @@ public sealed class AdminTemplatesClient : BaseClient {
         if (templateId <= 0) {
             throw new ArgumentOutOfRangeException(nameof(templateId));
         }
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client.PutAsync($"admin-template/v1/{templateId}", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();

@@ -38,9 +38,7 @@ public sealed class OrganizationsClient : BaseClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>The identifier of the created organization.</returns>
     public async Task<int> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client
             .PostAsync("v1/organization", JsonContent.Create(request, options: s_json), cancellationToken)
@@ -68,9 +66,7 @@ public sealed class OrganizationsClient : BaseClient {
         if (organizationId <= 0) {
             throw new ArgumentOutOfRangeException(nameof(organizationId));
         }
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
 
         var response = await _client
             .PutAsync($"v1/organization/{organizationId}", JsonContent.Create(request, options: s_json), cancellationToken)
@@ -84,9 +80,7 @@ public sealed class OrganizationsClient : BaseClient {
     /// <param name="request">Payload describing updated fields including identifier.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public Task UpdateAsync(UpdateOrganizationRequest request, CancellationToken cancellationToken = default) {
-        if (request is null) {
-            throw new ArgumentNullException(nameof(request));
-        }
+        Guard.AgainstNull(request, nameof(request));
         if (request.Id <= 0) {
             throw new ArgumentOutOfRangeException(nameof(request.Id));
         }
