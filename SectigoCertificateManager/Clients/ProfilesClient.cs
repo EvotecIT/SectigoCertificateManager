@@ -8,17 +8,14 @@ using System.Text.Json;
 /// <summary>
 /// Provides access to profile related endpoints.
 /// </summary>
-public sealed class ProfilesClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed class ProfilesClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProfilesClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public ProfilesClient(ISectigoClient client) => _client = client;
+    public ProfilesClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Retrieves a profile by identifier.

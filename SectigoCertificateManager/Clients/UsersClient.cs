@@ -10,17 +10,14 @@ using SectigoCertificateManager.Utilities;
 /// <summary>
 /// Provides access to user related endpoints.
 /// </summary>
-public sealed class UsersClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed class UsersClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UsersClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public UsersClient(ISectigoClient client) => _client = client;
+    public UsersClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Retrieves a user by identifier.

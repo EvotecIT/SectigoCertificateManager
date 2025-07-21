@@ -5,7 +5,7 @@ using SectigoCertificateManager.Utilities;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
-public sealed partial class CertificatesClient {
+public sealed partial class CertificatesClient : BaseClient {
     /// <summary>
     /// Downloads an issued certificate and returns an <see cref="X509Certificate2"/> instance.
     /// </summary>

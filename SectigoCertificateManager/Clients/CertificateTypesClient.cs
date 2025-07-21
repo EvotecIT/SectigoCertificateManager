@@ -9,17 +9,14 @@ using SectigoCertificateManager.Utilities;
 /// <summary>
 /// Provides access to certificate type information.
 /// </summary>
-public sealed class CertificateTypesClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed class CertificateTypesClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CertificateTypesClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public CertificateTypesClient(ISectigoClient client) => _client = client;
+    public CertificateTypesClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Retrieves available certificate types.

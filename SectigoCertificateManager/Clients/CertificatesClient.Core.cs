@@ -15,17 +15,14 @@ using SectigoCertificateManager.Utilities;
 /// <summary>
 /// Provides access to certificate related endpoints.
 /// </summary>
-public sealed partial class CertificatesClient {
-    private readonly ISectigoClient _client;
-    private static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+public sealed partial class CertificatesClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CertificatesClient"/> class.
     /// </summary>
     /// <param name="client">HTTP client wrapper.</param>
-    public CertificatesClient(ISectigoClient client) => _client = client;
+    public CertificatesClient(ISectigoClient client) : base(client) {
+    }
 
     /// <summary>
     /// Retrieves a certificate by identifier.
