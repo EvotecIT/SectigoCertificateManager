@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.Requests;
 
 using System.IO;
 using System.Text;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Request payload used to renew a certificate.
@@ -22,9 +23,7 @@ public sealed class RenewCertificateRequest {
     /// <param name="stream">Stream providing CSR bytes.</param>
     /// <param name="progress">Optional progress reporter.</param>
     public void SetCsr(Stream stream, IProgress<double>? progress = null) {
-        if (stream is null) {
-            throw new ArgumentNullException(nameof(stream));
-        }
+        Guard.AgainstNull(stream, nameof(stream));
 
         using var reader = new StreamReader(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
         var builder = new StringBuilder();

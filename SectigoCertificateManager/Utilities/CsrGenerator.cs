@@ -31,9 +31,7 @@ public static class CsrGenerator {
         string subjectName,
         int keySize = 2048,
         HashAlgorithmName? hashAlgorithm = null) {
-        if (string.IsNullOrWhiteSpace(subjectName)) {
-            throw new ArgumentException("Value cannot be null or empty.", nameof(subjectName));
-        }
+        Guard.AgainstNullOrWhiteSpace(subjectName, nameof(subjectName));
         var rsa = RSA.Create(keySize);
         var request = CreateRequest(subjectName, rsa, hashAlgorithm ?? HashAlgorithmName.SHA256);
         var csr = Convert.ToBase64String(request.CreateSigningRequest());
@@ -44,9 +42,7 @@ public static class CsrGenerator {
         string subjectName,
         ECCurve? curve = null,
         HashAlgorithmName? hashAlgorithm = null) {
-        if (string.IsNullOrWhiteSpace(subjectName)) {
-            throw new ArgumentException("Value cannot be null or empty.", nameof(subjectName));
-        }
+        Guard.AgainstNullOrWhiteSpace(subjectName, nameof(subjectName));
         var ecdsa = ECDsa.Create(curve ?? ECCurve.NamedCurves.nistP256);
         var request = CreateRequest(subjectName, ecdsa, hashAlgorithm ?? HashAlgorithmName.SHA256);
         var csr = Convert.ToBase64String(request.CreateSigningRequest());
