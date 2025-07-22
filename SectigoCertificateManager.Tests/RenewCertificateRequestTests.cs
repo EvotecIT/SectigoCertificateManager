@@ -39,4 +39,16 @@ public sealed class RenewCertificateRequestTests {
 
         Assert.Equal(1d, progress.Value, 3);
     }
+
+    [Fact]
+    public void SetCsr_SeeksToBeginning() {
+        var bytes = Encoding.ASCII.GetBytes(Base64Csr);
+        using var stream = new MemoryStream(bytes);
+        stream.Seek(2, SeekOrigin.Begin);
+        var request = new RenewCertificateRequest();
+
+        request.SetCsr(stream);
+
+        Assert.Equal(Base64Csr, request.Csr);
+    }
 }
