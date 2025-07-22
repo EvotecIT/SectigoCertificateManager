@@ -55,6 +55,40 @@ public static class CertificateExport {
     }
 
     /// <summary>
+    /// Combines a certificate and private key into a PFX container and returns the bytes.
+    /// </summary>
+    /// <param name="certificate">Certificate without private key.</param>
+    /// <param name="privateKey">Associated private key.</param>
+    /// <param name="password">Optional password protecting the PFX.</param>
+    /// <returns>PFX container bytes.</returns>
+    public static byte[] CreatePfx(
+        X509Certificate2 certificate,
+        AsymmetricAlgorithm privateKey,
+        string? password = null) {
+        Guard.AgainstNull(certificate, nameof(certificate));
+        Guard.AgainstNull(privateKey, nameof(privateKey));
+#if NETSTANDARD2_0
+        throw new PlatformNotSupportedException();
+#else
+        X509Certificate2 combined;
+        if (privateKey is RSA rsa) {
+            combined = certificate.CopyWithPrivateKey(rsa);
+        } else if (privateKey is ECDsa ecdsa) {
+            combined = certificate.CopyWithPrivateKey(ecdsa);
+        } else {
+            throw new NotSupportedException($"Unsupported key type: {privateKey.GetType().Name}");
+        }
+        try {
+            return password is null
+                ? combined.Export(X509ContentType.Pfx)
+                : combined.Export(X509ContentType.Pfx, password);
+        } finally {
+            combined.Dispose();
+        }
+#endif
+    }
+
+    /// <summary>
     /// Saves the certificate and private key in a PFX container and returns the cleared buffer for testing.
     /// </summary>
     /// <param name="certificate">Certificate to export.</param>
