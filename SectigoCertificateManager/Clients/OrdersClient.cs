@@ -58,6 +58,7 @@ public sealed class OrdersClient : BaseClient {
         int pageSize = 200,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) {
         var position = 0;
+        var firstPage = true;
 
         while (true) {
             var response = await _client
@@ -67,6 +68,9 @@ public sealed class OrdersClient : BaseClient {
                 .ReadFromJsonAsyncSafe<IReadOnlyList<Order>>(s_json, cancellationToken)
                 .ConfigureAwait(false);
             if (page is null || page.Count == 0) {
+                if (firstPage) {
+                    yield break;
+                }
                 yield break;
             }
 
@@ -79,6 +83,7 @@ public sealed class OrdersClient : BaseClient {
             }
 
             position += pageSize;
+            firstPage = false;
         }
     }
 

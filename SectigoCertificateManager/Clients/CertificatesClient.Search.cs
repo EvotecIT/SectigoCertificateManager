@@ -78,6 +78,7 @@ public sealed partial class CertificatesClient : BaseClient {
         var originalSize = request.Size;
         var originalPosition = request.Position;
         var pageSize = request.Size ?? 200;
+        var firstPage = true;
         var position = request.Position ?? 0;
 
         try {
@@ -87,6 +88,9 @@ public sealed partial class CertificatesClient : BaseClient {
                 .ReadFromJsonAsyncSafe<IReadOnlyList<Certificate>>(s_json, cancellationToken)
                 .ConfigureAwait(false);
             if (page is null || page.Count == 0) {
+                if (firstPage) {
+                    yield break;
+                }
                 yield break;
             }
 
@@ -99,6 +103,7 @@ public sealed partial class CertificatesClient : BaseClient {
             }
 
             request.Size = pageSize;
+            firstPage = false;
             position += pageSize;
 
             while (true) {
@@ -121,6 +126,7 @@ public sealed partial class CertificatesClient : BaseClient {
                 }
 
                 position += pageSize;
+                firstPage = false;
             }
         } finally {
             request.Size = originalSize;
