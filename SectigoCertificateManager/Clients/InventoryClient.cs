@@ -89,6 +89,7 @@ public sealed class InventoryClient : BaseClient {
         StringBuilder builder) {
         values.Clear();
         builder.Clear();
+        var vsb = new ValueStringBuilder(stackalloc char[64]);
         var inQuotes = false;
         for (var i = 0; i < line.Length; i++) {
             var ch = line[i];
@@ -97,13 +98,15 @@ public sealed class InventoryClient : BaseClient {
                 continue;
             }
             if (ch == ',' && !inQuotes) {
-                values.Add(builder.ToString());
+                values.Add(vsb.ToString());
                 builder.Clear();
+                vsb.Clear();
                 continue;
             }
-            builder.Append(ch);
+            vsb.Append(ch);
         }
-        values.Add(builder.ToString());
+        values.Add(vsb.ToString());
+        vsb.Dispose();
         return values.ToArray();
     }
 

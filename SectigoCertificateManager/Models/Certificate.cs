@@ -4,6 +4,7 @@ using SectigoCertificateManager;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Buffers;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using SectigoCertificateManager.Utilities;
@@ -111,14 +112,14 @@ public sealed class Certificate {
         }
 
         using var reader = new StreamReader(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
-        var builder = new StringBuilder();
-        var buffer = new char[4096];
+        var rented = ArrayPool<char>.Shared.Rent(4096);
+        var vsb = new ValueStringBuilder(stackalloc char[256]);
         long read = 0;
         long total = stream.CanSeek ? stream.Length : -1;
 
         int count;
-        while ((count = reader.Read(buffer, 0, buffer.Length)) > 0) {
-            builder.Append(buffer, 0, count);
+        while ((count = reader.Read(rented, 0, rented.Length)) > 0) {
+            vsb.Append(rented.AsSpan(0, count));
             read += count;
             if (progress is not null && total > 0) {
                 progress.Report((double)read / total);
@@ -128,7 +129,9 @@ public sealed class Certificate {
         if (progress is not null && total > 0) {
             progress.Report(1d);
         }
-
-        return FromBase64(builder.ToString());
+        var result = FromBase64(vsb.ToString());
+        vsb.Dispose();
+        ArrayPool<char>.Shared.Return(rented);
+        return result;
     }
 }
