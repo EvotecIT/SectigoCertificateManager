@@ -13,14 +13,32 @@ public sealed partial class CertificatesClient : BaseClient {
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<X509Certificate2> DownloadAsync(
         int certificateId,
-        CancellationToken cancellationToken = default) {
+        CancellationToken cancellationToken = default,
+        string format = "base64",
+        string? password = null) {
         if (certificateId <= 0) {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
         }
-
         var endpoint = $"ssl/v1/collect/{certificateId}";
-        var url = $"{endpoint}?format=base64";
+        var builder = new System.Text.StringBuilder($"{endpoint}?format={Uri.EscapeDataString(format)}");
+        if (!string.IsNullOrEmpty(password)) {
+            _ = builder.Append("&password=").Append(Uri.EscapeDataString(password));
+        }
+        var url = builder.ToString();
         var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+
+        if (string.Equals(format, "pfx", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(format, "p12", StringComparison.OrdinalIgnoreCase)) {
+#if NETSTANDARD2_0 || NET472
+            var bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+#else
+            var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+#endif
+#pragma warning disable SYSLIB0057
+            return password is null ? new X509Certificate2(bytes) : new X509Certificate2(bytes, password);
+#pragma warning restore SYSLIB0057
+        }
+
 #if NETSTANDARD2_0 || NET472
         var base64 = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #else
@@ -41,6 +59,7 @@ public sealed partial class CertificatesClient : BaseClient {
         int certificateId,
         string path,
         string format = "base64",
+        string? password = null,
         IProgress<double>? progress = null,
         CancellationToken cancellationToken = default) {
         if (certificateId <= 0) {
@@ -51,7 +70,11 @@ public sealed partial class CertificatesClient : BaseClient {
         }
 
         var endpoint = $"ssl/v1/collect/{certificateId}";
-        var url = $"{endpoint}?format={Uri.EscapeDataString(format)}";
+        var builder = new System.Text.StringBuilder($"{endpoint}?format={Uri.EscapeDataString(format)}");
+        if (!string.IsNullOrEmpty(password)) {
+            _ = builder.Append("&password=").Append(Uri.EscapeDataString(password));
+        }
+        var url = builder.ToString();
         var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
         var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         using (stream) {

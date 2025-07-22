@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,6 +41,20 @@ public sealed class CertificatesClientTests {
     private sealed class TestProgress : IProgress<double> {
         public double Value { get; private set; }
         public void Report(double value) => Value = value;
+    }
+
+    private static X509Certificate2 CreateCertificate() {
+        using var key = RSA.Create(2048);
+#if NET472
+        var request = new CertificateRequest(
+            new X500DistinguishedName("CN=Test"),
+            key,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+#else
+        var request = new CertificateRequest("CN=Test", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+#endif
+        return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
     }
 
     private const string Base64Cert = "MIIC/zCCAeegAwIBAgIULTQw6ATwfRI/1hVSQooJNHPEit8wDQYJKoZIhvcNAQELBQAwDzENMAsGA1UEAwwEdGVzdDAeFw0yNTA3MDQxMzE2NDRaFw0yNTA3MDUxMzE2NDRaMA8xDTALBgNVBAMMBHRlc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDiO8kIwsJLCi3d8bX31IIISKSoA24iCcfV7m+uMm8CMdJlY2NGf8ThiF3suG2lHQCxESQacUrPFMN/J3cM7L+5R8p24CCnrmAP2WhMuO2IwFhgfjo4PsmnmCGNx5fDAPI+lnSS6pnHfZfAPw3dbPT2/cgbeil0q2ByFR6C2YXU+mFdOg7cJJ1f2GXbUL3QYRBuaDYCHRrDAym4e/8DkKjjaroDxw1BPD6sjvzrDdEDusJANDCp8K6Cr99nvG+YCLjueN+xvUXHbsp9gUfLI39X73p+M9zGcYGAeYyD/i+VM/+Kde5CEfS34eOKfRIJX6DHAbVu1SrJPNFFvQV0keb/AgMBAAGjUzBRMB0GA1UdDgQWBBQ8PwJEkQsHvU7i5i45XLLyJUi4eTAfBgNVHSMEGDAWgBQ8PwJEkQsHvU7i5i45XLLyJUi4eTAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAjWADB2IC5xBHKOROcXZDa8mp3DaasUwL5mWjG7Ppr4LHrY1uCEojstJCg6s2FLBjGTs+0DTQ5UiBqSVJDK1GVhYG02xJSPoXNS4wNTp4a56NtbkDT96lO0BrH91lclMNXHU9NpMUFea0tt7h5tUeVtZ2CVK0nuy5MOifMdURVyhWsFgQVemmTNTYisVD5sNRvBJEq0M+3+JSjFYvRZVqfRSM3z1K4XcZJfhxv7Gq1ebb93R1QunIdGC0HiFnBZxpxhDCbcVOpbdbQOJ22dLSe5/4f+1V+D/bPCZJx5kF0yvM0jEhuQNxNV3H/DasvBhH/24JIjpe+WfKPw0jx7vR6";
@@ -674,6 +689,32 @@ public sealed class CertificatesClientTests {
         Assert.Equal("https://example.com/ssl/v1/collect/5?format=base64", handler.Request!.RequestUri!.ToString());
         Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", cert.Thumbprint);
     }
+
+    [Fact]
+#if !NET472
+    public async Task DownloadAsync_Pfx_ReturnsCertificate() {
+        using var original = CreateCertificate();
+        var bytes = original.Export(X509ContentType.Pfx, "pwd");
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new ByteArrayContent(bytes)
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        using var cert = await certificates.DownloadAsync(5, format: "pfx", password: "pwd");
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/ssl/v1/collect/5?format=pfx&password=pwd", handler.Request!.RequestUri!.ToString());
+        Assert.Equal(original.Thumbprint, cert.Thumbprint);
+    }
+#else
+    public async Task DownloadAsync_Pfx_ReturnsCertificate() {
+        await Task.CompletedTask;
+    }
+#endif
 
     [Theory]
     [InlineData(0)]
