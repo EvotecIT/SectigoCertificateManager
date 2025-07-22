@@ -169,6 +169,37 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
+    public async Task DisposeDuringRefresh_ThrowsObjectDisposedException() {
+        var started = new TaskCompletionSource<object?>();
+        var release = new TaskCompletionSource<TokenInfo>();
+
+        Task<TokenInfo> Refresh(CancellationToken ct) {
+            started.SetResult(null);
+            return release.Task;
+        }
+
+        var config = new ApiConfig(
+            "https://example.com/",
+            string.Empty,
+            string.Empty,
+            "c",
+            ApiVersion.V25_4,
+            token: "t",
+            tokenExpiresAt: DateTimeOffset.UtcNow.AddMinutes(-1),
+            refreshToken: Refresh);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        var task = client.GetAsync("v1/test");
+        await started.Task;
+        client.Dispose();
+        release.SetResult(new TokenInfo("n", DateTimeOffset.UtcNow.AddMinutes(5)));
+
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => task);
+    }
+
+    [Fact]
     public async Task RefreshesTokenAutomatically() {
         var expired = DateTimeOffset.UtcNow.AddMinutes(-1);
         var called = false;
