@@ -13,6 +13,10 @@ public static class TokenRefreshExample {
     private static readonly JsonSerializerOptions s_json = new() {
         PropertyNameCaseInsensitive = true
     };
+
+    static TokenRefreshExample() {
+        s_json.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+    }
     /// <summary>Runs the example using <see cref="ApiConfigBuilder.WithTokenRefresh"/>.</summary>
     public static async Task RunAsync() {
         var builder = new ApiConfigBuilder()

@@ -20,6 +20,10 @@ public abstract class BaseClient {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    static BaseClient() {
+        s_json.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseClient"/> class.
     /// </summary>

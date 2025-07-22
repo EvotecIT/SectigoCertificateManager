@@ -3,9 +3,6 @@ namespace SectigoCertificateManager;
 /// <summary>
 /// Enumerates statuses for certificate orders.
 /// </summary>
-using System.Text.Json.Serialization;
-
-[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum OrderStatus {
     /// <summary>Order is not initiated.</summary>
     NotInitiated,
