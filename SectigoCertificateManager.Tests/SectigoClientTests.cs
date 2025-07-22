@@ -282,8 +282,8 @@ public sealed class SectigoClientTests {
     [Fact]
     public async Task RetriesWhenRateLimited() {
         var responses = new[] {
-            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
-            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.TooManyRequests, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.TooManyRequests, Description = "err" }) },
             new HttpResponseMessage(HttpStatusCode.OK)
         };
 
@@ -301,11 +301,11 @@ public sealed class SectigoClientTests {
     [Fact]
     public async Task FailsAfterMaximumRetries() {
         var responses = new[] {
-            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
-            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
-            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
-            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) },
-            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = 429, Description = "err" }) }
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.TooManyRequests, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.TooManyRequests, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.TooManyRequests, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.TooManyRequests, Description = "err" }) },
+            new HttpResponseMessage((HttpStatusCode)429) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.TooManyRequests, Description = "err" }) }
         };
 
         var handler = new RetryHandler(responses);

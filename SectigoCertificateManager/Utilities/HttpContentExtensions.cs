@@ -21,7 +21,7 @@ public static class HttpContentExtensions {
                 .ConfigureAwait(false);
         } catch (Exception ex) when (ex is JsonException or NotSupportedException) {
             throw new ApiException(new ApiError {
-                Code = -1,
+                Code = ApiErrorCode.UnknownError,
                 Description = $"Failed to parse {typeof(T).Name} from response: {ex.Message}"
             });
         }
