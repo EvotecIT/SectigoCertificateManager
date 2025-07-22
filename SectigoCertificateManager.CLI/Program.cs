@@ -1,5 +1,6 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
+using SectigoCertificateManager.Requests;
 using System.Net.Http;
 
 static void PrintUsage()
