@@ -40,15 +40,15 @@ Import the module and call the cmdlets:
 ```powershell
 Import-Module ./SectigoCertificateManager.PowerShell.dll
 
-Get-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123
+Get-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123 -ApiVersion V25_6
 
-Get-SectigoProfile -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ProfileId 2
+Get-SectigoProfile -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ProfileId 2 -ApiVersion V25_6
 
-New-SectigoOrder -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CommonName "example.com" -ProfileId 1 -SubjectAlternativeNames "www.example.com","admin.example.com"
+New-SectigoOrder -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CommonName "example.com" -ProfileId 1 -SubjectAlternativeNames "www.example.com","admin.example.com" -ApiVersion V25_6
 
-Get-SectigoOrders -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1"
+Get-SectigoOrders -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ApiVersion V25_6
 
-Update-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123 -Csr "<csr>" -DcvMode "EMAIL" -DcvEmail "admin@example.com"
+Update-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123 -Csr "<csr>" -DcvMode "EMAIL" -DcvEmail "admin@example.com" -ApiVersion V25_6
 ```
 
 Use `-SubjectAlternativeNames` to specify multiple SAN values when placing an order.

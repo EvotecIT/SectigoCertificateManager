@@ -29,7 +29,7 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
 
     /// <summary>The API version to use.</summary>
     [Parameter]
-    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
+    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The identifier of the certificate to delete.</summary>
     [Parameter(Mandatory = true, Position = 0)]

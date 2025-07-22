@@ -29,7 +29,7 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
 
     /// <summary>The API version to use.</summary>
     [Parameter]
-    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
+    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The identifier of the order to cancel.</summary>
     [Parameter(Mandatory = true, Position = 0)]

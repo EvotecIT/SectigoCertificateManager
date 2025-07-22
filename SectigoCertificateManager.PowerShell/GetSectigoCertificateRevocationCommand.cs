@@ -30,7 +30,7 @@ public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet
 
     /// <summary>The API version to use.</summary>
     [Parameter]
-    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
+    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The certificate identifier.</summary>
     [Parameter(Mandatory = true, Position = 0)]
