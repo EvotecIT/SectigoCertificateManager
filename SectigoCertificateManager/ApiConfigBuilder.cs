@@ -11,6 +11,7 @@ using SectigoCertificateManager.Utilities;
 /// Provides a builder for creating instances of <see cref="ApiConfig"/> using a fluent API.
 /// </summary>
 public sealed class ApiConfigBuilder {
+    private readonly object _lock = new();
     private string _baseUrl = string.Empty;
     private string _username = string.Empty;
     private string _password = string.Empty;
@@ -30,7 +31,9 @@ public sealed class ApiConfigBuilder {
             throw new ArgumentException("Base URL must be a valid absolute URI.", nameof(baseUrl));
         }
 
-        _baseUrl = baseUrl;
+        lock (_lock) {
+            _baseUrl = baseUrl;
+        }
         return this;
     }
 
@@ -41,22 +44,28 @@ public sealed class ApiConfigBuilder {
         Guard.AgainstNullOrWhiteSpace(username, nameof(username), "Username must not be null or empty.");
         Guard.AgainstNullOrWhiteSpace(password, nameof(password), "Password must not be null or empty.");
 
-        _username = username;
-        _password = password;
+        lock (_lock) {
+            _username = username;
+            _password = password;
+        }
         return this;
     }
 
     /// <summary>Sets the bearer token used for authentication.</summary>
     /// <param name="token">Token value.</param>
     public ApiConfigBuilder WithToken(string token) {
-        _token = token;
+        lock (_lock) {
+            _token = token;
+        }
         return this;
     }
 
     /// <summary>Sets the token expiration time.</summary>
     /// <param name="expiresAt">UTC time when the token expires.</param>
     public ApiConfigBuilder WithTokenExpiration(DateTimeOffset expiresAt) {
-        _tokenExpiresAt = expiresAt;
+        lock (_lock) {
+            _tokenExpiresAt = expiresAt;
+        }
         return this;
     }
 
@@ -65,21 +74,27 @@ public sealed class ApiConfigBuilder {
     /// </summary>
     /// <param name="refresh">Delegate invoked to obtain a new token.</param>
     public ApiConfigBuilder WithTokenRefresh(Func<CancellationToken, Task<TokenInfo>> refresh) {
-        _refreshToken = refresh;
+        lock (_lock) {
+            _refreshToken = refresh;
+        }
         return this;
     }
 
     /// <summary>Sets the customer URI header value.</summary>
     /// <param name="customerUri">Value of the <c>customerUri</c> header.</param>
     public ApiConfigBuilder WithCustomerUri(string customerUri) {
-        _customerUri = customerUri;
+        lock (_lock) {
+            _customerUri = customerUri;
+        }
         return this;
     }
 
     /// <summary>Sets the API version.</summary>
     /// <param name="version">Desired API version.</param>
     public ApiConfigBuilder WithApiVersion(ApiVersion version) {
-        _apiVersion = version;
+        lock (_lock) {
+            _apiVersion = version;
+        }
         return this;
     }
 
@@ -108,14 +123,18 @@ public sealed class ApiConfigBuilder {
     /// <summary>Attaches a client certificate for mutual TLS authentication.</summary>
     /// <param name="certificate">The certificate used for client authentication.</param>
     public ApiConfigBuilder WithClientCertificate(X509Certificate2 certificate) {
-        _clientCertificate = certificate;
+        lock (_lock) {
+            _clientCertificate = certificate;
+        }
         return this;
     }
 
     /// <summary>Allows configuration of the <see cref="HttpClientHandler"/> used by <see cref="SectigoClient"/>.</summary>
     /// <param name="configure">Delegate used to configure the handler.</param>
     public ApiConfigBuilder WithHttpClientHandler(Action<HttpClientHandler> configure) {
-        _configureHandler = Guard.AgainstNull(configure, nameof(configure));
+        lock (_lock) {
+            _configureHandler = Guard.AgainstNull(configure, nameof(configure));
+        }
         return this;
     }
 
@@ -126,39 +145,43 @@ public sealed class ApiConfigBuilder {
             throw new ArgumentOutOfRangeException(nameof(limit));
         }
 
-        _concurrencyLimit = limit;
+        lock (_lock) {
+            _concurrencyLimit = limit;
+        }
         return this;
     }
 
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build() {
-        Guard.AgainstNullOrWhiteSpace(_baseUrl, "baseUrl", "Base URL is required.");
+        lock (_lock) {
+            Guard.AgainstNullOrWhiteSpace(_baseUrl, "baseUrl", "Base URL is required.");
 
-        var hasToken = !string.IsNullOrWhiteSpace(_token);
-        var hasCredentials = !string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_password);
+            var hasToken = !string.IsNullOrWhiteSpace(_token);
+            var hasCredentials = !string.IsNullOrWhiteSpace(_username) && !string.IsNullOrWhiteSpace(_password);
 
-        if (!hasToken && !hasCredentials) {
-            throw new ArgumentException("Credentials or token are required.");
+            if (!hasToken && !hasCredentials) {
+                throw new ArgumentException("Credentials or token are required.");
+            }
+
+            if (!hasToken) {
+                Guard.AgainstNullOrWhiteSpace(_username, "username", "User name is required.");
+                Guard.AgainstNullOrWhiteSpace(_password, "password", "Password is required.");
+            }
+
+            Guard.AgainstNullOrWhiteSpace(_customerUri, "customerUri", "Customer URI is required.");
+
+            return new ApiConfig(
+                _baseUrl,
+                _username,
+                _password,
+                _customerUri,
+                _apiVersion,
+                _clientCertificate,
+                _configureHandler,
+                _token,
+                _tokenExpiresAt,
+                _refreshToken,
+                _concurrencyLimit);
         }
-
-        if (!hasToken) {
-            Guard.AgainstNullOrWhiteSpace(_username, "username", "User name is required.");
-            Guard.AgainstNullOrWhiteSpace(_password, "password", "Password is required.");
-        }
-
-        Guard.AgainstNullOrWhiteSpace(_customerUri, "customerUri", "Customer URI is required.");
-
-        return new ApiConfig(
-            _baseUrl,
-            _username,
-            _password,
-            _customerUri,
-            _apiVersion,
-            _clientCertificate,
-            _configureHandler,
-            _token,
-            _tokenExpiresAt,
-            _refreshToken,
-            _concurrencyLimit);
     }
 }

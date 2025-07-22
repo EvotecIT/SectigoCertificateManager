@@ -11,6 +11,7 @@ using SectigoCertificateManager.Utilities;
 public sealed class IssueCertificateRequestBuilder {
     private readonly IssueCertificateRequest _request = new();
     private readonly IReadOnlyList<int> _allowedTerms;
+    private readonly object _lock = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="IssueCertificateRequestBuilder"/> class.
@@ -22,13 +23,17 @@ public sealed class IssueCertificateRequestBuilder {
 
     /// <summary>Sets the certificate common name.</summary>
     public IssueCertificateRequestBuilder WithCommonName(string commonName) {
-        _request.CommonName = commonName;
+        lock (_lock) {
+            _request.CommonName = commonName;
+        }
         return this;
     }
 
     /// <summary>Sets the profile identifier.</summary>
     public IssueCertificateRequestBuilder WithProfileId(int profileId) {
-        _request.ProfileId = profileId;
+        lock (_lock) {
+            _request.ProfileId = profileId;
+        }
         return this;
     }
 
@@ -38,16 +43,29 @@ public sealed class IssueCertificateRequestBuilder {
             throw new ArgumentOutOfRangeException(nameof(term));
         }
 
-        _request.Term = term;
+        lock (_lock) {
+            _request.Term = term;
+        }
         return this;
     }
 
     /// <summary>Sets subject alternative names.</summary>
     public IssueCertificateRequestBuilder WithSubjectAlternativeNames(IEnumerable<string> sans) {
-        _request.SubjectAlternativeNames = sans?.ToArray() ?? Array.Empty<string>();
+        lock (_lock) {
+            _request.SubjectAlternativeNames = sans?.ToArray() ?? Array.Empty<string>();
+        }
         return this;
     }
 
     /// <summary>Builds the request instance.</summary>
-    public IssueCertificateRequest Build() => _request;
+    public IssueCertificateRequest Build() {
+        lock (_lock) {
+            return new IssueCertificateRequest {
+                CommonName = _request.CommonName,
+                ProfileId = _request.ProfileId,
+                Term = _request.Term,
+                SubjectAlternativeNames = _request.SubjectAlternativeNames.ToArray()
+            };
+        }
+    }
 }
