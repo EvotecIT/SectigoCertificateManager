@@ -29,7 +29,7 @@ public sealed class GetSectigoCertificateTypesCommand : PSCmdlet {
 
     /// <summary>The API version to use.</summary>
     [Parameter]
-    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
+    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>Optional organization identifier used to filter results.</summary>
     [Parameter]
