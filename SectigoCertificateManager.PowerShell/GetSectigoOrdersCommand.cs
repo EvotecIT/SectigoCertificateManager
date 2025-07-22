@@ -30,7 +30,7 @@ public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
 
     /// <summary>The API version to use.</summary>
     [Parameter]
-    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
+    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>Optional cancellation token.</summary>
     [Parameter]
