@@ -57,7 +57,7 @@ public sealed partial class CertificatesClient : BaseClient {
         using (stream) {
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            var buffer = new byte[81920];
+            var buffer = new byte[65536];
             long total = response.Content.Headers.ContentLength ?? (stream.CanSeek ? stream.Length : -1);
             long copied = 0;
             int count;
