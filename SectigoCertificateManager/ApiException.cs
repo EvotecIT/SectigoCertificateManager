@@ -7,7 +7,7 @@ using System;
 /// </summary>
 public class ApiException : Exception {
     /// <summary>Gets the API error code.</summary>
-    public int ErrorCode { get; }
+    public ApiErrorCode ErrorCode { get; }
 
     /// <summary>Initializes a new instance of the <see cref="ApiException"/> class.</summary>
     /// <param name="error">Error information returned by the API.</param>

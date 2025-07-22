@@ -28,13 +28,13 @@ internal static class ApiErrorHandler {
                 .ConfigureAwait(false);
         } catch (Exception ex) when (ex is JsonException or NotSupportedException) {
             throw new ApiException(new ApiError {
-                Code = -1,
+                Code = ApiErrorCode.UnknownError,
                 Description = $"Failed to parse ApiError from response: {ex.Message}"
             });
         }
 
         error ??= new ApiError {
-            Code = (int)response.StatusCode,
+            Code = (ApiErrorCode)(int)response.StatusCode,
             Description = response.ReasonPhrase ?? "Request failed",
         };
 
