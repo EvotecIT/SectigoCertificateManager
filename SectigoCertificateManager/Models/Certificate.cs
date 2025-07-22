@@ -86,7 +86,7 @@ public sealed class Certificate {
             bytes = Convert.FromBase64String(data);
         } catch (FormatException) {
             throw new ValidationException(new ApiError {
-                Code = -1,
+                Code = ApiErrorCode.UnknownError,
                 Description = "Certificate data is not valid Base64."
             });
         }

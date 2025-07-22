@@ -33,37 +33,37 @@ public sealed class ApiErrorHandlerTests {
     [Fact]
     public async Task ThrowsAuthenticationException() {
         var response = new HttpResponseMessage(HttpStatusCode.Unauthorized) {
-            Content = JsonContent.Create(new ApiError { Code = -16, Description = "Unknown user" })
+            Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.UnknownUser, Description = "Unknown user" })
         };
 
         using var client = CreateClient(response);
 
         var ex = await Assert.ThrowsAsync<AuthenticationException>(() => client.GetAsync("v1/test"));
-        Assert.Equal(-16, ex.ErrorCode);
+        Assert.Equal(ApiErrorCode.UnknownUser, ex.ErrorCode);
     }
 
     [Fact]
     public async Task ThrowsValidationException() {
         var response = new HttpResponseMessage(HttpStatusCode.BadRequest) {
-            Content = JsonContent.Create(new ApiError { Code = -10, Description = "Invalid" })
+            Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.ErrorWhileDecodingCsr, Description = "Invalid" })
         };
 
         using var client = CreateClient(response);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() => client.GetAsync("v1/test"));
-        Assert.Equal(-10, ex.ErrorCode);
+        Assert.Equal(ApiErrorCode.ErrorWhileDecodingCsr, ex.ErrorCode);
     }
 
     [Fact]
     public async Task ThrowsApiExceptionForOtherErrors() {
         var response = new HttpResponseMessage(HttpStatusCode.InternalServerError) {
-            Content = JsonContent.Create(new ApiError { Code = -2, Description = "Boom" })
+            Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.InternalErrorPleaseContactSupportForDetails, Description = "Boom" })
         };
 
         using var client = CreateClient(response);
 
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
-        Assert.Equal(-2, ex.ErrorCode);
+        Assert.Equal(ApiErrorCode.InternalErrorPleaseContactSupportForDetails, ex.ErrorCode);
     }
 
     [Fact]
@@ -75,6 +75,6 @@ public sealed class ApiErrorHandlerTests {
         using var client = CreateClient(response);
 
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
-        Assert.Equal(-1, ex.ErrorCode);
+        Assert.Equal(ApiErrorCode.UnknownError, ex.ErrorCode);
     }
 }
