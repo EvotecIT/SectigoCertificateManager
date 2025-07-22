@@ -26,6 +26,10 @@ public sealed class RenewCertificateRequest {
     public void SetCsr(Stream stream, IProgress<double>? progress = null) {
         Guard.AgainstNull(stream, nameof(stream));
 
+        if (stream.CanSeek) {
+            stream.Seek(0, SeekOrigin.Begin);
+        }
+
         using var reader = new StreamReader(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
         var rented = ArrayPool<char>.Shared.Rent(4096);
         var vsb = new ValueStringBuilder(stackalloc char[256]);
