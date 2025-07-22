@@ -191,6 +191,26 @@ public sealed class OrdersClientTests {
         await Assert.ThrowsAsync<TaskCanceledException>(async () => await enumerator.MoveNextAsync());
     }
 
+    [Fact]
+    public async Task EnumerateOrdersAsync_EmptyFirstPage_Breaks() {
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Array.Empty<Order>()) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var results = new List<Order>();
+        await foreach (var order in orders.EnumerateOrdersAsync(pageSize: 1)) {
+            results.Add(order);
+        }
+
+        Assert.Single(handler.Requests);
+        Assert.Empty(results);
+    }
+
     private sealed class TestProgress : IProgress<double> {
         public double Value { get; private set; }
         public void Report(double value) => Value = value;

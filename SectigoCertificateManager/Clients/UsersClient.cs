@@ -58,6 +58,7 @@ public sealed class UsersClient : BaseClient {
         [EnumeratorCancellation] CancellationToken cancellationToken = default) {
         filter ??= new UserSearchRequest();
         var pageSize = filter.Size ?? 200;
+        var firstPage = true;
         var position = filter.Position ?? 0;
 
         while (true) {
@@ -69,6 +70,9 @@ public sealed class UsersClient : BaseClient {
                 .ReadFromJsonAsyncSafe<IReadOnlyList<User>>(s_json, cancellationToken)
                 .ConfigureAwait(false);
             if (page is null || page.Count == 0) {
+                if (firstPage) {
+                    yield break;
+                }
                 yield break;
             }
 
@@ -81,6 +85,7 @@ public sealed class UsersClient : BaseClient {
             }
 
             position += pageSize;
+            firstPage = false;
         }
     }
 
