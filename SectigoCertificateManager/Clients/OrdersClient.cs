@@ -11,7 +11,7 @@ using System.Text.Json;
 /// <summary>
 /// Provides access to order related endpoints.
 /// </summary>
-public sealed class OrdersClient : BaseClient {
+public sealed partial class OrdersClient : BaseClient {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OrdersClient"/> class.
