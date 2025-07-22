@@ -14,3 +14,4 @@ await WatchOrdersExample.RunAsync();
 CsrGeneratorExample.Run();
 HttpClientPropertyExample.Run();
 GuardExample.Run();
+CombineCertKeyToPfxExample.Run();
