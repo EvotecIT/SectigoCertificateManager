@@ -52,9 +52,13 @@ public sealed class AdminTemplatesClient : BaseClient {
         int pageSize = 200,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) {
         var position = 0;
+        var firstPage = true;
         while (true) {
             var list = await ListAsync(pageSize, position, null, null, null, cancellationToken).ConfigureAwait(false);
             if (list.Count == 0) {
+                if (firstPage) {
+                    yield break;
+                }
                 yield break;
             }
 
@@ -67,6 +71,7 @@ public sealed class AdminTemplatesClient : BaseClient {
             }
 
             position += pageSize;
+            firstPage = false;
         }
     }
 
