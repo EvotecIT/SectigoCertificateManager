@@ -204,6 +204,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     }
 
     private async Task EnsureValidTokenAsync(CancellationToken cancellationToken) {
+        ThrowIfDisposed();
         if (_refreshToken is null) {
             return;
         }
@@ -214,6 +215,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
 
         await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try {
+            ThrowIfDisposed();
             if (_token is not null && _tokenExpiresAt is not null && _tokenExpiresAt > DateTimeOffset.UtcNow) {
                 return;
             }
@@ -225,7 +227,9 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
             _client.DefaultRequestHeaders.Remove("password");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", info.Token);
         } finally {
-            _refreshLock.Release();
+            if (!_disposed) {
+                _refreshLock.Release();
+            }
         }
     }
 
@@ -236,6 +240,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         }
 
         _client.Dispose();
+        _refreshLock.Dispose();
         _disposed = true;
     }
 }
