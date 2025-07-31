@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Security.Cryptography.X509Certificates;
 using SectigoCertificateManager.Utilities;
+using System.Globalization;
 
 /// <summary>
 /// Provides access to certificate related endpoints.
@@ -225,7 +226,8 @@ public sealed partial class CertificatesClient : BaseClient {
             }
 
             AppendSeparator();
-            builder.Append(name).Append('=').Append(value.Value.ToString("yyyy-MM-dd"));
+            builder.Append(name).Append('=')
+                .Append(value.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         }
 
         if (request.Size.HasValue) {
