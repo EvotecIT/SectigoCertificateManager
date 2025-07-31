@@ -4,6 +4,7 @@ using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Models;
 using System.Net;
 using System.Net.Http;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -52,5 +53,34 @@ public sealed class InventoryClientTests {
         var inventory = new InventoryClient(client);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => inventory.DownloadCsvAsync(null!));
+    }
+
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("de-DE")]
+    public async Task DownloadCsvAsync_UsesInvariantCulture(string cultureName) {
+        var originalCulture = CultureInfo.CurrentCulture;
+        var originalUiCulture = CultureInfo.CurrentUICulture;
+        try {
+            var culture = new CultureInfo(cultureName);
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+
+            const string csv = "id,commonName\n1,example.com";
+            var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(csv) };
+
+            var handler = new TestHandler(response);
+            var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+            var inventory = new InventoryClient(client);
+
+            var request = new InventoryCsvRequest { DateFrom = new DateTime(2023, 5, 1), DateTo = new DateTime(2023, 5, 7) };
+            await inventory.DownloadCsvAsync(request);
+
+            Assert.NotNull(handler.Request);
+            Assert.Equal("https://example.com/v1/inventory.csv?from=2023-05-01&to=2023-05-07", handler.Request!.RequestUri!.ToString());
+        } finally {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
     }
 }
