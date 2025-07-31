@@ -718,4 +718,62 @@ public sealed class CertificatesClientTests {
         Assert.Equal(3, results.Count);
         Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", results[0].Thumbprint);
     }
+
+    [Fact]
+    public async Task StreamCertificatesAsync_ReturnsBytes() {
+        var page1 = new[] { new Certificate { Id = 1 }, new Certificate { Id = 2 } };
+        var page2 = new[] { new Certificate { Id = 3 } };
+
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page1) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page2) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var results = new List<byte[]>();
+        await foreach (var bytes in certificates.StreamCertificatesAsync<byte[]>(pageSize: 2)) {
+            results.Add(bytes);
+        }
+
+        Assert.Equal(5, handler.Requests.Count);
+        Assert.Equal(3, results.Count);
+        using var cert = new X509Certificate2(results[0]);
+        Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", cert.Thumbprint);
+    }
+
+    [Fact]
+    public async Task StreamCertificatesAsync_ReturnsStreams() {
+        var page1 = new[] { new Certificate { Id = 1 }, new Certificate { Id = 2 } };
+        var page2 = new[] { new Certificate { Id = 3 } };
+
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page1) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page2) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var results = new List<Stream>();
+        await foreach (var stream in certificates.StreamCertificatesAsync<Stream>(pageSize: 2)) {
+            results.Add(stream);
+        }
+
+        Assert.Equal(5, handler.Requests.Count);
+        Assert.Equal(3, results.Count);
+        using var ms = new MemoryStream();
+        await results[0].CopyToAsync(ms);
+        using var cert = new X509Certificate2(ms.ToArray());
+        Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", cert.Thumbprint);
+    }
 }
