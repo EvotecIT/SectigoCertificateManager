@@ -49,18 +49,26 @@ public sealed class GetSectigoOrdersPageCommand : AsyncPSCmdlet {
     /// <para>Creates an API client and outputs the orders from a single page.</para>
     protected override async Task ProcessRecordAsync() {
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var orders = new OrdersClient(client);
-        var request = new OrderSearchRequest { Size = Size, Position = Position };
+        ISectigoClient? client = null;
+        try {
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var orders = new OrdersClient(client);
+            var request = new OrderSearchRequest { Size = Size, Position = Position };
 
-        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
-        var result = await orders.SearchAsync(request, linked.Token).ConfigureAwait(false);
-        if (result is null) {
-            return;
-        }
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+            var result = await orders.SearchAsync(request, linked.Token).ConfigureAwait(false);
+            if (result is null) {
+                return;
+            }
 
-        foreach (var order in result.Orders) {
-            WriteObject(order);
+            foreach (var order in result.Orders) {
+                WriteObject(order);
+            }
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
         }
     }
 }

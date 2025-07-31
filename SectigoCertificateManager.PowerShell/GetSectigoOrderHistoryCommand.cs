@@ -49,11 +49,19 @@ public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var orders = new OrdersClient(client);
-        var history = orders.GetHistoryAsync(OrderId, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        WriteObject(history, true);
+        ISectigoClient? client = null;
+        try {
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var orders = new OrdersClient(client);
+            var history = orders.GetHistoryAsync(OrderId, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            WriteObject(history, true);
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }

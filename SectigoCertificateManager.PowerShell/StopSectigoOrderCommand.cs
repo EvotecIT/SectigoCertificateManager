@@ -53,10 +53,18 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var orders = new OrdersClient(client);
-        orders.CancelAsync(OrderId, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
+        ISectigoClient? client = null;
+        try {
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var orders = new OrdersClient(client);
+            orders.CancelAsync(OrderId, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }

@@ -42,14 +42,22 @@ public sealed class GetSectigoCertificateTypesCommand : PSCmdlet {
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and outputs all certificate types.</para>
     protected override void ProcessRecord() {
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var types = new CertificateTypesClient(client);
-        var list = types.ListTypesAsync(OrganizationId, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        foreach (var type in list) {
-            WriteObject(type);
+        ISectigoClient? client = null;
+        try {
+            var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var types = new CertificateTypesClient(client);
+            var list = types.ListTypesAsync(OrganizationId, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            foreach (var type in list) {
+                WriteObject(type);
+            }
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
         }
     }
 }
