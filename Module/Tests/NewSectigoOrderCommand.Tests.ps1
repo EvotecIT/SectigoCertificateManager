@@ -9,7 +9,7 @@ Describe 'New-SectigoOrder parameter validation' -Tag 'Cmdlet' {
             ProfileId = 1
             SubjectAlternativeNames = @('valid', '')
         }
-        { New-SectigoOrder @params } | Should -Throw
+        { New-SectigoOrder @params } | Should -Throw -ErrorId 'InvalidSubjectAlternativeName,SectigoCertificateManager.PowerShell.NewSectigoOrderCommand'
     }
 
     It 'Throws when CommonName is null or whitespace' {
@@ -21,6 +21,6 @@ Describe 'New-SectigoOrder parameter validation' -Tag 'Cmdlet' {
             CommonName = ' '
             ProfileId = 1
         }
-        { New-SectigoOrder @params } | Should -Throw
+        { New-SectigoOrder @params } | Should -Throw -ErrorId 'InvalidCommonName,SectigoCertificateManager.PowerShell.NewSectigoOrderCommand'
     }
 }

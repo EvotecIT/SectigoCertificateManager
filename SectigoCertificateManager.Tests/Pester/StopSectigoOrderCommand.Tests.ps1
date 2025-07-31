@@ -6,7 +6,7 @@ Describe "Stop-SectigoOrder" {
     }
 
     It "throws when OrderId is less than or equal to zero" {
-        { Stop-SectigoOrder -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -OrderId 0 } | Should -Throw
+        { Stop-SectigoOrder -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -OrderId 0 } | Should -Throw -ErrorId 'InvalidOrderId,SectigoCertificateManager.PowerShell.StopSectigoOrderCommand'
     }
 
     It "supports ShouldProcess" {
