@@ -39,6 +39,54 @@ public sealed partial class CertificatesClient : BaseClient {
     }
 
     /// <summary>
+    /// Streams issued certificates and returns them in the specified format.
+    /// </summary>
+    /// <typeparam name="T">Output type: <see cref="X509Certificate2"/>, <see cref="byte[]"/>, or <see cref="Stream"/>.</typeparam>
+    /// <param name="pageSize">Number of certificates to request per page.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public IAsyncEnumerable<T> StreamCertificatesAsync<T>(
+        int pageSize = 200,
+        CancellationToken cancellationToken = default) {
+        var request = new CertificateSearchRequest { Size = pageSize };
+        return StreamCertificatesAsync<T>(request, cancellationToken);
+    }
+
+    /// <summary>
+    /// Streams issued certificates matching the provided filter in the specified format.
+    /// </summary>
+    /// <typeparam name="T">Output type: <see cref="X509Certificate2"/>, <see cref="byte[]"/>, or <see cref="Stream"/>.</typeparam>
+    /// <param name="request">Filter describing certificates to retrieve.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async IAsyncEnumerable<T> StreamCertificatesAsync<T>(
+        CertificateSearchRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+        Guard.AgainstNull(request, nameof(request));
+
+        await foreach (var certificate in EnumerateSearchAsync(request, cancellationToken).ConfigureAwait(false)) {
+            yield return await GetCertificateAsync<T>(certificate.Id, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task<T> GetCertificateAsync<T>(int certificateId, CancellationToken cancellationToken) {
+        if (typeof(T) == typeof(X509Certificate2)) {
+            var cert = await DownloadAsync(certificateId, cancellationToken).ConfigureAwait(false);
+            return (T)(object)cert;
+        }
+
+        if (typeof(T) == typeof(byte[])) {
+            var bytes = await DownloadBytesAsync(certificateId, cancellationToken).ConfigureAwait(false);
+            return (T)(object)bytes;
+        }
+
+        if (typeof(T) == typeof(Stream)) {
+            var stream = await DownloadStreamAsync(certificateId, cancellationToken).ConfigureAwait(false);
+            return (T)(object)stream;
+        }
+
+        throw new NotSupportedException($"Type {typeof(T)} is not supported.");
+    }
+
+    /// <summary>
     /// Streams issued certificates page by page and downloads each one.
     /// </summary>
     /// <param name="pageSize">Number of certificates to request per page.</param>
@@ -46,8 +94,7 @@ public sealed partial class CertificatesClient : BaseClient {
     public IAsyncEnumerable<X509Certificate2> StreamCertificatesAsync(
         int pageSize = 200,
         CancellationToken cancellationToken = default) {
-        var request = new CertificateSearchRequest { Size = pageSize };
-        return StreamCertificatesAsync(request, cancellationToken);
+        return StreamCertificatesAsync<X509Certificate2>(pageSize, cancellationToken);
     }
 
     /// <summary>
@@ -58,10 +105,8 @@ public sealed partial class CertificatesClient : BaseClient {
     public async IAsyncEnumerable<X509Certificate2> StreamCertificatesAsync(
         CertificateSearchRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) {
-        Guard.AgainstNull(request, nameof(request));
-
-        await foreach (var certificate in EnumerateSearchAsync(request, cancellationToken).ConfigureAwait(false)) {
-            yield return await DownloadAsync(certificate.Id, cancellationToken).ConfigureAwait(false);
+        await foreach (var cert in StreamCertificatesAsync<X509Certificate2>(request, cancellationToken).ConfigureAwait(false)) {
+            yield return cert;
         }
     }
 

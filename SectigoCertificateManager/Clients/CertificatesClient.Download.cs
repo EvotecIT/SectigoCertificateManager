@@ -30,6 +30,41 @@ public sealed partial class CertificatesClient : BaseClient {
     }
 
     /// <summary>
+    /// Downloads an issued certificate and returns the DER encoded bytes.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to download.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<byte[]> DownloadBytesAsync(
+        int certificateId,
+        CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var endpoint = $"ssl/v1/collect/{certificateId}";
+        var url = $"{endpoint}?format=base64";
+        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+#if NETSTANDARD2_0 || NET472
+        var base64 = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+        var base64 = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
+        return Convert.FromBase64String(base64);
+    }
+
+    /// <summary>
+    /// Downloads an issued certificate and returns a <see cref="Stream"/> containing the DER bytes.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to download.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<Stream> DownloadStreamAsync(
+        int certificateId,
+        CancellationToken cancellationToken = default) {
+        var bytes = await DownloadBytesAsync(certificateId, cancellationToken).ConfigureAwait(false);
+        return new MemoryStream(bytes, writable: false);
+    }
+
+    /// <summary>
     /// Downloads an issued certificate and saves it to disk.
     /// </summary>
     /// <param name="certificateId">Identifier of the certificate to download.</param>
