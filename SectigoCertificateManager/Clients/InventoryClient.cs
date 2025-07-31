@@ -3,6 +3,7 @@ namespace SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Utilities;
+using System.Globalization;
 using System.Text;
 
 /// <summary>
@@ -130,7 +131,7 @@ public sealed class InventoryClient : BaseClient {
 
             AppendSeparator();
             builder.Append(name).Append('=')
-                .Append(value.Value.ToString("yyyy-MM-dd"));
+                .Append(value.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         }
 
         if (request.Size.HasValue) {

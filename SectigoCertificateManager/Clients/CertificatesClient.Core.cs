@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Globalization;
 using System.Text.Json;
 using System.Security.Cryptography.X509Certificates;
 using SectigoCertificateManager.Utilities;
@@ -225,7 +226,8 @@ public sealed partial class CertificatesClient : BaseClient {
             }
 
             AppendSeparator();
-            builder.Append(name).Append('=').Append(value.Value.ToString("yyyy-MM-dd"));
+            builder.Append(name).Append('=')
+                .Append(value.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         }
 
         if (request.Size.HasValue) {
