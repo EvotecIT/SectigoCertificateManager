@@ -38,14 +38,22 @@ public sealed class GetSectigoProfilesCommand : PSCmdlet {
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and outputs all profiles.</para>
     protected override void ProcessRecord() {
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var profilesClient = new ProfilesClient(client);
-        var list = profilesClient.ListProfilesAsync(CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        foreach (var profile in list) {
-            WriteObject(profile);
+        ISectigoClient? client = null;
+        try {
+            var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var profilesClient = new ProfilesClient(client);
+            var list = profilesClient.ListProfilesAsync(CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            foreach (var profile in list) {
+                WriteObject(profile);
+            }
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
         }
     }
 }

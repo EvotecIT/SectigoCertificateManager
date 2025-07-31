@@ -53,12 +53,20 @@ public sealed class WaitSectigoOrderCommand : PSCmdlet {
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var statuses = new OrderStatusClient(client);
-        var status = statuses
-            .WatchAsync(OrderId, PollInterval, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        WriteObject(status);
+        ISectigoClient? client = null;
+        try {
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var statuses = new OrderStatusClient(client);
+            var status = statuses
+                .WatchAsync(OrderId, PollInterval, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            WriteObject(status);
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }

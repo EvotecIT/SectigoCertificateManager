@@ -61,16 +61,24 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var certificates = new CertificatesClient(client);
-        var request = new RenewCertificateRequest {
-            Csr = Csr,
-            DcvMode = DcvMode,
-            DcvEmail = DcvEmail
-        };
-        var newId = certificates.RenewAsync(CertificateId, request, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        WriteObject(newId);
+        ISectigoClient? client = null;
+        try {
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var certificates = new CertificatesClient(client);
+            var request = new RenewCertificateRequest {
+                Csr = Csr,
+                DcvMode = DcvMode,
+                DcvEmail = DcvEmail
+            };
+            var newId = certificates.RenewAsync(CertificateId, request, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            WriteObject(newId);
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }
