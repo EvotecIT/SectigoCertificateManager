@@ -4,6 +4,7 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -73,6 +74,41 @@ public sealed class CertificatesClientTests {
         var actualResult = result!;
         Assert.Single(actualResult.Certificates);
         Assert.Equal(1, actualResult.Certificates[0].Id);
+    }
+
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("de-DE")]
+    public async Task SearchAsync_UsesInvariantCulture(string cultureName) {
+        var certificate = new Certificate { Id = 1, CommonName = "test" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { certificate })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var originalCulture = CultureInfo.CurrentCulture;
+        var originalUiCulture = CultureInfo.CurrentUICulture;
+        try {
+            var culture = new CultureInfo(cultureName);
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+
+            var request = new CertificateSearchRequest {
+                DateFrom = new DateTime(2023, 1, 1),
+                DateTo = new DateTime(2023, 1, 2)
+            };
+            await certificates.SearchAsync(request);
+
+            Assert.NotNull(handler.Request);
+            Assert.Equal("https://example.com/v1/certificate?dateFrom=2023-01-01&dateTo=2023-01-02", handler.Request!.RequestUri!.ToString());
+        } finally {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
     }
 
     [Fact]

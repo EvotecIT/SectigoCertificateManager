@@ -4,6 +4,7 @@ using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Utilities;
 using System.Text;
+using System.Globalization;
 
 /// <summary>
 /// Provides access to inventory related endpoints.
@@ -130,7 +131,7 @@ public sealed class InventoryClient : BaseClient {
 
             AppendSeparator();
             builder.Append(name).Append('=')
-                .Append(value.Value.ToString("yyyy-MM-dd"));
+                .Append(value.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         }
 
         if (request.Size.HasValue) {
