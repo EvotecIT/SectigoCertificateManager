@@ -15,3 +15,4 @@ CsrGeneratorExample.Run();
 HttpClientPropertyExample.Run();
 GuardExample.Run();
 CombineCertKeyToPfxExample.Run();
+await StreamCertificatesBytesExample.RunAsync();
