@@ -12,6 +12,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -105,6 +106,38 @@ public sealed class CertificatesClientTests {
 
             Assert.NotNull(handler.Request);
             Assert.Equal("https://example.com/v1/certificate?dateFrom=2023-01-01&dateTo=2023-01-02", handler.Request!.RequestUri!.ToString());
+        } finally {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
+    }
+
+    [Fact]
+    public async Task SearchAsync_UsesInvariantCulture() {
+        var certificate = new Certificate { Id = 1, CommonName = "test" };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { certificate })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var originalCulture = CultureInfo.CurrentCulture;
+        var originalUiCulture = CultureInfo.CurrentUICulture;
+        try {
+            CultureInfo.CurrentCulture = new CultureInfo("fr-FR");
+            CultureInfo.CurrentUICulture = new CultureInfo("fr-FR");
+
+            var request = new CertificateSearchRequest {
+                DateFrom = new DateTime(2023, 1, 1),
+                DateTo = new DateTime(2023, 1, 31)
+            };
+            await certificates.SearchAsync(request);
+
+            Assert.NotNull(handler.Request);
+            Assert.Equal("https://example.com/v1/certificate?dateFrom=2023-01-01&dateTo=2023-01-31", handler.Request!.RequestUri!.ToString());
         } finally {
             CultureInfo.CurrentCulture = originalCulture;
             CultureInfo.CurrentUICulture = originalUiCulture;
