@@ -41,12 +41,20 @@ public sealed class GetSectigoCertificateStatusCommand : PSCmdlet {
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and retrieves certificate status.</para>
     protected override void ProcessRecord() {
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var certificates = new CertificatesClient(client);
-        var status = certificates.GetStatusAsync(CertificateId, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        WriteObject(status);
+        ISectigoClient? client = null;
+        try {
+            var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var certificates = new CertificatesClient(client);
+            var status = certificates.GetStatusAsync(CertificateId, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            WriteObject(status);
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }

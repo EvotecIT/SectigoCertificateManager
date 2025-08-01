@@ -53,10 +53,18 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var certificates = new CertificatesClient(client);
-        certificates.DeleteAsync(CertificateId, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
+        ISectigoClient? client = null;
+        try {
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var certificates = new CertificatesClient(client);
+            certificates.DeleteAsync(CertificateId, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }
