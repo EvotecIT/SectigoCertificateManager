@@ -40,7 +40,10 @@ public static class CertificateExport {
     /// <param name="password">Optional password protecting the PFX.</param>
     public static void SavePfx(X509Certificate2 certificate, string path, string? password = null) {
         Guard.AgainstNullOrEmpty(path, nameof(path), "Path cannot be null or empty.");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory)) {
+            Directory.CreateDirectory(directory);
+        }
         var bytes = password is null
             ? certificate.Export(X509ContentType.Pfx)
             : certificate.Export(X509ContentType.Pfx, password);
@@ -99,7 +102,10 @@ public static class CertificateExport {
         var bytes = password is null
             ? certificate.Export(X509ContentType.Pfx)
             : certificate.Export(X509ContentType.Pfx, password);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory)) {
+            Directory.CreateDirectory(directory);
+        }
         using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None)) {
             stream.Write(bytes, 0, bytes.Length);
         }

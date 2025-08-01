@@ -109,6 +109,20 @@ public sealed class CertificateExportTests {
     }
 
     [Fact]
+    public void SavePfx_NoDirectory_WritesFile() {
+        using var cert = CreateCertificate();
+        var path = Path.GetRandomFileName();
+        try {
+            CertificateExport.SavePfx(cert, path, "pwd");
+            Assert.True(File.Exists(path));
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
     public void SavePfxForTest_ClearsBuffer() {
         using var cert = CreateCertificate();
         var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -120,6 +134,21 @@ public sealed class CertificateExportTests {
         } finally {
             if (Directory.Exists(dir)) {
                 Directory.Delete(dir, true);
+            }
+        }
+    }
+
+    [Fact]
+    public void SavePfxForTest_NoDirectory_WritesFile() {
+        using var cert = CreateCertificate();
+        var path = Path.GetRandomFileName();
+        try {
+            var buffer = CertificateExport.SavePfxForTest(cert, path, "pwd");
+            Assert.True(File.Exists(path));
+            Assert.All(buffer, b => Assert.Equal(0, b));
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
             }
         }
     }
