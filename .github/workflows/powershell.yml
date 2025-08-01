@@ -20,7 +20,7 @@ env:
 jobs:
   refresh-psd1:
     name: 'Refresh PSD1'
-    runs-on: windows-latest
+    runs-on: [self-hosted, windows]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
