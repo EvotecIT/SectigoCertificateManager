@@ -11,6 +11,6 @@ Describe "New-SectigoOrganization" {
     }
 
     It "throws when Name is empty" {
-        { New-SectigoOrganization -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -Name '' } | Should -Throw
+        { New-SectigoOrganization -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -Name ' ' } | Should -Throw -ErrorId 'InvalidName,SectigoCertificateManager.PowerShell.NewSectigoOrganizationCommand'
     }
 }

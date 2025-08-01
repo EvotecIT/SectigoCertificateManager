@@ -228,7 +228,9 @@ public abstract class AsyncPSCmdlet : PSCmdlet, IDisposable {
     /// </summary>
     internal void ThrowIfStopped() {
         if (_cancelSource.IsCancellationRequested) {
-            throw new PipelineStoppedException();
+            var ex = new PipelineStoppedException("Cmdlet execution was canceled.");
+            var record = new ErrorRecord(ex, "CmdletCancelled", ErrorCategory.OperationStopped, null);
+            ThrowTerminatingError(record);
         }
     }
 
