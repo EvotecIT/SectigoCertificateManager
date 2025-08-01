@@ -71,17 +71,25 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var certificates = new CertificatesClient(client);
-        var request = new IssueCertificateRequest {
-            CommonName = CommonName,
-            ProfileId = ProfileId,
-            Term = Term,
-            SubjectAlternativeNames = SubjectAlternativeNames
-        };
-        var certificate = certificates.IssueAsync(request, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        WriteObject(certificate);
+        ISectigoClient? client = null;
+        try {
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var certificates = new CertificatesClient(client);
+            var request = new IssueCertificateRequest {
+                CommonName = CommonName,
+                ProfileId = ProfileId,
+                Term = Term,
+                SubjectAlternativeNames = SubjectAlternativeNames
+            };
+            var certificate = certificates.IssueAsync(request, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            WriteObject(certificate);
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }

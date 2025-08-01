@@ -10,8 +10,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateRevocation")]
 [CmdletBinding()]
 [OutputType(typeof(Models.CertificateRevocation))]
-public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet
-{
+public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet {
     /// <summary>The API base URL.</summary>
     [Parameter(Mandatory = true)]
     public string BaseUrl { get; set; } = string.Empty;
@@ -42,14 +41,21 @@ public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and retrieves certificate revocation details.</para>
-    protected override void ProcessRecord()
-    {
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var certificates = new CertificatesClient(client);
-        var revocation = certificates.GetRevocationAsync(CertificateId, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        WriteObject(revocation);
+    protected override void ProcessRecord() {
+        ISectigoClient? client = null;
+        try {
+            var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var certificates = new CertificatesClient(client);
+            var revocation = certificates.GetRevocationAsync(CertificateId, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            WriteObject(revocation);
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }

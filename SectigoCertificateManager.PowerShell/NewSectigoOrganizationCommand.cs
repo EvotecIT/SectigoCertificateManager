@@ -55,15 +55,23 @@ public sealed class NewSectigoOrganizationCommand : PSCmdlet {
         }
 
         var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var organizations = new OrganizationsClient(client);
-        var request = new CreateOrganizationRequest {
-            Name = Name,
-            StateOrProvince = StateOrProvince
-        };
-        var id = organizations.CreateAsync(request, CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        WriteObject(id);
+        ISectigoClient? client = null;
+        try {
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var organizations = new OrganizationsClient(client);
+            var request = new CreateOrganizationRequest {
+                Name = Name,
+                StateOrProvince = StateOrProvince
+            };
+            var id = organizations.CreateAsync(request, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            WriteObject(id);
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
+        }
     }
 }

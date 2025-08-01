@@ -37,14 +37,22 @@ public sealed class GetSectigoOrganizationsCommand : PSCmdlet {
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and outputs all organizations.</para>
     protected override void ProcessRecord() {
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        var client = new SectigoClient(config);
-        var organizations = new OrganizationsClient(client);
-        var list = organizations.ListOrganizationsAsync(CancellationToken)
-            .GetAwaiter()
-            .GetResult();
-        foreach (var org in list) {
-            WriteObject(org);
+        ISectigoClient? client = null;
+        try {
+            var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
+            TestHooks.CreatedClient = client;
+            var organizations = new OrganizationsClient(client);
+            var list = organizations.ListOrganizationsAsync(CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            foreach (var org in list) {
+                WriteObject(org);
+            }
+        } finally {
+            if (client is IDisposable disposable) {
+                disposable.Dispose();
+            }
         }
     }
 }
