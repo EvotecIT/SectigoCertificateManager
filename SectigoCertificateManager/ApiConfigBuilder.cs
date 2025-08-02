@@ -23,6 +23,7 @@ public sealed class ApiConfigBuilder {
     private X509Certificate2? _clientCertificate;
     private Action<HttpClientHandler>? _configureHandler;
     private int? _concurrencyLimit;
+    private bool _useEtagCache;
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
@@ -151,6 +152,15 @@ public sealed class ApiConfigBuilder {
         return this;
     }
 
+    /// <summary>Enables caching of ETag headers for conditional requests.</summary>
+    /// <param name="enabled">When <c>true</c>, ETags are cached and sent on subsequent requests.</param>
+    public ApiConfigBuilder WithETagCache(bool enabled = true) {
+        lock (_lock) {
+            _useEtagCache = enabled;
+        }
+        return this;
+    }
+
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build() {
         lock (_lock) {
@@ -181,7 +191,8 @@ public sealed class ApiConfigBuilder {
                 _token,
                 _tokenExpiresAt,
                 _refreshToken,
-                _concurrencyLimit);
+                _concurrencyLimit,
+                _useEtagCache);
         }
     }
 }

@@ -17,7 +17,7 @@ internal static class ApiErrorHandler {
     /// </summary>
     /// <param name="response">HTTP response message.</param>
     public static async Task ThrowIfErrorAsync(HttpResponseMessage response, CancellationToken cancellationToken = default) {
-        if (response.IsSuccessStatusCode) {
+        if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.NotModified) {
             return;
         }
 

@@ -147,4 +147,17 @@ public sealed class ApiConfigBuilderTests {
 
         Assert.Equal(ApiVersion.V25_5, config.ApiVersion);
     }
+
+    /// <summary>Sets ETag caching option.</summary>
+    [Fact]
+    public void WithETagCache_SetsProperty() {
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com")
+            .WithCredentials("user", "pass")
+            .WithCustomerUri("cst1")
+            .WithETagCache()
+            .Build();
+
+        Assert.True(config.UseEtagCache);
+    }
 }

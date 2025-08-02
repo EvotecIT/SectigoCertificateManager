@@ -77,4 +77,15 @@ public sealed class ApiErrorHandlerTests {
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
         Assert.Equal(ApiErrorCode.UnknownError, ex.ErrorCode);
     }
+
+    /// <summary>Returns without throwing on 304 Not Modified.</summary>
+    [Fact]
+    public async Task DoesNotThrowOnNotModified() {
+        var response = new HttpResponseMessage(HttpStatusCode.NotModified);
+
+        using var client = CreateClient(response);
+
+        var result = await client.GetAsync("v1/test");
+        Assert.Equal(HttpStatusCode.NotModified, result.StatusCode);
+    }
 }

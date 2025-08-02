@@ -1,10 +1,11 @@
 namespace SectigoCertificateManager;
 
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly Func<CancellationToken, Task<TokenInfo>>? _refreshToken;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private readonly SemaphoreSlim? _throttle;
+    private readonly ConcurrentDictionary<string, EntityTagHeaderValue>? _etagCache;
     private const int s_retryLimit = 5;
     private const double s_initialBackoffSeconds = 1d;
     internal Func<TimeSpan, CancellationToken, Task>? DelayAsync { get; set; }
@@ -68,6 +70,9 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         if (config.ConcurrencyLimit.HasValue) {
             _throttle = new SemaphoreSlim(config.ConcurrencyLimit.Value, config.ConcurrencyLimit.Value);
         }
+        if (config.UseEtagCache) {
+            _etagCache = new ConcurrentDictionary<string, EntityTagHeaderValue>(StringComparer.Ordinal);
+        }
         ConfigureHeaders(config);
     }
 
@@ -83,7 +88,18 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
             await _throttle.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         try {
-            var response = await SendWithRetryAsync(ct => _client.GetAsync(requestUri, ct), cancellationToken).ConfigureAwait(false);
+            async Task<HttpResponseMessage> SendAsync(CancellationToken ct) {
+                using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+                if (_etagCache is not null && _etagCache.TryGetValue(requestUri, out var tag)) {
+                    request.Headers.IfNoneMatch.Add(tag);
+                }
+                return await _client.SendAsync(request, ct).ConfigureAwait(false);
+            }
+
+            var response = await SendWithRetryAsync(SendAsync, cancellationToken).ConfigureAwait(false);
+            if (_etagCache is not null && response.Headers.ETag is not null) {
+                _etagCache[requestUri] = response.Headers.ETag;
+            }
             await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
             return response;
         } finally {
