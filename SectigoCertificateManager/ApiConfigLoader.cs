@@ -55,8 +55,12 @@ public static class ApiConfigLoader {
         using var stream = File.OpenRead(tokenPath);
         using var reader = new StreamReader(stream);
         var json = reader.ReadToEnd();
-        var model = JsonSerializer.Deserialize<TokenFileModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        return model is null ? null : new TokenInfo(model.Token, model.ExpiresAt);
+        try {
+            var model = JsonSerializer.Deserialize<TokenFileModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return model is null ? null : new TokenInfo(model.Token, model.ExpiresAt);
+        } catch (JsonException ex) {
+            throw new JsonException($"Invalid JSON in token file '{tokenPath}': {ex.Message}", ex);
+        }
     }
 
     public static void WriteToken(TokenInfo info, string? path = null) {
@@ -123,8 +127,13 @@ public static class ApiConfigLoader {
         using var reader = new StreamReader(stream);
         var json = reader.ReadToEnd();
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        var model = JsonSerializer.Deserialize<FileModel>(json, options)
+        FileModel model;
+        try {
+            model = JsonSerializer.Deserialize<FileModel>(json, options)
                     ?? throw new InvalidOperationException("Invalid configuration file.");
+        } catch (JsonException ex) {
+            throw new JsonException($"Invalid JSON in configuration file '{path}': {ex.Message}", ex);
+        }
 
         var cache = ReadToken(tokenPath);
         var tokenValue = model.Token ?? cache?.Token;

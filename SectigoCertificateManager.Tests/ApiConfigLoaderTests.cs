@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using System;
 using System.IO;
+using System.Text.Json;
 using Xunit;
 
 namespace SectigoCertificateManager.Tests;
@@ -139,6 +140,32 @@ public sealed class ApiConfigLoaderTests {
         Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", null);
         Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", null);
         Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", null);
+        Directory.Delete(tempDir, true);
+    }
+
+    [Fact]
+    public void Load_WithMalformedJson_ThrowsJsonExceptionWithPath() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var path = Path.Combine(tempDir, "cred.json");
+        File.WriteAllText(path, "{\"baseUrl\":\"https://example.com\"");
+
+        var ex = Assert.Throws<JsonException>(() => ApiConfigLoader.Load(path));
+        Assert.Contains(path, ex.Message);
+
+        Directory.Delete(tempDir, true);
+    }
+
+    [Fact]
+    public void ReadToken_WithMalformedJson_ThrowsJsonExceptionWithPath() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var path = Path.Combine(tempDir, "token.json");
+        File.WriteAllText(path, "{\"token\":\"tok\"");
+
+        var ex = Assert.Throws<JsonException>(() => ApiConfigLoader.ReadToken(path));
+        Assert.Contains(path, ex.Message);
+
         Directory.Delete(tempDir, true);
     }
 }
