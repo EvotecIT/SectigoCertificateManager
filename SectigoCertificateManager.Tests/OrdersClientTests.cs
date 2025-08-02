@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
+using SectigoCertificateManager.Responses;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -20,17 +21,14 @@ public sealed class OrdersClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
+        public string? Body { get; private set; }
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
             if (request.Content is not null) {
-#if NETSTANDARD2_0 || NET472
-                await request.Content.CopyToAsync(Stream.Null).ConfigureAwait(false);
-#else
-                await request.Content.CopyToAsync(Stream.Null, cancellationToken).ConfigureAwait(false);
-#endif
+                Body = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
             return _response;
         }
@@ -71,6 +69,42 @@ public sealed class OrdersClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal("https://example.com/v1/order/5/cancel", handler.Request.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task RenewCertificateAsync_SendsRequestAndReturnsId() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new RenewCertificateResponse { SslId = 12 })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var request = new RenewCertificateRequest { Csr = "csr", DcvMode = "EMAIL", DcvEmail = "admin@example.com" };
+        var result = await orders.RenewCertificateAsync(9, request);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/order/9/renew", handler.Request!.RequestUri!.ToString());
+        Assert.NotNull(handler.Body);
+        Assert.Contains("\"csr\":\"csr\"", handler.Body);
+        Assert.Contains("\"dcvMode\":\"EMAIL\"", handler.Body);
+        Assert.Contains("\"dcvEmail\":\"admin@example.com\"", handler.Body);
+        Assert.Equal(12, result);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-4)]
+    public async Task RenewCertificateAsync_InvalidOrderId_Throws(int orderId) {
+        var handler = new TestHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var request = new RenewCertificateRequest { Csr = "csr", DcvMode = "EMAIL", DcvEmail = "admin@example.com" };
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.RenewCertificateAsync(orderId, request));
     }
 
     [Theory]

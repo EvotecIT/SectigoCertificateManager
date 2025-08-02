@@ -8,6 +8,7 @@ static void PrintUsage()
     Console.WriteLine("Commands:");
     Console.WriteLine("  get-ca-chain <certificateId> <outputPath>  Download issuing CA chain");
     Console.WriteLine("  search-orders [size] [position]            List orders page");
+    Console.WriteLine("  renew-certificate <orderId> <csr> <dcvMode> [dcvEmail]  Renew certificate for order");
 }
 
 if (args.Length == 0)
@@ -58,6 +59,26 @@ else if (string.Equals(args[0], "search-orders", StringComparison.OrdinalIgnoreC
             Console.WriteLine($"Order ID: {o.Id}");
         }
     }
+}
+else if (string.Equals(args[0], "renew-certificate", StringComparison.OrdinalIgnoreCase))
+{
+    if (args.Length < 4 || !int.TryParse(args[1], out var orderId))
+    {
+        Console.WriteLine("Usage: renew-certificate <orderId> <csr> <dcvMode> [dcvEmail]");
+        return;
+    }
+
+    var csr = args[2];
+    var dcvMode = args[3];
+    var dcvEmail = args.Length > 4 ? args[4] : null;
+
+    var config = ApiConfigLoader.Load();
+    using var httpClient = new HttpClient();
+    var client = new SectigoClient(config, httpClient);
+    var ordersClient = new OrdersClient(client);
+    var request = new RenewCertificateRequest { Csr = csr, DcvMode = dcvMode, DcvEmail = dcvEmail };
+    var newId = await ordersClient.RenewCertificateAsync(orderId, request);
+    Console.WriteLine($"New certificate id: {newId}");
 }
 else
 {

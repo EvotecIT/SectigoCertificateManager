@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.Clients;
 
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Responses;
+using SectigoCertificateManager.Requests;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -120,6 +121,27 @@ public sealed partial class OrdersClient : BaseClient {
 
         var response = await _client.PostAsync($"v1/order/{orderId}/cancel", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Renews a certificate associated with an order.
+    /// </summary>
+    /// <param name="orderId">Identifier of the order.</param>
+    /// <param name="request">Payload describing renewal parameters.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The identifier of the newly issued certificate.</returns>
+    public async Task<int> RenewCertificateAsync(int orderId, RenewCertificateRequest request, CancellationToken cancellationToken = default) {
+        if (orderId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(orderId));
+        }
+
+        Guard.AgainstNull(request, nameof(request));
+
+        var response = await _client.PostAsync($"v1/order/{orderId}/renew", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        var result = await response.Content
+            .ReadFromJsonAsyncSafe<RenewCertificateResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+        return result?.SslId ?? 0;
     }
 
     /// <summary>
