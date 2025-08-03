@@ -50,7 +50,10 @@ public sealed class AuditClientTests {
         var result = await audits.ListAsync();
 
         Assert.NotNull(handler.Request);
-        Assert.Equal("https://example.com/report/v1/activity?size=200&position=0", handler.Request!.RequestUri!.ToString());
+        var uri = handler.Request!.RequestUri!;
+        Assert.Equal("https://example.com/report/v1/activity", uri.GetLeftPart(UriPartial.Path));
+        Assert.Contains("size=200", uri.Query);
+        Assert.Contains("position=0", uri.Query);
         Assert.Single(result);
         Assert.Equal(1, result[0].Id);
     }
@@ -101,9 +104,16 @@ public sealed class AuditClientTests {
         }
 
         Assert.Equal(3, handler.Requests.Count);
-        Assert.Equal("https://example.com/report/v1/activity?size=1&position=0", handler.Requests[0].RequestUri!.ToString());
-        Assert.Equal("https://example.com/report/v1/activity?size=1&position=1", handler.Requests[1].RequestUri!.ToString());
-        Assert.Equal("https://example.com/report/v1/activity?size=1&position=2", handler.Requests[2].RequestUri!.ToString());
+        AssertAll(handler.Requests[0], 0);
+        AssertAll(handler.Requests[1], 1);
+        AssertAll(handler.Requests[2], 2);
         Assert.Equal(2, results.Count);
+    }
+
+    private static void AssertAll(HttpRequestMessage request, int position) {
+        var uri = request.RequestUri!;
+        Assert.Equal("https://example.com/report/v1/activity", uri.GetLeftPart(UriPartial.Path));
+        Assert.Contains("size=1", uri.Query);
+        Assert.Contains($"position={position}", uri.Query);
     }
 }

@@ -7,7 +7,6 @@ using System.Net.Http;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Globalization;
 using Xunit;
 
 namespace SectigoCertificateManager.Tests;
@@ -48,7 +47,7 @@ public sealed class InventoryClientTests {
     }
 
     [Fact]
-    public async Task DownloadCsvAsync_UsesInvariantCulture() {
+    public async Task DownloadCsvAsync_UsesInvariantCulture_FrenchCulture() {
         const string csv = "id,commonName\n1,example.com";
         var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(csv) };
 
@@ -88,7 +87,7 @@ public sealed class InventoryClientTests {
     [Theory]
     [InlineData("en-US")]
     [InlineData("de-DE")]
-    public async Task DownloadCsvAsync_UsesInvariantCulture(string cultureName) {
+    public async Task DownloadCsvAsync_UsesInvariantCultureAcrossCultures(string cultureName) {
         var originalCulture = CultureInfo.CurrentCulture;
         var originalUiCulture = CultureInfo.CurrentUICulture;
         try {

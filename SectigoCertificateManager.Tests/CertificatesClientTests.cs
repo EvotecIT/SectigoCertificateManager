@@ -12,7 +12,6 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
-using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -80,7 +79,7 @@ public sealed class CertificatesClientTests {
     [Theory]
     [InlineData("en-US")]
     [InlineData("de-DE")]
-    public async Task SearchAsync_UsesInvariantCulture(string cultureName) {
+    public async Task SearchAsync_UsesInvariantCultureAcrossCultures(string cultureName) {
         var certificate = new Certificate { Id = 1, CommonName = "test" };
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(new[] { certificate })
@@ -113,7 +112,7 @@ public sealed class CertificatesClientTests {
     }
 
     [Fact]
-    public async Task SearchAsync_UsesInvariantCulture() {
+    public async Task SearchAsync_UsesInvariantCulture_FrenchCulture() {
         var certificate = new Certificate { Id = 1, CommonName = "test" };
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(new[] { certificate })
