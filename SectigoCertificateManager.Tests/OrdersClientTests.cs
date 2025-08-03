@@ -231,13 +231,14 @@ public sealed class OrdersClientTests {
             Position = 5,
             Status = OrderStatus.Submitted,
             OrderNumber = 2,
-            BackendCertId = "abc"
+            BackendCertId = "abc",
+            UpdatedAfter = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc)
         };
 
         var result = await orders.SearchAsync(request);
 
         Assert.NotNull(handler.Request);
-        Assert.Equal("https://example.com/v1/order?size=10&position=5&status=Submitted&orderNumber=2&backendCertId=abc", handler.Request!.RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/order?size=10&position=5&status=Submitted&orderNumber=2&backendCertId=abc&updatedAfter=2023-01-01T00:00:00", handler.Request!.RequestUri!.ToString());
         Assert.NotNull(result);
         Assert.Single(result!.Orders);
         Assert.Equal(4, result.Orders[0].Id);
@@ -260,16 +261,16 @@ public sealed class OrdersClientTests {
         var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var orders = new OrdersClient(client);
 
-        var request = new OrderSearchRequest { Size = 1 };
+        var request = new OrderSearchRequest { Size = 1, UpdatedAfter = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
         var results = new List<Order>();
         await foreach (var o in orders.EnumerateSearchAsync(request)) {
             results.Add(o);
         }
 
         Assert.Equal(3, handler.Requests.Count);
-        Assert.Equal("https://example.com/v1/order?size=1", handler.Requests[0].RequestUri!.ToString());
-        Assert.Equal("https://example.com/v1/order?size=1&position=1", handler.Requests[1].RequestUri!.ToString());
-        Assert.Equal("https://example.com/v1/order?size=1&position=2", handler.Requests[2].RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/order?size=1&updatedAfter=2023-01-01T00:00:00", handler.Requests[0].RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/order?size=1&position=1&updatedAfter=2023-01-01T00:00:00", handler.Requests[1].RequestUri!.ToString());
+        Assert.Equal("https://example.com/v1/order?size=1&position=2&updatedAfter=2023-01-01T00:00:00", handler.Requests[2].RequestUri!.ToString());
         Assert.Equal(2, results.Count);
     }
 

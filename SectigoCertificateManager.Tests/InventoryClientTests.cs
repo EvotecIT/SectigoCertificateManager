@@ -48,7 +48,7 @@ public sealed class InventoryClientTests {
     }
 
     [Fact]
-    public async Task DownloadCsvAsync_UsesInvariantCulture() {
+    public async Task DownloadCsvAsync_UsesInvariantCulture_DefaultCulture() {
         const string csv = "id,commonName\n1,example.com";
         var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(csv) };
 
