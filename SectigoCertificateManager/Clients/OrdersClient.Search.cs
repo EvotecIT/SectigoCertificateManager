@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using SectigoCertificateManager.Utilities;
+using System.Globalization;
 
 public sealed partial class OrdersClient {
     /// <summary>
@@ -108,6 +109,11 @@ public sealed partial class OrdersClient {
         }
         if (!string.IsNullOrEmpty(request.BackendCertId)) {
             query.Add($"backendCertId={Uri.EscapeDataString(request.BackendCertId)}");
+        }
+        if (request.UpdatedAfter.HasValue) {
+            var updated = request.UpdatedAfter.Value.ToUniversalTime()
+                .ToString("s", CultureInfo.InvariantCulture);
+            query.Add($"updatedAfter={updated}");
         }
         return query.Count == 0 ? string.Empty : "?" + string.Join("&", query);
     }
