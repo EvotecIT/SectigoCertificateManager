@@ -18,4 +18,7 @@ public sealed class OrderSearchRequest {
 
     /// <summary>Gets or sets the backend certificate identifier filter.</summary>
     public string? BackendCertId { get; set; }
+
+    /// <summary>Gets or sets the filter for orders updated after the specified date.</summary>
+    public DateTime? UpdatedAfter { get; set; }
 }
