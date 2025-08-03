@@ -113,7 +113,7 @@ public sealed class CertificatesClientTests {
     }
 
     [Fact]
-    public async Task SearchAsync_UsesInvariantCulture() {
+    public async Task SearchAsync_UsesInvariantCulture_DefaultCulture() {
         var certificate = new Certificate { Id = 1, CommonName = "test" };
         var response = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(new[] { certificate })
