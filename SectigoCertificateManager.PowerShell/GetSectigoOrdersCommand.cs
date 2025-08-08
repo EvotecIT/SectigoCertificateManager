@@ -8,6 +8,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate orders.</summary>
 /// <para>Creates an API client and lists all orders for the account.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Network</term>
+///     <description>This cmdlet connects to the Sectigo API and may take time to return results.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>List all orders</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoOrders -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example"</code>
+///   <para>Retrieves every order for the specified account.</para>
+/// </example>
+/// <example>
+///   <summary>Use a specific API version</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoOrders -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -ApiVersion V25_5</code>
+///   <para>Overrides the default API version.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoOrders")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Order))]

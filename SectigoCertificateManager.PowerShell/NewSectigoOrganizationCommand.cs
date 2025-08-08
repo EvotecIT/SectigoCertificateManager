@@ -9,6 +9,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Creates a new organization.</summary>
 /// <para>Builds an API client and submits a <see cref="CreateOrganizationRequest"/>.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Charges</term>
+///     <description>Creating organizations may modify account configuration and incur fees.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Create an organization</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>New-SectigoOrganization -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -Name "Example Org"</code>
+///   <para>Creates a new organization with the given name.</para>
+/// </example>
+/// <example>
+///   <summary>Specify state or province</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>New-SectigoOrganization -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -Name "Example Org" -StateOrProvince "NY"</code>
+///   <para>Includes location information when creating the organization.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.New, "SectigoOrganization")]
 [CmdletBinding()]
 [OutputType(typeof(int))]

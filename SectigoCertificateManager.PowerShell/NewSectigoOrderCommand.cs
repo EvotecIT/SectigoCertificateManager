@@ -8,6 +8,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Creates a new certificate order.</summary>
 /// <para>Builds an API client and submits an <see cref="IssueCertificateRequest"/>.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Charges</term>
+///     <description>Issuing a certificate may incur costs on your Sectigo account.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Issue a certificate</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>New-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CommonName "www.example.com" -ProfileId 1</code>
+///   <para>Creates a one-year certificate for the specified domain.</para>
+/// </example>
+/// <example>
+///   <summary>Include subject alternative names</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>New-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CommonName "www.example.com" -ProfileId 1 -SubjectAlternativeNames "api.example.com","mail.example.com"</code>
+///   <para>Issues a certificate that covers multiple host names.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.New, "SectigoOrder")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Certificate))]

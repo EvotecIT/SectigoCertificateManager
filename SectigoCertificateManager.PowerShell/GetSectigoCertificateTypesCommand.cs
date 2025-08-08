@@ -7,6 +7,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves available certificate types.</summary>
 /// <para>Creates an API client and lists certificate types for the account.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Network</term>
+///     <description>Retrieves type information from the Sectigo API.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>List certificate types</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoCertificateTypes -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example"</code>
+///   <para>Outputs all available certificate types.</para>
+/// </example>
+/// <example>
+///   <summary>Filter by organization</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoCertificateTypes -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrganizationId 42</code>
+///   <para>Returns types available for the specified organization.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateTypes")]
 [CmdletBinding()]
 [OutputType(typeof(Models.CertificateType))]

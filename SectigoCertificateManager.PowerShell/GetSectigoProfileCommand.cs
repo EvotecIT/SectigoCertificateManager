@@ -7,6 +7,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves a profile.</summary>
 /// <para>Creates an API client and returns profile details using the identifier.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Network</term>
+///     <description>Queries the Sectigo API for profile information.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Get a profile</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoProfile -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -ProfileId 5</code>
+///   <para>Retrieves details of profile 5.</para>
+/// </example>
+/// <example>
+///   <summary>Specify API version</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoProfile -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -ProfileId 5 -ApiVersion V25_5</code>
+///   <para>Uses a different API version for the request.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoProfile")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Profile))]
