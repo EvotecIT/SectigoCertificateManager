@@ -9,6 +9,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves a single page of orders.</summary>
 /// <para>Creates an API client and lists orders using paging parameters.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Network</term>
+///     <description>This cmdlet issues a paged request to the Sectigo API and may require multiple calls for all data.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Fetch the first page</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoOrdersPage -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -Size 50</code>
+///   <para>Retrieves up to fifty orders starting at the beginning of the list.</para>
+/// </example>
+/// <example>
+///   <summary>Continue from a specific position</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoOrdersPage -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -Position 50 -Size 50</code>
+///   <para>Retrieves the next fifty orders after position fifty.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoOrdersPage")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Order))]
