@@ -7,6 +7,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate details.</summary>
 /// <para>Builds an API client and returns the certificate for the specified identifier.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Network</term>
+///     <description>Queries the Sectigo API to fetch certificate data.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Get a certificate</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10</code>
+///   <para>Retrieves details for certificate identifier 10.</para>
+/// </example>
+/// <example>
+///   <summary>Retrieve using a different API version</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -ApiVersion V25_5</code>
+///   <para>Uses API version 25.5 to obtain the certificate.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificate")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Certificate))]

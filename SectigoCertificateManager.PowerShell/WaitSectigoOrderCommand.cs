@@ -7,6 +7,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Waits for an order to reach a terminal status.</summary>
 /// <para>Creates an API client and polls the order status until it is completed or cancelled.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Delay</term>
+///     <description>The cmdlet waits and repeatedly queries the API until the order finishes.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Wait for an order</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Wait-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrderId 100</code>
+///   <para>Blocks until order 100 completes or is cancelled.</para>
+/// </example>
+/// <example>
+///   <summary>Specify API version</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Wait-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrderId 100 -ApiVersion V25_5</code>
+///   <para>Uses a different API version while waiting for completion.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsLifecycle.Wait, "SectigoOrder")]
 [CmdletBinding()]
 [OutputType(typeof(OrderStatus))]

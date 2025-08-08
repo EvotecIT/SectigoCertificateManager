@@ -7,6 +7,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate status.</summary>
 /// <para>Creates an API client and returns the status of a certificate.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Network</term>
+///     <description>Requests status information from the Sectigo API.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Get certificate status</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoCertificateStatus -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10</code>
+///   <para>Shows the current status for certificate 10.</para>
+/// </example>
+/// <example>
+///   <summary>Use a specific API version</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoCertificateStatus -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -ApiVersion V25_5</code>
+///   <para>Uses API version 25.5 to query status.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateStatus")]
 [CmdletBinding()]
 public sealed class GetSectigoCertificateStatusCommand : PSCmdlet {

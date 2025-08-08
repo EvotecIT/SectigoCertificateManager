@@ -7,6 +7,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate revocation information.</summary>
 /// <para>Creates an API client and returns revocation details for the specified certificate.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Network</term>
+///     <description>Requests revocation data from the Sectigo API.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Check revocation status</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoCertificateRevocation -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10</code>
+///   <para>Retrieves revocation details for certificate 10.</para>
+/// </example>
+/// <example>
+///   <summary>Use another API version</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Get-SectigoCertificateRevocation -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -ApiVersion V25_5</code>
+///   <para>Queries revocation information using API version 25.5.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateRevocation")]
 [CmdletBinding()]
 [OutputType(typeof(Models.CertificateRevocation))]

@@ -6,9 +6,28 @@ using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
-/// <summary>
-/// Updates an existing certificate using the renew endpoint.
-/// </summary>
+/// <summary>Renews an existing certificate.</summary>
+/// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/> to the renew endpoint.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Network</term>
+///     <description>Contacts the Sectigo API and replaces the specified certificate.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Renew a certificate</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Update-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -Csr "CSR" -DcvMode "Email"</code>
+///   <para>Renews certificate 10 using the provided signing request.</para>
+/// </example>
+/// <example>
+///   <summary>Specify a DCV email</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Update-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -Csr "CSR" -DcvMode "Email" -DcvEmail "admin@example.com"</code>
+///   <para>Sends the domain control validation to a specific address.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsData.Update, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
 [CmdletBinding()]
 [OutputType(typeof(int))]

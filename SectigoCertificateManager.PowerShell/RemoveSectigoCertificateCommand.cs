@@ -8,6 +8,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Deletes a certificate.</summary>
 /// <para>Builds an API client and calls the delete endpoint.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Irreversible</term>
+///     <description>Deleting a certificate cannot be undone.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Delete a certificate</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Remove-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10</code>
+///   <para>Permanently removes certificate 10.</para>
+/// </example>
+/// <example>
+///   <summary>Use a different API version</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Remove-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -ApiVersion V25_5</code>
+///   <para>Deletes the certificate using API version 25.5.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/shouldprocess-attribute"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Remove, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
 public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
