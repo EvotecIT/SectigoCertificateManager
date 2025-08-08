@@ -8,6 +8,26 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Cancels an order.</summary>
 /// <para>Creates an API client and calls the cancel endpoint.</para>
+/// <list type="alertSet">
+///   <item>
+///     <term>Irreversible</term>
+///     <description>Once an order is cancelled the action cannot be reversed.</description>
+///   </item>
+/// </list>
+/// <example>
+///   <summary>Cancel an order</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Stop-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrderId 100</code>
+///   <para>Cancels the specified order immediately.</para>
+/// </example>
+/// <example>
+///   <summary>Specify an API version</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Stop-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrderId 100 -ApiVersion V25_5</code>
+///   <para>Uses a different API version for the cancellation request.</para>
+/// </example>
+/// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/confirmimpact-attribute"/>
+/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsLifecycle.Stop, "SectigoOrder", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
 public sealed class StopSectigoOrderCommand : PSCmdlet {
