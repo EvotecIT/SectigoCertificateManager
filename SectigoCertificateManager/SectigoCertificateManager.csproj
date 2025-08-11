@@ -14,7 +14,7 @@
   <ItemGroup>
     <PackageReference Include="System.Net.Http.Json" Version="9.0.7" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.7" />
-    <PackageReference Include="System.Formats.Asn1" Version="9.0.7" />
+    <PackageReference Include="System.Formats.Asn1" Version="9.0.8" />
   </ItemGroup>
 
 
