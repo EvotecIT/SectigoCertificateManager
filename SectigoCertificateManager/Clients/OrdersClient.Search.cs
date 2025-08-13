@@ -19,11 +19,22 @@ public sealed partial class OrdersClient {
         Guard.AgainstNull(request, nameof(request));
 
         var list = new List<Order>();
-        await foreach (var order in EnumerateSearchAsync(request, cancellationToken).ConfigureAwait(false)) {
+        await foreach (var order in SearchAllAsync(request, cancellationToken).ConfigureAwait(false)) {
             list.Add(order);
         }
 
         return list.Count == 0 ? null : new OrderResponse { Orders = list };
+    }
+
+    /// <summary>
+    /// Streams orders matching the provided filter.
+    /// </summary>
+    /// <param name="request">Filter describing orders to retrieve.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public IAsyncEnumerable<Order> SearchAllAsync(
+        OrderSearchRequest request,
+        CancellationToken cancellationToken = default) {
+        return EnumerateSearchAsync(request, cancellationToken);
     }
 
     /// <summary>
