@@ -120,6 +120,11 @@ public sealed class ApiConfigLoaderTests {
     }
 
     [Fact]
+    public void WriteToken_WithNullInfo_Throws() {
+        Assert.Throws<ArgumentNullException>(() => ApiConfigLoader.WriteToken(null!));
+    }
+
+    [Fact]
     public void Load_FromTokenCache() {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
