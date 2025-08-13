@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.Clients;
 
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Responses;
+using SectigoCertificateManager.Requests;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -85,6 +86,44 @@ public sealed partial class OrdersClient : BaseClient {
             position += pageSize;
             firstPage = false;
         }
+    }
+
+    /// <summary>
+    /// Creates one or more orders.
+    /// </summary>
+    /// <param name="orders">Orders to create.</param>
+    /// <param name="asMultipart">Send requests using multipart format.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<int>> CreateAsync(
+        IEnumerable<CreateOrderRequest> orders,
+        bool asMultipart = false,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNull(orders, nameof(orders));
+        var list = orders as IList<CreateOrderRequest> ?? orders.ToList();
+        if (list.Count == 0) {
+            throw new ArgumentException("At least one order must be provided.", nameof(orders));
+        }
+
+        HttpContent content;
+        if (asMultipart) {
+            var multipart = new MultipartContent("mixed");
+            foreach (var order in list) {
+                multipart.Add(JsonContent.Create(order, options: s_json));
+            }
+            content = multipart;
+        } else if (list.Count == 1) {
+            content = JsonContent.Create(list[0], options: s_json);
+        } else {
+            content = JsonContent.Create(list, options: s_json);
+        }
+
+        var path = list.Count == 1 && !asMultipart ? "v1/order" : "v1/order/bulk";
+        var response = await _client.PostAsync(path, content, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        var ids = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<int>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+        return ids ?? Array.Empty<int>();
     }
 
     /// <summary>
