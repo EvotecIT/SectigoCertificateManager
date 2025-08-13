@@ -25,6 +25,7 @@ public sealed class ApiConfigBuilder {
     private int? _concurrencyLimit;
     private int _retryCount = 5;
     private TimeSpan _retryInitialDelay = TimeSpan.FromSeconds(1);
+    private TimeSpan _tokenRefreshThreshold = TimeSpan.FromMinutes(1);
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
@@ -78,6 +79,19 @@ public sealed class ApiConfigBuilder {
     public ApiConfigBuilder WithTokenRefresh(Func<CancellationToken, Task<TokenInfo>> refresh) {
         lock (_lock) {
             _refreshToken = refresh;
+        }
+        return this;
+    }
+
+    /// <summary>Sets the threshold before expiration when the token should be refreshed.</summary>
+    /// <param name="threshold">Time remaining before expiration to trigger a refresh.</param>
+    public ApiConfigBuilder WithTokenRefreshThreshold(TimeSpan threshold) {
+        if (threshold < TimeSpan.Zero) {
+            throw new ArgumentOutOfRangeException(nameof(threshold));
+        }
+
+        lock (_lock) {
+            _tokenRefreshThreshold = threshold;
         }
         return this;
     }
@@ -203,6 +217,7 @@ public sealed class ApiConfigBuilder {
                 _token,
                 _tokenExpiresAt,
                 _refreshToken,
+                _tokenRefreshThreshold,
                 _concurrencyLimit,
                 _retryCount,
                 _retryInitialDelay);

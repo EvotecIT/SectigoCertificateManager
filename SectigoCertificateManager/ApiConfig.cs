@@ -30,6 +30,7 @@ public sealed class ApiConfig(
     string? token = null,
     DateTimeOffset? tokenExpiresAt = null,
     Func<CancellationToken, Task<TokenInfo>>? refreshToken = null,
+    TimeSpan? tokenRefreshThreshold = null,
     int? concurrencyLimit = null,
     int retryCount = 5,
     TimeSpan? retryInitialDelay = null) {
@@ -62,6 +63,9 @@ public sealed class ApiConfig(
 
     /// <summary>Gets the delegate used to refresh the token, if any.</summary>
     public Func<CancellationToken, Task<TokenInfo>>? RefreshToken { get; } = refreshToken;
+
+    /// <summary>Gets the threshold before expiration when the token should be refreshed.</summary>
+    public TimeSpan TokenRefreshThreshold { get; } = tokenRefreshThreshold ?? TimeSpan.FromMinutes(1);
 
     /// <summary>Gets the optional concurrency limit for HTTP requests.</summary>
     public int? ConcurrencyLimit { get; } = concurrencyLimit;
