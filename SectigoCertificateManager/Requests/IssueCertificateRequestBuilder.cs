@@ -11,6 +11,7 @@ using SectigoCertificateManager.Utilities;
 public sealed class IssueCertificateRequestBuilder {
     private readonly IssueCertificateRequest _request = new();
     private readonly IReadOnlyList<int> _allowedTerms;
+    private readonly HashSet<string> _subjectAlternativeNames = new();
     private readonly object _lock = new();
 
     /// <summary>
@@ -52,7 +53,12 @@ public sealed class IssueCertificateRequestBuilder {
     /// <summary>Sets subject alternative names.</summary>
     public IssueCertificateRequestBuilder WithSubjectAlternativeNames(IEnumerable<string> sans) {
         lock (_lock) {
-            _request.SubjectAlternativeNames = sans?.ToArray() ?? Array.Empty<string>();
+            _subjectAlternativeNames.Clear();
+            if (sans is not null) {
+                foreach (var san in sans) {
+                    _subjectAlternativeNames.Add(san);
+                }
+            }
         }
         return this;
     }
@@ -64,7 +70,7 @@ public sealed class IssueCertificateRequestBuilder {
                 CommonName = _request.CommonName,
                 ProfileId = _request.ProfileId,
                 Term = _request.Term,
-                SubjectAlternativeNames = _request.SubjectAlternativeNames.ToArray()
+                SubjectAlternativeNames = _subjectAlternativeNames.ToArray()
             };
         }
     }
