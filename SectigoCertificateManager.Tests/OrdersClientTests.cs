@@ -245,7 +245,7 @@ public sealed class OrdersClientTests {
     }
 
     [Fact]
-    public async Task EnumerateSearchAsync_ReturnsPages() {
+    public async Task SearchAllAsync_ReturnsPages() {
         var page1 = new[] { new Order { Id = 1 } };
         var page2 = new[] { new Order { Id = 2 } };
         var empty = Array.Empty<Order>();
@@ -263,7 +263,7 @@ public sealed class OrdersClientTests {
 
         var request = new OrderSearchRequest { Size = 1, UpdatedAfter = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) };
         var results = new List<Order>();
-        await foreach (var o in orders.EnumerateSearchAsync(request)) {
+        await foreach (var o in orders.SearchAllAsync(request)) {
             results.Add(o);
         }
 
@@ -272,6 +272,55 @@ public sealed class OrdersClientTests {
         Assert.Equal("https://example.com/v1/order?size=1&position=1&updatedAfter=2023-01-01T00:00:00", handler.Requests[1].RequestUri!.ToString());
         Assert.Equal("https://example.com/v1/order?size=1&position=2&updatedAfter=2023-01-01T00:00:00", handler.Requests[2].RequestUri!.ToString());
         Assert.Equal(2, results.Count);
+    }
+
+    [Fact]
+    public async Task SearchAllAsync_CanBeCancelled() {
+        var page1 = new[] { new Order { Id = 1 } };
+        var page2 = new[] { new Order { Id = 2 } };
+        var empty = Array.Empty<Order>();
+
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page1) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(page2) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(empty) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        using var cts = new CancellationTokenSource();
+        var request = new OrderSearchRequest { Size = 1 };
+        var enumerator = orders.SearchAllAsync(request, cts.Token).GetAsyncEnumerator();
+
+        Assert.True(await enumerator.MoveNextAsync());
+        Assert.Equal(1, enumerator.Current.Id);
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<TaskCanceledException>(async () => await enumerator.MoveNextAsync());
+    }
+
+    [Fact]
+    public async Task SearchAllAsync_EmptyFirstPage_Breaks() {
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Array.Empty<Order>()) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var request = new OrderSearchRequest { Size = 1 };
+        var results = new List<Order>();
+        await foreach (var o in orders.SearchAllAsync(request)) {
+            results.Add(o);
+        }
+
+        Assert.Single(handler.Requests);
+        Assert.Empty(results);
     }
 
     private sealed class TestProgress : IProgress<double> {
