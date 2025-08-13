@@ -24,6 +24,10 @@ internal sealed class ProgressStreamContent : HttpContent {
     public ProgressStreamContent(Stream stream, IProgress<double>? progress = null, int bufferSize = 81920) {
         _stream = Guard.AgainstNull(stream, nameof(stream));
         _progress = progress;
+        if (bufferSize <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(bufferSize), "Buffer size must be greater than 0.");
+        }
+
         _bufferSize = bufferSize;
     }
 
