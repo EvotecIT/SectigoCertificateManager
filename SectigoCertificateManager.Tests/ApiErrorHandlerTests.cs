@@ -77,4 +77,32 @@ public sealed class ApiErrorHandlerTests {
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
         Assert.Equal(ApiErrorCode.UnknownError, ex.ErrorCode);
     }
+
+    [Fact]
+    public async Task ExceptionMessageIncludesStatusCodeAndBody() {
+        const string body = "{\"code\":1}";
+        var response = new HttpResponseMessage(HttpStatusCode.Unauthorized) {
+            Content = new StringContent(body)
+        };
+
+        using var client = CreateClient(response);
+
+        var ex = await Assert.ThrowsAsync<AuthenticationException>(() => client.GetAsync("v1/test"));
+        Assert.Contains("StatusCode: 401", ex.Message);
+        Assert.Contains(body, ex.Message);
+    }
+
+    [Fact]
+    public async Task ExceptionMessageTruncatesLongBody() {
+        var longBody = new string('a', 250);
+        var response = new HttpResponseMessage(HttpStatusCode.BadRequest) {
+            Content = new StringContent(longBody)
+        };
+
+        using var client = CreateClient(response);
+
+        var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
+        Assert.Contains(new string('a', 200), ex.Message);
+        Assert.DoesNotContain(new string('a', 201), ex.Message);
+    }
 }
