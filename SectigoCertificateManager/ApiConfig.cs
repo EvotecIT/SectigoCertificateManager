@@ -30,7 +30,9 @@ public sealed class ApiConfig(
     string? token = null,
     DateTimeOffset? tokenExpiresAt = null,
     Func<CancellationToken, Task<TokenInfo>>? refreshToken = null,
-    int? concurrencyLimit = null) {
+    int? concurrencyLimit = null,
+    int retryCount = 5,
+    TimeSpan? retryInitialDelay = null) {
     /// <summary>Gets the base URL of the API endpoint.</summary>
     public string BaseUrl { get; } = baseUrl;
 
@@ -63,4 +65,10 @@ public sealed class ApiConfig(
 
     /// <summary>Gets the optional concurrency limit for HTTP requests.</summary>
     public int? ConcurrencyLimit { get; } = concurrencyLimit;
+
+    /// <summary>Gets the maximum number of retry attempts for transient failures.</summary>
+    public int RetryCount { get; } = retryCount;
+
+    /// <summary>Gets the initial delay used for exponential backoff when retrying.</summary>
+    public TimeSpan RetryInitialDelay { get; } = retryInitialDelay ?? TimeSpan.FromSeconds(1);
 }
