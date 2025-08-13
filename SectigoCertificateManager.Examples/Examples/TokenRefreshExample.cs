@@ -20,6 +20,7 @@ public static class TokenRefreshExample {
             .WithCustomerUri("<customer uri>")
             .WithToken("<initial token>")
             .WithTokenExpiration(DateTimeOffset.UtcNow.AddMinutes(30))
+            .WithTokenRefreshThreshold(TimeSpan.FromMinutes(1))
             .WithTokenRefresh(RefreshTokenAsync);
 
         var config = builder.Build();

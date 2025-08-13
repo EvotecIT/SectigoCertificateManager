@@ -19,6 +19,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly SemaphoreSlim? _throttle;
     private readonly int _retryCount;
     private readonly TimeSpan _retryInitialDelay;
+    private readonly TimeSpan _tokenRefreshThreshold;
     internal Func<TimeSpan, CancellationToken, Task>? DelayAsync { get; set; }
     private string? _token;
     private DateTimeOffset? _tokenExpiresAt;
@@ -67,6 +68,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         _tokenExpiresAt = config.TokenExpiresAt;
         _retryCount = config.RetryCount;
         _retryInitialDelay = config.RetryInitialDelay;
+        _tokenRefreshThreshold = config.TokenRefreshThreshold;
         if (config.ConcurrencyLimit.HasValue) {
             _throttle = new SemaphoreSlim(config.ConcurrencyLimit.Value, config.ConcurrencyLimit.Value);
         }
@@ -213,14 +215,14 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
             return;
         }
 
-        if (_token is not null && _tokenExpiresAt is not null && _tokenExpiresAt > DateTimeOffset.UtcNow) {
+        if (_token is not null && _tokenExpiresAt is not null && _tokenExpiresAt - DateTimeOffset.UtcNow > _tokenRefreshThreshold) {
             return;
         }
 
         await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try {
             ThrowIfDisposed();
-            if (_token is not null && _tokenExpiresAt is not null && _tokenExpiresAt > DateTimeOffset.UtcNow) {
+            if (_token is not null && _tokenExpiresAt is not null && _tokenExpiresAt - DateTimeOffset.UtcNow > _tokenRefreshThreshold) {
                 return;
             }
 

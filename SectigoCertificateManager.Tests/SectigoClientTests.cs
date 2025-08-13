@@ -228,6 +228,35 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
+    public async Task RefreshesTokenBeforeExpirationThreshold() {
+        var expires = DateTimeOffset.UtcNow.AddSeconds(30);
+        var called = false;
+        Task<TokenInfo> Refresh(CancellationToken ct) {
+            called = true;
+            return Task.FromResult(new TokenInfo("new", DateTimeOffset.UtcNow.AddMinutes(30)));
+        }
+
+        var config = new ApiConfig(
+            "https://example.com/",
+            string.Empty,
+            string.Empty,
+            "c",
+            ApiVersion.V25_4,
+            token: "old",
+            tokenExpiresAt: expires,
+            refreshToken: Refresh,
+            tokenRefreshThreshold: TimeSpan.FromMinutes(1));
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        Assert.True(called);
+        Assert.Equal("new", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
+    }
+
+    [Fact]
     public async Task DoesNotRefreshValidToken() {
         var expires = DateTimeOffset.UtcNow.AddMinutes(10);
         var called = false;
