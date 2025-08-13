@@ -23,6 +23,8 @@ public sealed class ApiConfigBuilder {
     private X509Certificate2? _clientCertificate;
     private Action<HttpClientHandler>? _configureHandler;
     private int? _concurrencyLimit;
+    private int _retryCount = 5;
+    private TimeSpan _retryInitialDelay = TimeSpan.FromSeconds(1);
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
@@ -151,6 +153,26 @@ public sealed class ApiConfigBuilder {
         return this;
     }
 
+    /// <summary>Configures retry behavior for transient errors.</summary>
+    /// <param name="count">Maximum number of retry attempts.</param>
+    /// <param name="initialDelay">Initial delay before retrying.</param>
+    public ApiConfigBuilder WithRetryOptions(int count, TimeSpan initialDelay) {
+        if (count <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+
+        if (initialDelay < TimeSpan.Zero) {
+            throw new ArgumentOutOfRangeException(nameof(initialDelay));
+        }
+
+        lock (_lock) {
+            _retryCount = count;
+            _retryInitialDelay = initialDelay;
+        }
+
+        return this;
+    }
+
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build() {
         lock (_lock) {
@@ -181,7 +203,9 @@ public sealed class ApiConfigBuilder {
                 _token,
                 _tokenExpiresAt,
                 _refreshToken,
-                _concurrencyLimit);
+                _concurrencyLimit,
+                _retryCount,
+                _retryInitialDelay);
         }
     }
 }

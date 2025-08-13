@@ -1,7 +1,7 @@
 using SectigoCertificateManager;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -347,6 +347,53 @@ public sealed class SectigoClientTests {
 
         await Assert.ThrowsAnyAsync<Exception>(() => client.GetAsync("v1/test"));
         Assert.Equal(5, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task RetriesOnServerError() {
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.UnknownError, Description = "err" }) },
+            new HttpResponseMessage(HttpStatusCode.OK)
+        };
+
+        var handler = new RetryHandler(responses);
+        using var httpClient = new HttpClient(handler);
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com/")
+            .WithCredentials("u", "p")
+            .WithCustomerUri("c")
+            .WithRetryOptions(3, TimeSpan.FromMilliseconds(1))
+            .Build();
+
+        var client = new SectigoClient(config, httpClient) { DelayAsync = (_, _) => Task.CompletedTask };
+
+        await client.GetAsync("v1/test");
+
+        Assert.Equal(2, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task RespectsRetryCountForServerErrors() {
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.UnknownError, Description = "err" }) },
+            new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.UnknownError, Description = "err" }) },
+            new HttpResponseMessage(HttpStatusCode.OK)
+        };
+
+        var handler = new RetryHandler(responses);
+        using var httpClient = new HttpClient(handler);
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com/")
+            .WithCredentials("u", "p")
+            .WithCustomerUri("c")
+            .WithRetryOptions(2, TimeSpan.FromMilliseconds(1))
+            .Build();
+
+        var client = new SectigoClient(config, httpClient) { DelayAsync = (_, _) => Task.CompletedTask };
+
+        await Assert.ThrowsAnyAsync<Exception>(() => client.GetAsync("v1/test"));
+
+        Assert.Equal(2, handler.Requests.Count);
     }
      
     [Fact]
