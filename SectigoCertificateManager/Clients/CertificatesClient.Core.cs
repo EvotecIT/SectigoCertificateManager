@@ -3,16 +3,15 @@ namespace SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
+using SectigoCertificateManager.Utilities;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
-using System.Globalization;
-using System.Text.Json;
 using System.Security.Cryptography.X509Certificates;
-using SectigoCertificateManager.Utilities;
-using System.Globalization;
+using System.Text;
+using System.Text.Json;
 
 /// <summary>
 /// Provides access to certificate related endpoints.
