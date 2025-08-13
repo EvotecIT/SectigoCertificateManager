@@ -14,19 +14,26 @@ on:
   workflow_dispatch:
 
 env:
-  DOTNET_VERSION: '8.x'
   BUILD_CONFIGURATION: 'Debug'
 
 jobs:
   refresh-psd1:
     name: 'Refresh PSD1'
-    runs-on: [self-hosted, windows]
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+            8.0.x
 
       - name: Setup PowerShell modules
         run: |
@@ -59,7 +66,8 @@ jobs:
   test-windows-ps5:
     name: 'Windows PowerShell 5.1'
     needs: refresh-psd1
-    runs-on: [self-hosted, windows]
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -76,7 +84,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            9.0.x
+            8.0.x
 
       - name: Install PowerShell modules
         shell: powershell
@@ -97,7 +107,8 @@ jobs:
   test-windows-ps7:
     name: 'Windows PowerShell 7'
     needs: refresh-psd1
-    runs-on: [self-hosted, windows]
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -114,7 +125,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            9.0.x
+            8.0.x
 
       - name: Install PowerShell modules
         shell: pwsh
@@ -135,7 +148,8 @@ jobs:
   test-linux-ps7:
     name: 'Linux PowerShell 7'
     needs: refresh-psd1
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -152,7 +166,14 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            9.0.x
+            8.0.x
+
+      - name: Install Mono
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mono-complete
 
       - name: Install PowerShell modules
         shell: pwsh
@@ -171,10 +192,10 @@ jobs:
         run: ./Module/SectigoCertificateManager.Tests.ps1
 
   test-macos-ps7:
-    if: ${{ false }}
     name: 'macOS PowerShell 7'
     needs: refresh-psd1
-    runs-on: [self-hosted, macos]
+    runs-on: macos-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -191,7 +212,12 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            9.0.x
+            8.0.x
+
+      - name: Install Mono
+        run: brew install mono
 
       - name: Install PowerShell modules
         shell: pwsh
