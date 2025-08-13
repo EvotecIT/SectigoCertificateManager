@@ -20,6 +20,7 @@ public sealed class OrdersClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
+        public string? Body { get; private set; }
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
@@ -27,9 +28,9 @@ public sealed class OrdersClientTests {
             Request = request;
             if (request.Content is not null) {
 #if NETSTANDARD2_0 || NET472
-                await request.Content.CopyToAsync(Stream.Null).ConfigureAwait(false);
+                Body = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
 #else
-                await request.Content.CopyToAsync(Stream.Null, cancellationToken).ConfigureAwait(false);
+                Body = await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 #endif
             }
             return _response;
@@ -326,8 +327,7 @@ public sealed class OrdersClientTests {
 
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/order", handler.Request!.RequestUri!.ToString());
-        var body = await handler.Request.Content!.ReadAsStringAsync();
-        Assert.Contains("\"profileId\":1", body);
+        Assert.Contains("\"profileId\":1", handler.Body);
         Assert.Single(result);
         Assert.Equal(1, result[0]);
     }
@@ -352,8 +352,7 @@ public sealed class OrdersClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/order/bulk", handler.Request!.RequestUri!.ToString());
         Assert.Equal("application/json", handler.Request.Content!.Headers.ContentType!.MediaType);
-        var body = await handler.Request.Content.ReadAsStringAsync();
-        Assert.StartsWith("[", body);
+        Assert.StartsWith("[", handler.Body);
         Assert.Equal(2, result.Count);
     }
 
