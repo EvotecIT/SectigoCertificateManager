@@ -14,7 +14,6 @@ on:
   workflow_dispatch:
 
 env:
-  DOTNET_VERSION: '8.x'
   BUILD_CONFIGURATION: 'Debug'
 
 jobs:
@@ -28,6 +27,13 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+            8.0.x
 
       - name: Setup PowerShell modules
         run: |
@@ -78,7 +84,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            9.0.x
+            8.0.x
 
       - name: Install PowerShell modules
         shell: powershell
@@ -117,7 +125,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            9.0.x
+            8.0.x
 
       - name: Install PowerShell modules
         shell: pwsh
@@ -156,7 +166,14 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            9.0.x
+            8.0.x
+
+      - name: Install Mono
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mono-complete
 
       - name: Install PowerShell modules
         shell: pwsh
@@ -195,7 +212,12 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: |
+            9.0.x
+            8.0.x
+
+      - name: Install Mono
+        run: brew install mono
 
       - name: Install PowerShell modules
         shell: pwsh
