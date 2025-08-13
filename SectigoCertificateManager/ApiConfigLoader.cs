@@ -60,6 +60,10 @@ public static class ApiConfigLoader {
     }
 
     public static void WriteToken(TokenInfo info, string? path = null) {
+        if (info is null) {
+            throw new ArgumentNullException(nameof(info));
+        }
+
         var tokenPath = GetTokenPath(path);
         var dir = Path.GetDirectoryName(tokenPath);
         if (!string.IsNullOrEmpty(dir)) {
