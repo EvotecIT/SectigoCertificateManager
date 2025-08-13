@@ -24,7 +24,7 @@ public sealed class ApiErrorHandlerTests {
     }
 
     private static SectigoClient CreateClient(HttpResponseMessage response) {
-        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4, concurrencyLimit: null, retryCount: 1);
         var handler = new RespondingHandler(response);
         return new SectigoClient(config, new HttpClient(handler));
     }

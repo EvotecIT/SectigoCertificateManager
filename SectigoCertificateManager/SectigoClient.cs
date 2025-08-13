@@ -17,8 +17,8 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly Func<CancellationToken, Task<TokenInfo>>? _refreshToken;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private readonly SemaphoreSlim? _throttle;
-    private const int s_retryLimit = 5;
-    private const double s_initialBackoffSeconds = 1d;
+    private readonly int _retryCount;
+    private readonly TimeSpan _retryInitialDelay;
     internal Func<TimeSpan, CancellationToken, Task>? DelayAsync { get; set; }
     private string? _token;
     private DateTimeOffset? _tokenExpiresAt;
@@ -65,6 +65,8 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         _refreshToken = config.RefreshToken;
         _token = config.Token;
         _tokenExpiresAt = config.TokenExpiresAt;
+        _retryCount = config.RetryCount;
+        _retryInitialDelay = config.RetryInitialDelay;
         if (config.ConcurrencyLimit.HasValue) {
             _throttle = new SemaphoreSlim(config.ConcurrencyLimit.Value, config.ConcurrencyLimit.Value);
         }
@@ -157,15 +159,17 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         Func<CancellationToken, Task<HttpResponseMessage>> send,
         CancellationToken cancellationToken) {
         var attempt = 0;
-        var delay = TimeSpan.FromSeconds(s_initialBackoffSeconds);
+        var delay = _retryInitialDelay;
         while (true) {
             var response = await send(cancellationToken).ConfigureAwait(false);
-            if (response.StatusCode != (HttpStatusCode)429 || attempt >= s_retryLimit - 1) {
+            var status = (int)response.StatusCode;
+            var retryable = status == 429 || (status >= 500 && status < 600 && response.StatusCode != HttpStatusCode.NotImplemented);
+            if (!retryable || attempt >= _retryCount - 1) {
                 return response;
             }
 
             var wait = delay;
-            if (response.Headers.TryGetValues("Retry-After", out var values)) {
+            if (status == 429 && response.Headers.TryGetValues("Retry-After", out var values)) {
                 var value = values.FirstOrDefault();
                 if (int.TryParse(value, out var seconds)) {
                     wait = TimeSpan.FromSeconds(seconds);
