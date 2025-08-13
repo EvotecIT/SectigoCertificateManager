@@ -310,4 +310,73 @@ public sealed class OrdersClientTests {
 
         Assert.Equal(1d, progress.Value, 3);
     }
+
+    [Fact]
+    public async Task CreateAsync_SingleOrder_UsesOrderEndpoint() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { 1 })
+        };
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var request = new CreateOrderRequest { ProfileId = 1, Csr = "csr" };
+        var result = await orders.CreateAsync(new[] { request });
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/order", handler.Request!.RequestUri!.ToString());
+        var body = await handler.Request.Content!.ReadAsStringAsync();
+        Assert.Contains("\"profileId\":1", body);
+        Assert.Single(result);
+        Assert.Equal(1, result[0]);
+    }
+
+    [Fact]
+    public async Task CreateAsync_MultipleOrders_UsesBulkEndpoint() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { 1, 2 })
+        };
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var requests = new[] {
+            new CreateOrderRequest { ProfileId = 1, Csr = "a" },
+            new CreateOrderRequest { ProfileId = 2, Csr = "b" }
+        };
+
+        var result = await orders.CreateAsync(requests);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/order/bulk", handler.Request!.RequestUri!.ToString());
+        Assert.Equal("application/json", handler.Request.Content!.Headers.ContentType!.MediaType);
+        var body = await handler.Request.Content.ReadAsStringAsync();
+        Assert.StartsWith("[", body);
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async Task CreateAsync_AsMultipart_SendsMultipartContent() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { 1, 2 })
+        };
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var requests = new[] {
+            new CreateOrderRequest { ProfileId = 1, Csr = "a" },
+            new CreateOrderRequest { ProfileId = 2, Csr = "b" }
+        };
+
+        await orders.CreateAsync(requests, asMultipart: true);
+
+        Assert.NotNull(handler.Request);
+        Assert.Equal("https://example.com/v1/order/bulk", handler.Request!.RequestUri!.ToString());
+        Assert.StartsWith("multipart/", handler.Request.Content!.Headers.ContentType!.MediaType);
+        Assert.IsType<MultipartContent>(handler.Request.Content);
+    }
 }
