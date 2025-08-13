@@ -35,4 +35,17 @@ public sealed class IssueCertificateRequestTests {
         Assert.Equal(5, request.ProfileId);
         Assert.Equal(12, request.Term);
     }
+
+    [Fact]
+    public void Builder_WithSubjectAlternativeNames_CollapsesDuplicates() {
+        var builder = new IssueCertificateRequestBuilder(new[] { 12 });
+        var request = builder
+            .WithSubjectAlternativeNames(new[] { "a.example.com", "a.example.com", "b.example.com" })
+            .WithTerm(12)
+            .Build();
+
+        Assert.Equal(2, request.SubjectAlternativeNames.Count);
+        Assert.Contains("a.example.com", request.SubjectAlternativeNames);
+        Assert.Contains("b.example.com", request.SubjectAlternativeNames);
+    }
 }
