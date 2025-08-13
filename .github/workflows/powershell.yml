@@ -20,7 +20,8 @@ env:
 jobs:
   refresh-psd1:
     name: 'Refresh PSD1'
-    runs-on: [self-hosted, windows]
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,7 +60,8 @@ jobs:
   test-windows-ps5:
     name: 'Windows PowerShell 5.1'
     needs: refresh-psd1
-    runs-on: [self-hosted, windows]
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -97,7 +99,8 @@ jobs:
   test-windows-ps7:
     name: 'Windows PowerShell 7'
     needs: refresh-psd1
-    runs-on: [self-hosted, windows]
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -135,7 +138,8 @@ jobs:
   test-linux-ps7:
     name: 'Linux PowerShell 7'
     needs: refresh-psd1
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -171,10 +175,10 @@ jobs:
         run: ./Module/SectigoCertificateManager.Tests.ps1
 
   test-macos-ps7:
-    if: ${{ false }}
     name: 'macOS PowerShell 7'
     needs: refresh-psd1
-    runs-on: [self-hosted, macos]
+    runs-on: macos-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

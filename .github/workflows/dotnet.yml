@@ -20,7 +20,8 @@ env:
 jobs:
   test-windows:
     name: 'Windows'
-    runs-on: [self-hosted, windows]
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,7 +56,8 @@ jobs:
 
   test-linux:
     name: 'Linux'
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -86,4 +88,40 @@ jobs:
         if: always()
         with:
           name: coverage-reports-linux
+          path: '**/coverage.cobertura.xml'
+
+  test-macos:
+    name: 'macOS'
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore SectigoCertificateManager.sln
+
+      - name: Build solution
+        run: dotnet build SectigoCertificateManager.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        run: dotnet test SectigoCertificateManager.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-macos
+          path: '**/*.trx'
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-reports-macos
           path: '**/coverage.cobertura.xml'
