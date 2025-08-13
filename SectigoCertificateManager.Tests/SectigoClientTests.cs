@@ -228,6 +228,63 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
+    public async Task RefreshesTokenBeforeExpiryWithinThreshold() {
+        var expiresSoon = DateTimeOffset.UtcNow.AddSeconds(30);
+        var called = false;
+        Task<TokenInfo> Refresh(CancellationToken ct) {
+            called = true;
+            return Task.FromResult(new TokenInfo("new", DateTimeOffset.UtcNow.AddMinutes(30)));
+        }
+
+        var config = new ApiConfig(
+            "https://example.com/",
+            string.Empty,
+            string.Empty,
+            "c",
+            ApiVersion.V25_4,
+            token: "old",
+            tokenExpiresAt: expiresSoon,
+            refreshToken: Refresh);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        Assert.True(called);
+        Assert.Equal("new", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
+    }
+
+    [Fact]
+    public async Task DoesNotRefreshTokenWhenOutsideCustomThreshold() {
+        var expiresSoon = DateTimeOffset.UtcNow.AddSeconds(30);
+        var called = false;
+        Task<TokenInfo> Refresh(CancellationToken ct) {
+            called = true;
+            return Task.FromResult(new TokenInfo("new", DateTimeOffset.UtcNow.AddMinutes(30)));
+        }
+
+        var config = new ApiConfig(
+            "https://example.com/",
+            string.Empty,
+            string.Empty,
+            "c",
+            ApiVersion.V25_4,
+            token: "old",
+            tokenExpiresAt: expiresSoon,
+            refreshToken: Refresh,
+            tokenRefreshThreshold: TimeSpan.FromSeconds(10));
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        Assert.False(called);
+        Assert.Equal("old", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
+    }
+
+    [Fact]
     public async Task DoesNotRefreshValidToken() {
         var expires = DateTimeOffset.UtcNow.AddMinutes(10);
         var called = false;

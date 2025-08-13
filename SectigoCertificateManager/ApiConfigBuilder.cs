@@ -23,6 +23,7 @@ public sealed class ApiConfigBuilder {
     private X509Certificate2? _clientCertificate;
     private Action<HttpClientHandler>? _configureHandler;
     private int? _concurrencyLimit;
+    private TimeSpan? _tokenRefreshThreshold;
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
@@ -151,6 +152,19 @@ public sealed class ApiConfigBuilder {
         return this;
     }
 
+    /// <summary>Sets the buffer period before token expiration that triggers a refresh.</summary>
+    /// <param name="threshold">Duration before expiration to refresh the token.</param>
+    public ApiConfigBuilder WithTokenRefreshThreshold(TimeSpan threshold) {
+        if (threshold < TimeSpan.Zero) {
+            throw new ArgumentOutOfRangeException(nameof(threshold));
+        }
+
+        lock (_lock) {
+            _tokenRefreshThreshold = threshold;
+        }
+        return this;
+    }
+
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build() {
         lock (_lock) {
@@ -181,7 +195,8 @@ public sealed class ApiConfigBuilder {
                 _token,
                 _tokenExpiresAt,
                 _refreshToken,
-                _concurrencyLimit);
+                _concurrencyLimit,
+                _tokenRefreshThreshold);
         }
     }
 }

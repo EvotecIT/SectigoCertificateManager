@@ -19,6 +19,10 @@ using System.Threading.Tasks;
 /// <param name="token">Optional bearer token used for authentication.</param>
 /// <param name="tokenExpiresAt">Optional expiration time for <paramref name="token"/>.</param>
 /// <param name="refreshToken">Optional delegate used to refresh the token.</param>
+/// <param name="tokenRefreshThreshold">
+/// Optional buffer period before token expiration after which a refresh should occur.
+/// Defaults to one minute if not specified.
+/// </param>
 public sealed class ApiConfig(
     string baseUrl,
     string username,
@@ -30,7 +34,8 @@ public sealed class ApiConfig(
     string? token = null,
     DateTimeOffset? tokenExpiresAt = null,
     Func<CancellationToken, Task<TokenInfo>>? refreshToken = null,
-    int? concurrencyLimit = null) {
+    int? concurrencyLimit = null,
+    TimeSpan? tokenRefreshThreshold = null) {
     /// <summary>Gets the base URL of the API endpoint.</summary>
     public string BaseUrl { get; } = baseUrl;
 
@@ -63,4 +68,9 @@ public sealed class ApiConfig(
 
     /// <summary>Gets the optional concurrency limit for HTTP requests.</summary>
     public int? ConcurrencyLimit { get; } = concurrencyLimit;
+
+    /// <summary>
+    /// Gets the buffer period before token expiration that triggers a refresh.
+    /// </summary>
+    public TimeSpan TokenRefreshThreshold { get; } = tokenRefreshThreshold ?? TimeSpan.FromMinutes(1);
 }
