@@ -13,6 +13,10 @@ public interface ISectigoClient {
     /// </summary>
     HttpClient HttpClient { get; }
     /// <summary>
+    /// Gets a value indicating whether certificate download caching is enabled.
+    /// </summary>
+    bool EnableDownloadCache { get; }
+    /// <summary>
     /// Sends a GET request.
     /// </summary>
     /// <param name="requestUri">Relative request URI.</param>

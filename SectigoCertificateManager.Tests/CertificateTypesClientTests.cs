@@ -19,6 +19,7 @@ public sealed class CertificateTypesClientTests {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
         public HttpClient HttpClient { get; } = new();
+        public bool EnableDownloadCache => true;
 
         public StubClient(HttpResponseMessage response) => _response = response;
 

@@ -20,6 +20,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     private readonly int _retryCount;
     private readonly TimeSpan _retryInitialDelay;
     private readonly TimeSpan _tokenRefreshThreshold;
+    private readonly bool _enableDownloadCache;
     internal Func<TimeSpan, CancellationToken, Task>? DelayAsync { get; set; }
     private string? _token;
     private DateTimeOffset? _tokenExpiresAt;
@@ -38,6 +39,16 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         get {
             ThrowIfDisposed();
             return _client;
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether certificate download caching is enabled.
+    /// </summary>
+    public bool EnableDownloadCache {
+        get {
+            ThrowIfDisposed();
+            return _enableDownloadCache;
         }
     }
 
@@ -69,6 +80,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         _retryCount = config.RetryCount;
         _retryInitialDelay = config.RetryInitialDelay;
         _tokenRefreshThreshold = config.TokenRefreshThreshold;
+        _enableDownloadCache = config.EnableDownloadCache;
         if (config.ConcurrencyLimit.HasValue) {
             _throttle = new SemaphoreSlim(config.ConcurrencyLimit.Value, config.ConcurrencyLimit.Value);
         }

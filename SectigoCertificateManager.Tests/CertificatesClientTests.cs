@@ -12,6 +12,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -440,6 +441,67 @@ public sealed class CertificatesClientTests {
             await certificates.DownloadAsync(2, path);
             Assert.NotNull(handler.Request);
             Assert.Equal("https://example.com/api/ssl/v1/collect/2?format=base64", handler.Request!.RequestUri!.ToString());
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task DownloadAsync_CacheHit_SkipsDownload() {
+        var bytes = Convert.FromBase64String(Base64Cert);
+        string hash;
+        using (var sha1 = SHA1.Create()) {
+            hash = BitConverter.ToString(sha1.ComputeHash(bytes)).Replace("-", string.Empty);
+        }
+
+        var metadata = new Certificate { Id = 5, Sha1Hash = hash };
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(metadata) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            File.WriteAllText(path, Base64Cert);
+            await certificates.DownloadAsync(5, path);
+            Assert.Single(handler.Requests);
+        } finally {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task DownloadAsync_CacheMiss_Downloads() {
+        var bytes = Convert.FromBase64String(Base64Cert);
+        string hash;
+        using (var sha1 = SHA1.Create()) {
+            hash = BitConverter.ToString(sha1.ComputeHash(bytes)).Replace("-", string.Empty);
+        }
+
+        var metadata = new Certificate { Id = 5, Sha1Hash = hash };
+        var responses = new[] {
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(metadata) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Base64Cert) }
+        };
+
+        var handler = new SequenceHandler(responses);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
+        var certificates = new CertificatesClient(client);
+
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try {
+            File.WriteAllText(path, "OLD");
+            await certificates.DownloadAsync(5, path);
+            Assert.Equal(2, handler.Requests.Count);
+            var written = File.ReadAllText(path);
+            Assert.Equal(Base64Cert, written);
         } finally {
             if (File.Exists(path)) {
                 File.Delete(path);

@@ -58,6 +58,9 @@ public sealed class Certificate {
     /// <summary>Gets or sets the serial number.</summary>
     public string? SerialNumber { get; set; }
 
+    /// <summary>Gets or sets the SHA1 fingerprint of the certificate.</summary>
+    public string? Sha1Hash { get; set; }
+
     /// <summary>Gets or sets the key algorithm.</summary>
     public string? KeyAlgorithm { get; set; }
 

@@ -26,6 +26,7 @@ public sealed class ApiConfigBuilder {
     private int _retryCount = 5;
     private TimeSpan _retryInitialDelay = TimeSpan.FromSeconds(1);
     private TimeSpan _tokenRefreshThreshold = TimeSpan.FromMinutes(1);
+    private bool _enableDownloadCache = true;
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
@@ -187,6 +188,15 @@ public sealed class ApiConfigBuilder {
         return this;
     }
 
+    /// <summary>Enables or disables certificate download caching.</summary>
+    /// <param name="enabled">Set to <c>false</c> to disable caching.</param>
+    public ApiConfigBuilder WithDownloadCache(bool enabled) {
+        lock (_lock) {
+            _enableDownloadCache = enabled;
+        }
+        return this;
+    }
+
     /// <summary>Builds a new <see cref="ApiConfig"/> instance using configured values.</summary>
     public ApiConfig Build() {
         lock (_lock) {
@@ -220,7 +230,8 @@ public sealed class ApiConfigBuilder {
                 _tokenRefreshThreshold,
                 _concurrencyLimit,
                 _retryCount,
-                _retryInitialDelay);
+                _retryInitialDelay,
+                _enableDownloadCache);
         }
     }
 }

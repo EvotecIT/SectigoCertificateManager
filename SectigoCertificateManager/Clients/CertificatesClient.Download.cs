@@ -83,12 +83,14 @@ public sealed partial class CertificatesClient : BaseClient {
     /// <param name="certificateId">Identifier of the certificate to download.</param>
     /// <param name="path">Destination file path.</param>
     /// <param name="format">Certificate format to request. Defaults to <c>base64</c>.</param>
+    /// <param name="force">If <c>true</c>, bypasses the local cache and downloads the certificate.</param>
     /// <param name="progress">Optional progress reporter.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task DownloadAsync(
         int certificateId,
         string path,
         string format = "base64",
+        bool force = false,
         IProgress<double>? progress = null,
         CancellationToken cancellationToken = default) {
         if (certificateId <= 0) {
@@ -96,6 +98,45 @@ public sealed partial class CertificatesClient : BaseClient {
         }
         if (string.IsNullOrEmpty(path)) {
             throw new ArgumentException("Path cannot be null or empty.", nameof(path));
+        }
+
+        if (_client.EnableDownloadCache && !force && File.Exists(path)) {
+            string? localHash = null;
+            if (string.Equals(format, "base64", StringComparison.OrdinalIgnoreCase)) {
+#if NETSTANDARD2_0 || NET472
+                var text = File.ReadAllText(path);
+#else
+                var text = await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false);
+#endif
+                byte[] data;
+                try {
+                    data = Convert.FromBase64String(text);
+                } catch (FormatException) {
+                    data = Array.Empty<byte>();
+                }
+
+                using var sha1 = SHA1.Create();
+#if NETSTANDARD2_0 || NET472
+                localHash = BitConverter.ToString(sha1.ComputeHash(data)).Replace("-", string.Empty);
+#else
+                localHash = Convert.ToHexString(sha1.ComputeHash(data));
+#endif
+            } else {
+                using var fs = File.OpenRead(path);
+                using var sha1 = SHA1.Create();
+#if NETSTANDARD2_0 || NET472
+                localHash = BitConverter.ToString(sha1.ComputeHash(fs)).Replace("-", string.Empty);
+#else
+                var hash = await sha1.ComputeHashAsync(fs, cancellationToken).ConfigureAwait(false);
+                localHash = Convert.ToHexString(hash);
+#endif
+            }
+
+            var meta = await GetAsync(certificateId, cancellationToken).ConfigureAwait(false);
+            if (localHash is not null && meta?.Sha1Hash is not null &&
+                meta.Sha1Hash.Equals(localHash, StringComparison.OrdinalIgnoreCase)) {
+                return;
+            }
         }
 
         var endpoint = $"ssl/v1/collect/{certificateId}";
