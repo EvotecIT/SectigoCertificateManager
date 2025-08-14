@@ -78,6 +78,43 @@ public sealed partial class CertificatesClient : BaseClient {
     }
 
     /// <summary>
+    /// Downloads an issued certificate as a PFX and returns an <see cref="X509Certificate2"/> instance.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to download.</param>
+    /// <param name="password">Optional password protecting the PFX.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<X509Certificate2> DownloadPfxAsync(
+        int certificateId,
+        string? password = null,
+        CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var endpoint = $"ssl/v1/collect/{certificateId}";
+        var url = password is null
+            ? $"{endpoint}?format=pfx"
+            : $"{endpoint}?format=pfx&password={Uri.EscapeDataString(password)}";
+        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+#if NETSTANDARD2_0 || NET472
+        var bytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+#else
+        var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+#endif
+#pragma warning disable SYSLIB0057
+        var certificate = password is null
+            ? new X509Certificate2(bytes)
+            : new X509Certificate2(bytes, password);
+#pragma warning restore SYSLIB0057
+#if NET6_0_OR_GREATER
+        CryptographicOperations.ZeroMemory(bytes);
+#else
+        Array.Clear(bytes, 0, bytes.Length);
+#endif
+        return certificate;
+    }
+
+    /// <summary>
     /// Downloads an issued certificate and saves it to disk.
     /// </summary>
     /// <param name="certificateId">Identifier of the certificate to download.</param>
