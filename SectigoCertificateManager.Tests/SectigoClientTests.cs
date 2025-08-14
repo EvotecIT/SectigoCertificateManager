@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -444,5 +445,18 @@ public sealed class SectigoClientTests {
         client.Dispose();
 
         Assert.Throws<ObjectDisposedException>(() => _ = client.HttpClient);
+    }
+
+    [Fact]
+    public void Dispose_DisposesSemaphore() {
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4, concurrencyLimit: 1);
+        var client = new SectigoClient(config);
+        var field = typeof(SectigoClient).GetField("_throttle", BindingFlags.NonPublic | BindingFlags.Instance);
+        var semaphore = (SemaphoreSlim?)field!.GetValue(client);
+        Assert.NotNull(semaphore);
+
+        client.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => semaphore!.Wait(0));
     }
 }
