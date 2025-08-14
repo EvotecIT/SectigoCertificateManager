@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -283,6 +284,33 @@ public sealed class SectigoClientTests {
 
         Assert.False(called);
         Assert.Equal("old", httpClient.DefaultRequestHeaders.Authorization?.Parameter);
+    }
+
+    [Fact]
+    public async Task PersistsTokenAfterRefresh() {
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "token.json");
+        var expired = DateTimeOffset.UtcNow.AddMinutes(-1);
+        Task<TokenInfo> Refresh(CancellationToken ct) => Task.FromResult(new TokenInfo("new", DateTimeOffset.UtcNow.AddMinutes(30)));
+
+        var config = new ApiConfig(
+            "https://example.com/",
+            string.Empty,
+            string.Empty,
+            "c",
+            ApiVersion.V25_4,
+            token: "old",
+            tokenExpiresAt: expired,
+            refreshToken: Refresh,
+            tokenCachePath: path);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        var cached = ApiConfigLoader.ReadToken(path);
+        Assert.NotNull(cached);
+        Assert.Equal("new", cached!.Token);
     }
 
     private sealed class ThrottleHandler : HttpMessageHandler {

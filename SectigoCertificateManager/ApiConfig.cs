@@ -19,6 +19,11 @@ using System.Threading.Tasks;
 /// <param name="token">Optional bearer token used for authentication.</param>
 /// <param name="tokenExpiresAt">Optional expiration time for <paramref name="token"/>.</param>
 /// <param name="refreshToken">Optional delegate used to refresh the token.</param>
+/// <param name="tokenRefreshThreshold">Optional threshold before expiration when the token should be refreshed.</param>
+/// <param name="concurrencyLimit">Optional concurrency limit for HTTP requests.</param>
+/// <param name="retryCount">Maximum number of retry attempts for transient failures.</param>
+/// <param name="retryInitialDelay">Initial delay used for exponential backoff when retrying.</param>
+/// <param name="tokenCachePath">Optional path to the token cache file.</param>
 public sealed class ApiConfig(
     string baseUrl,
     string username,
@@ -33,7 +38,8 @@ public sealed class ApiConfig(
     TimeSpan? tokenRefreshThreshold = null,
     int? concurrencyLimit = null,
     int retryCount = 5,
-    TimeSpan? retryInitialDelay = null) {
+    TimeSpan? retryInitialDelay = null,
+    string? tokenCachePath = null) {
     /// <summary>Gets the base URL of the API endpoint.</summary>
     public string BaseUrl { get; } = baseUrl;
 
@@ -75,4 +81,7 @@ public sealed class ApiConfig(
 
     /// <summary>Gets the initial delay used for exponential backoff when retrying.</summary>
     public TimeSpan RetryInitialDelay { get; } = retryInitialDelay ?? TimeSpan.FromSeconds(1);
+
+    /// <summary>Gets the path to the token cache file, if any.</summary>
+    public string? TokenCachePath { get; } = tokenCachePath;
 }
