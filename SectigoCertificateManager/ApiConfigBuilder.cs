@@ -26,6 +26,7 @@ public sealed class ApiConfigBuilder {
     private int _retryCount = 5;
     private TimeSpan _retryInitialDelay = TimeSpan.FromSeconds(1);
     private TimeSpan _tokenRefreshThreshold = TimeSpan.FromMinutes(1);
+    private string? _tokenCachePath;
 
     /// <summary>Sets the base URL for the API endpoint.</summary>
     /// <param name="baseUrl">The root URL of the Sectigo API.</param>
@@ -93,6 +94,16 @@ public sealed class ApiConfigBuilder {
         lock (_lock) {
             _tokenRefreshThreshold = threshold;
         }
+        return this;
+    }
+
+    /// <summary>Sets the path to the token cache file.</summary>
+    /// <param name="path">Full path to the cache file.</param>
+    public ApiConfigBuilder WithTokenCachePath(string path) {
+        lock (_lock) {
+            _tokenCachePath = path;
+        }
+
         return this;
     }
 
@@ -220,7 +231,8 @@ public sealed class ApiConfigBuilder {
                 _tokenRefreshThreshold,
                 _concurrencyLimit,
                 _retryCount,
-                _retryInitialDelay);
+                _retryInitialDelay,
+                _tokenCachePath);
         }
     }
 }
