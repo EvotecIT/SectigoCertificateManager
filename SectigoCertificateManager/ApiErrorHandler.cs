@@ -5,8 +5,14 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
-using System.Threading.Tasks;
-
+using System.Threading.Tasks;        if (!string.IsNullOrWhiteSpace(error.Description)) {
+            message += $", Error: {error.Description}";
+        }
+        if ((int)error.Code != 0) {
+            message += $", Code: {(int)error.Code}";
+        }
+
+        error.Description = message;
 /// <summary>
 /// Handles API error responses.
 /// </summary>

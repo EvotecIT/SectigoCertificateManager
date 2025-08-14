@@ -105,4 +105,16 @@ public sealed class ApiErrorHandlerTests {
         Assert.Contains(new string('a', 200), ex.Message);
         Assert.DoesNotContain(new string('a', 201), ex.Message);
     }
+
+    [Fact]
+    public async Task ExceptionMessageIncludesErrorCode() {
+        var response = new HttpResponseMessage(HttpStatusCode.BadRequest) {
+            Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.ErrorWhileDecodingCsr, Description = "Invalid" })
+        };
+
+        using var client = CreateClient(response);
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => client.GetAsync("v1/test"));
+        Assert.Contains($"Code: {(int)ApiErrorCode.ErrorWhileDecodingCsr}", ex.Message);
+    }
 }
