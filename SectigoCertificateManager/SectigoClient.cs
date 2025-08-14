@@ -247,6 +247,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
 
         _client.Dispose();
         _refreshLock.Dispose();
+        _throttle?.Dispose();
         _disposed = true;
     }
 }
