@@ -96,17 +96,17 @@ public static class ApiConfigLoader {
         string? version = Environment.GetEnvironmentVariable("SECTIGO_API_VERSION");
 
         if (baseUrl is not null && token is not null && customerUri is not null) {
-            return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ApiVersionHelper.Parse(version), token: token);
+            return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ApiVersionHelper.Parse(version), token: token, tokenCachePath: tokenPath);
         }
 
         var cached = ReadToken(tokenPath);
 
         if (baseUrl is not null && cached is not null && customerUri is not null) {
-            return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ApiVersionHelper.Parse(version), token: cached.Token, tokenExpiresAt: cached.ExpiresAt);
+            return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ApiVersionHelper.Parse(version), token: cached.Token, tokenExpiresAt: cached.ExpiresAt, tokenCachePath: tokenPath);
         }
 
         if (baseUrl is not null && username is not null && password is not null && customerUri is not null) {
-            return new ApiConfig(baseUrl, username, password, customerUri, ApiVersionHelper.Parse(version));
+            return new ApiConfig(baseUrl, username, password, customerUri, ApiVersionHelper.Parse(version), tokenCachePath: tokenPath);
         }
 
         if (string.IsNullOrEmpty(path)) {
@@ -141,6 +141,7 @@ public static class ApiConfigLoader {
             model.CustomerUri,
             ApiVersionHelper.Parse(model.ApiVersion),
             token: tokenValue,
-            tokenExpiresAt: expires);
+            tokenExpiresAt: expires,
+            tokenCachePath: tokenPath);
     }
 }
