@@ -103,7 +103,10 @@ public sealed partial class CertificatesClient : BaseClient {
         var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
         var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
         using (stream) {
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory)) {
+                Directory.CreateDirectory(directory);
+            }
             using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
             var buffer = new byte[65536];
             long total = response.Content.Headers.ContentLength ?? (stream.CanSeek ? stream.Length : -1);

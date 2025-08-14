@@ -412,6 +412,38 @@ public sealed class CertificatesClientTests {
         }
     }
 
+    [Fact]
+    public async Task DownloadAsync_WritesFileToWorkingDirectory() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("DATA")
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(dir);
+        var originalDir = Directory.GetCurrentDirectory();
+        Directory.SetCurrentDirectory(dir);
+        var fileName = Path.GetRandomFileName();
+        try {
+            await certificates.DownloadAsync(1, fileName);
+            Assert.NotNull(handler.Request);
+            Assert.Equal("https://example.com/ssl/v1/collect/1?format=base64", handler.Request!.RequestUri!.ToString());
+            var fullPath = Path.Combine(dir, fileName);
+            Assert.True(File.Exists(fullPath));
+            Assert.Equal("DATA", File.ReadAllText(fullPath));
+            Assert.Empty(Directory.GetDirectories(dir));
+        } finally {
+            Directory.SetCurrentDirectory(originalDir);
+            if (Directory.Exists(dir)) {
+                Directory.Delete(dir, true);
+            }
+        }
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData(null)]
