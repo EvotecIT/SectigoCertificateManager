@@ -3,6 +3,7 @@ namespace SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Utilities;
 using System.IO;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 public sealed partial class CertificatesClient : BaseClient {
@@ -60,8 +61,20 @@ public sealed partial class CertificatesClient : BaseClient {
     public async Task<Stream> DownloadStreamAsync(
         int certificateId,
         CancellationToken cancellationToken = default) {
-        var bytes = await DownloadBytesAsync(certificateId, cancellationToken).ConfigureAwait(false);
-        return new MemoryStream(bytes, writable: false);
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        var endpoint = $"ssl/v1/collect/{certificateId}";
+        var url = $"{endpoint}?format=base64";
+        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+#if NETSTANDARD2_0 || NET472
+        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+#else
+        var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+#endif
+        var transform = new FromBase64Transform(FromBase64TransformMode.IgnoreWhiteSpaces);
+        return new CryptoStream(stream, transform, CryptoStreamMode.Read);
     }
 
     /// <summary>
