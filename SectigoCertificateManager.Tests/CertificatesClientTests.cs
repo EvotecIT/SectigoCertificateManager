@@ -44,6 +44,37 @@ public sealed class CertificatesClientTests {
         public void Report(double value) => Value = value;
     }
 
+    private sealed class TrackingContent : HttpContent {
+        private readonly byte[] _data;
+        public bool ReadAsStringCalled { get; private set; }
+        public bool ReadAsByteArrayCalled { get; private set; }
+
+        public TrackingContent(byte[] data) => _data = data;
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) {
+            return stream.WriteAsync(_data, 0, _data.Length);
+        }
+
+        protected override Task<Stream> CreateContentReadStreamAsync() {
+            return Task.FromResult<Stream>(new MemoryStream(_data));
+        }
+
+        public new Task<string> ReadAsStringAsync() {
+            ReadAsStringCalled = true;
+            return base.ReadAsStringAsync();
+        }
+
+        public new Task<byte[]> ReadAsByteArrayAsync() {
+            ReadAsByteArrayCalled = true;
+            return base.ReadAsByteArrayAsync();
+        }
+
+        protected override bool TryComputeLength(out long length) {
+            length = _data.Length;
+            return true;
+        }
+    }
+
     private const string Base64Cert = "MIIC/zCCAeegAwIBAgIULTQw6ATwfRI/1hVSQooJNHPEit8wDQYJKoZIhvcNAQELBQAwDzENMAsGA1UEAwwEdGVzdDAeFw0yNTA3MDQxMzE2NDRaFw0yNTA3MDUxMzE2NDRaMA8xDTALBgNVBAMMBHRlc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDiO8kIwsJLCi3d8bX31IIISKSoA24iCcfV7m+uMm8CMdJlY2NGf8ThiF3suG2lHQCxESQacUrPFMN/J3cM7L+5R8p24CCnrmAP2WhMuO2IwFhgfjo4PsmnmCGNx5fDAPI+lnSS6pnHfZfAPw3dbPT2/cgbeil0q2ByFR6C2YXU+mFdOg7cJJ1f2GXbUL3QYRBuaDYCHRrDAym4e/8DkKjjaroDxw1BPD6sjvzrDdEDusJANDCp8K6Cr99nvG+YCLjueN+xvUXHbsp9gUfLI39X73p+M9zGcYGAeYyD/i+VM/+Kde5CEfS34eOKfRIJX6DHAbVu1SrJPNFFvQV0keb/AgMBAAGjUzBRMB0GA1UdDgQWBBQ8PwJEkQsHvU7i5i45XLLyJUi4eTAfBgNVHSMEGDAWgBQ8PwJEkQsHvU7i5i45XLLyJUi4eTAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAjWADB2IC5xBHKOROcXZDa8mp3DaasUwL5mWjG7Ppr4LHrY1uCEojstJCg6s2FLBjGTs+0DTQ5UiBqSVJDK1GVhYG02xJSPoXNS4wNTp4a56NtbkDT96lO0BrH91lclMNXHU9NpMUFea0tt7h5tUeVtZ2CVK0nuy5MOifMdURVyhWsFgQVemmTNTYisVD5sNRvBJEq0M+3+JSjFYvRZVqfRSM3z1K4XcZJfhxv7Gq1ebb93R1QunIdGC0HiFnBZxpxhDCbcVOpbdbQOJ22dLSe5/4f+1V+D/bPCZJx5kF0yvM0jEhuQNxNV3H/DasvBhH/24JIjpe+WfKPw0jx7vR6";
 
     /// <summary>Parses search results.</summary>
@@ -323,6 +354,27 @@ public sealed class CertificatesClientTests {
         var certificates = new CertificatesClient(client);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => certificates.RenewAsync(1, null!));
+    }
+
+    [Fact]
+    public async Task DownloadStreamAsync_ReturnsResponseStream() {
+        var bytes = Encoding.ASCII.GetBytes("DATA");
+        var content = new TrackingContent(bytes);
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = content
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var certificates = new CertificatesClient(client);
+
+        var stream = await certificates.DownloadStreamAsync(5);
+        Assert.NotNull(stream);
+        Assert.Equal("https://example.com/ssl/v1/collect/5?format=base64", handler.Request!.RequestUri!.ToString());
+        Assert.False(content.ReadAsByteArrayCalled);
+        Assert.False(content.ReadAsStringCalled);
+        stream.Dispose();
     }
 
     [Theory]
