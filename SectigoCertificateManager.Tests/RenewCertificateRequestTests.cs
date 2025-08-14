@@ -16,6 +16,10 @@ public sealed class RenewCertificateRequestTests {
         public void Report(double value) => Value = value;
     }
 
+    private sealed class UnreadableStream : MemoryStream {
+        public override bool CanRead => false;
+    }
+
     /// <summary>Reads CSR from a stream.</summary>
     [Fact]
     public void SetCsr_FromStream_SetsProperty() {
@@ -50,5 +54,13 @@ public sealed class RenewCertificateRequestTests {
         request.SetCsr(stream);
 
         Assert.Equal(Base64Csr, request.Csr);
+    }
+
+    [Fact]
+    public void SetCsr_UnreadableStream_Throws() {
+        using var stream = new UnreadableStream();
+        var request = new RenewCertificateRequest();
+
+        Assert.Throws<ArgumentException>(() => request.SetCsr(stream));
     }
 }
