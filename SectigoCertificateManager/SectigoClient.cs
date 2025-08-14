@@ -23,6 +23,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
     internal Func<TimeSpan, CancellationToken, Task>? DelayAsync { get; set; }
     private string? _token;
     private DateTimeOffset? _tokenExpiresAt;
+    private readonly string? _tokenCachePath;
     private bool _disposed;
 
     private void ThrowIfDisposed() {
@@ -69,6 +70,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
         _retryCount = config.RetryCount;
         _retryInitialDelay = config.RetryInitialDelay;
         _tokenRefreshThreshold = config.TokenRefreshThreshold;
+        _tokenCachePath = config.TokenCachePath;
         if (config.ConcurrencyLimit.HasValue) {
             _throttle = new SemaphoreSlim(config.ConcurrencyLimit.Value, config.ConcurrencyLimit.Value);
         }
@@ -229,6 +231,7 @@ public sealed class SectigoClient : ISectigoClient, IDisposable {
             var info = await _refreshToken(cancellationToken).ConfigureAwait(false);
             _token = info.Token;
             _tokenExpiresAt = info.ExpiresAt;
+            ApiConfigLoader.WriteToken(info, _tokenCachePath);
             _client.DefaultRequestHeaders.Remove("login");
             _client.DefaultRequestHeaders.Remove("password");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", info.Token);
