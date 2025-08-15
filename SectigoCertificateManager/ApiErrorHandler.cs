@@ -1,6 +1,9 @@
 namespace SectigoCertificateManager;
 
-using System;
+        try {
+            error = JsonSerializer.Deserialize<ApiError>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        } catch (Exception ex) when (ex is JsonException || ex is NotSupportedException) {
+
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
