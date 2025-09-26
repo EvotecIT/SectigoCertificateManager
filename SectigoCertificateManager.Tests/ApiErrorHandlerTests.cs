@@ -23,6 +23,22 @@ public sealed class ApiErrorHandlerTests {
             => Task.FromResult(_response);
     }
 
+    private sealed class TrackingHttpResponseMessage : HttpResponseMessage {
+        public TrackingHttpResponseMessage(HttpStatusCode statusCode)
+            : base(statusCode) {
+        }
+
+        public bool Disposed { get; private set; }
+
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
+                Disposed = true;
+            }
+
+            base.Dispose(disposing);
+        }
+    }
+
     private static SectigoClient CreateClient(HttpResponseMessage response) {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4, concurrencyLimit: null, retryCount: 1);
         var handler = new RespondingHandler(response);
@@ -79,6 +95,19 @@ public sealed class ApiErrorHandlerTests {
     }
 
     [Fact]
+    public async Task DisposesResponse_WhenErrorBodyInvalid() {
+        var response = new TrackingHttpResponseMessage(HttpStatusCode.BadRequest) {
+            Content = new StringContent("oops")
+        };
+
+        using var client = CreateClient(response);
+
+        _ = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
+
+        Assert.True(response.Disposed);
+    }
+
+    [Fact]
     public async Task ExceptionMessageIncludesStatusCodeAndBody() {
         const string body = "{\"code\":1}";
         var response = new HttpResponseMessage(HttpStatusCode.Unauthorized) {
@@ -104,5 +133,18 @@ public sealed class ApiErrorHandlerTests {
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
         Assert.Contains(new string('a', 200), ex.Message);
         Assert.DoesNotContain(new string('a', 201), ex.Message);
+    }
+
+    [Fact]
+    public async Task DisposesResponse_WhenApiErrorReturned() {
+        var response = new TrackingHttpResponseMessage(HttpStatusCode.BadRequest) {
+            Content = JsonContent.Create(new ApiError { Code = ApiErrorCode.ErrorWhileDecodingCsr, Description = "Invalid" })
+        };
+
+        using var client = CreateClient(response);
+
+        _ = await Assert.ThrowsAsync<ValidationException>(() => client.GetAsync("v1/test"));
+
+        Assert.True(response.Disposed);
     }
 }
