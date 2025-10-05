@@ -17,7 +17,8 @@ public abstract class BaseClient {
     /// JSON options with camel case naming policy.
     /// </summary>
     protected static readonly JsonSerializerOptions s_json = new() {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true
     };
 
     /// <summary>
