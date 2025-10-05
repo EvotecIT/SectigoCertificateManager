@@ -146,4 +146,71 @@ public sealed class ApiConfigLoaderTests {
         Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", null);
         Directory.Delete(tempDir, true);
     }
+
+    [Fact]
+    public void Load_FromTokenCache_IgnoresExpiredToken() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var tokenPath = Path.Combine(tempDir, "token.json");
+        var info = new TokenInfo("tok", DateTimeOffset.UtcNow.AddMinutes(-5));
+        ApiConfigLoader.WriteToken(info, tokenPath);
+
+        Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", "https://example.com");
+        Environment.SetEnvironmentVariable("SECTIGO_USERNAME", "user");
+        Environment.SetEnvironmentVariable("SECTIGO_PASSWORD", "pass");
+        Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", "cst1");
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", tokenPath);
+
+        var config = ApiConfigLoader.Load();
+
+        Assert.Null(config.Token);
+        Assert.Null(config.TokenExpiresAt);
+        Assert.Equal("user", config.Username);
+
+        Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", null);
+        Environment.SetEnvironmentVariable("SECTIGO_USERNAME", null);
+        Environment.SetEnvironmentVariable("SECTIGO_PASSWORD", null);
+        Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", null);
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", null);
+        Directory.Delete(tempDir, true);
+    }
+
+    [Fact]
+    public void Load_FromFile_IgnoresExpiredTokenCache() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var tokenPath = Path.Combine(tempDir, "token.json");
+        var configPath = Path.Combine(tempDir, "cred.json");
+        var info = new TokenInfo("tok", DateTimeOffset.UtcNow.AddMinutes(-5));
+        ApiConfigLoader.WriteToken(info, tokenPath);
+
+        File.WriteAllText(configPath, "{\"baseUrl\":\"https://example.com\",\"username\":\"user\",\"password\":\"pass\",\"customerUri\":\"cst1\"}");
+
+        var config = ApiConfigLoader.Load(configPath, tokenPath);
+
+        Assert.Null(config.Token);
+        Assert.Null(config.TokenExpiresAt);
+        Assert.Equal("user", config.Username);
+
+        Directory.Delete(tempDir, true);
+    }
+
+    [Fact]
+    public void Load_FromFile_UsesValidTokenCache() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        var tokenPath = Path.Combine(tempDir, "token.json");
+        var configPath = Path.Combine(tempDir, "cred.json");
+        var info = new TokenInfo("tok", DateTimeOffset.UtcNow.AddMinutes(10));
+        ApiConfigLoader.WriteToken(info, tokenPath);
+
+        File.WriteAllText(configPath, "{\"baseUrl\":\"https://example.com\",\"username\":\"user\",\"password\":\"pass\",\"customerUri\":\"cst1\"}");
+
+        var config = ApiConfigLoader.Load(configPath, tokenPath);
+
+        Assert.Equal("tok", config.Token);
+        Assert.Equal(info.ExpiresAt, config.TokenExpiresAt);
+
+        Directory.Delete(tempDir, true);
+    }
 }
