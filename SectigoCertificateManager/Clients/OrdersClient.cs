@@ -104,26 +104,22 @@ public sealed partial class OrdersClient : BaseClient {
             throw new ArgumentException("At least one order must be provided.", nameof(orders));
         }
 
-        HttpContent content;
         if (asMultipart) {
-            var multipart = new MultipartContent("mixed");
+            using var multipart = new MultipartContent("mixed");
             foreach (var order in list) {
                 multipart.Add(JsonContent.Create(order, options: s_json));
             }
-            content = multipart;
-        } else if (list.Count == 1) {
-            content = JsonContent.Create(list[0], options: s_json);
-        } else {
-            content = JsonContent.Create(list, options: s_json);
+
+            return await SendCreateRequestAsync("v1/order/bulk", multipart, cancellationToken).ConfigureAwait(false);
         }
 
-        var path = list.Count == 1 && !asMultipart ? "v1/order" : "v1/order/bulk";
-        var response = await _client.PostAsync(path, content, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-        var ids = await response.Content
-            .ReadFromJsonAsyncSafe<IReadOnlyList<int>>(s_json, cancellationToken)
-            .ConfigureAwait(false);
-        return ids ?? Array.Empty<int>();
+        if (list.Count == 1) {
+            using var content = JsonContent.Create(list[0], options: s_json);
+            return await SendCreateRequestAsync("v1/order", content, cancellationToken).ConfigureAwait(false);
+        }
+
+        using var bulkContent = JsonContent.Create(list, options: s_json);
+        return await SendCreateRequestAsync("v1/order/bulk", bulkContent, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -157,7 +153,10 @@ public sealed partial class OrdersClient : BaseClient {
             throw new ArgumentOutOfRangeException(nameof(orderId));
         }
 
-        var response = await _client.PostAsync($"v1/order/{orderId}/cancel", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
+        using var content = CreateEmptyCancellationContent();
+        var response = await _client
+            .PostAsync($"v1/order/{orderId}/cancel", content, cancellationToken)
+            .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -177,4 +176,17 @@ public sealed partial class OrdersClient : BaseClient {
             .ConfigureAwait(false);
         return entries ?? Array.Empty<OrderHistoryEntry>();
     }
+
+    private static StringContent CreateEmptyCancellationContent() => new StringContent(s_emptyCancelPayload);
+
+    private async Task<IReadOnlyList<int>> SendCreateRequestAsync(string path, HttpContent content, CancellationToken cancellationToken) {
+        var response = await _client.PostAsync(path, content, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        var ids = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<int>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+        return ids ?? Array.Empty<int>();
+    }
+
+    private const string s_emptyCancelPayload = "";
 }
