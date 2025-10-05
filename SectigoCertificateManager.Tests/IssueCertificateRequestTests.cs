@@ -1,5 +1,6 @@
-using SectigoCertificateManager.Requests;
 using System;
+using System.Linq;
+using SectigoCertificateManager.Requests;
 using Xunit;
 
 namespace SectigoCertificateManager.Tests;
@@ -37,15 +38,26 @@ public sealed class IssueCertificateRequestTests {
     }
 
     [Fact]
-    public void Builder_WithSubjectAlternativeNames_CollapsesDuplicates() {
+    public void Builder_WithSubjectAlternativeNames_NormalizesInput() {
         var builder = new IssueCertificateRequestBuilder(new[] { 12 });
         var request = builder
-            .WithSubjectAlternativeNames(new[] { "a.example.com", "a.example.com", "b.example.com" })
+            .WithSubjectAlternativeNames(new[] {
+                "  a.example.com  ",
+                "A.EXAMPLE.COM",
+                "b.example.com",
+                null!,
+                " ",
+                "\tB.EXAMPLE.COM"
+            })
             .WithTerm(12)
             .Build();
 
         Assert.Equal(2, request.SubjectAlternativeNames.Count);
-        Assert.Contains("a.example.com", request.SubjectAlternativeNames);
-        Assert.Contains("b.example.com", request.SubjectAlternativeNames);
+        var normalizedSans = request.SubjectAlternativeNames
+            .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        Assert.Equal("a.example.com", normalizedSans[0]);
+        Assert.Equal("b.example.com", normalizedSans[1]);
     }
 }
