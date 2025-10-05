@@ -100,6 +100,9 @@ public static class ApiConfigLoader {
         }
 
         var cached = ReadToken(tokenPath);
+        if (cached is not null && cached.ExpiresAt <= DateTimeOffset.UtcNow) {
+            cached = null;
+        }
 
         if (baseUrl is not null && cached is not null && customerUri is not null) {
             return new ApiConfig(baseUrl, string.Empty, string.Empty, customerUri, ApiVersionHelper.Parse(version), token: cached.Token, tokenExpiresAt: cached.ExpiresAt, tokenCachePath: tokenPath);
@@ -131,6 +134,10 @@ public static class ApiConfigLoader {
                     ?? throw new InvalidOperationException("Invalid configuration file.");
 
         var cache = ReadToken(tokenPath);
+        if (cache is not null && cache.ExpiresAt <= DateTimeOffset.UtcNow) {
+            cache = null;
+        }
+
         var tokenValue = model.Token ?? cache?.Token;
         DateTimeOffset? expires = cache?.ExpiresAt;
 
