@@ -72,6 +72,7 @@ public sealed class OrdersClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal("https://example.com/v1/order/5/cancel", handler.Request.RequestUri!.ToString());
+        await AssertContentDisposedAsync(handler.Request.Content);
     }
 
     [Theory]
@@ -96,6 +97,71 @@ public sealed class OrdersClientTests {
         var orders = new OrdersClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.CancelAsync(orderId));
+    }
+
+    [Fact]
+    public async Task CreateAsync_SingleOrder_DisposesRequestContent() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { 42 })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var request = new CreateOrderRequest { ProfileId = 7, Csr = "csr" };
+        var result = await orders.CreateAsync(new[] { request });
+
+        Assert.NotNull(result);
+        Assert.NotNull(handler.Request);
+        await AssertContentDisposedAsync(handler.Request!.Content);
+    }
+
+    [Fact]
+    public async Task CreateAsync_BulkJson_DisposesRequestContent() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { 1, 2 })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var requests = new[] {
+            new CreateOrderRequest { ProfileId = 7, Csr = "csr" },
+            new CreateOrderRequest { ProfileId = 8, Csr = "csr2" }
+        };
+
+        var result = await orders.CreateAsync(requests);
+
+        Assert.NotNull(result);
+        Assert.NotNull(handler.Request);
+        await AssertContentDisposedAsync(handler.Request!.Content);
+    }
+
+    [Fact]
+    public async Task CreateAsync_Multipart_DisposesRequestContent() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { 1, 2, 3 })
+        };
+
+        var handler = new TestHandler(response);
+        using var httpClient = new HttpClient(handler);
+        var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
+        var orders = new OrdersClient(client);
+
+        var requests = new[] {
+            new CreateOrderRequest { ProfileId = 4, Csr = "csr1" },
+            new CreateOrderRequest { ProfileId = 5, Csr = "csr2" }
+        };
+
+        var result = await orders.CreateAsync(requests, asMultipart: true);
+
+        Assert.NotNull(result);
+        Assert.NotNull(handler.Request);
+        await AssertContentDisposedAsync(handler.Request!.Content);
     }
 
     [Fact]
@@ -127,6 +193,15 @@ public sealed class OrdersClientTests {
         var orders = new OrdersClient(client);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => orders.GetHistoryAsync(orderId));
+    }
+
+    private static Task AssertContentDisposedAsync(HttpContent? content) {
+        Assert.NotNull(content);
+#if NETSTANDARD2_0 || NET472
+        return Assert.ThrowsAsync<ObjectDisposedException>(() => content!.ReadAsStringAsync());
+#else
+        return Assert.ThrowsAsync<ObjectDisposedException>(() => content!.ReadAsStringAsync(CancellationToken.None));
+#endif
     }
 
     private sealed class SequenceHandler : HttpMessageHandler {
