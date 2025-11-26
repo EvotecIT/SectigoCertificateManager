@@ -34,7 +34,7 @@ public static class ApiConfigLoader {
 
     private static string GetTokenPath(string? path) {
         if (!string.IsNullOrEmpty(path)) {
-            return path;
+            return path!;
         }
 
         var env = Environment.GetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH");
