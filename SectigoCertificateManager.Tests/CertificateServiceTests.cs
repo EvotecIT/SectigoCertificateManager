@@ -48,6 +48,35 @@ public sealed class CertificateServiceTests {
         }
     }
 
+    private sealed class LegacyStubClient : ISectigoClient {
+        private readonly HttpResponseMessage _response;
+
+        public HttpRequestMessage? LastRequest { get; private set; }
+
+        public HttpClient HttpClient { get; } = new();
+
+        public LegacyStubClient(HttpResponseMessage response) {
+            _response = response;
+        }
+
+        public Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default) {
+            LastRequest = new HttpRequestMessage(HttpMethod.Get, requestUri);
+            return Task.FromResult(_response);
+        }
+
+        public Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default) {
+            throw new NotImplementedException();
+        }
+
+        public Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default) {
+            throw new NotImplementedException();
+        }
+
+        public Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default) {
+            throw new NotImplementedException();
+        }
+    }
+
     [Fact]
     public async Task ListAsync_Admin_ReturnsMappedCertificates() {
         var token = new { access_token = "tok" };
@@ -127,4 +156,48 @@ public sealed class CertificateServiceTests {
         Assert.Equal(RevocationReason.Superseded, revocation.ReasonCode);
     }
 
+    [Fact]
+    public async Task ListAsync_Legacy_UsesCertificatesClient() {
+        var certificates = new[] {
+            new Certificate { Id = 1, CommonName = "legacy.example.com" }
+        };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create<IReadOnlyList<Certificate>>(certificates)
+        };
+
+        var stub = new LegacyStubClient(response);
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+
+        using var service = new CertificateService(config, stub);
+        var result = await service.ListAsync(10, 0);
+
+        Assert.NotNull(stub.LastRequest);
+        Assert.Equal("v1/certificate?size=10&position=0", stub.LastRequest!.RequestUri!.ToString());
+        Assert.Single(result);
+        Assert.Equal(1, result[0].Id);
+        Assert.Equal("legacy.example.com", result[0].CommonName);
+    }
+
+    [Fact]
+    public async Task GetAsync_Legacy_UsesCertificatesClient() {
+        var certificate = new Certificate {
+            Id = 2,
+            CommonName = "legacy.example.org"
+        };
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(certificate)
+        };
+
+        var stub = new LegacyStubClient(response);
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+
+        using var service = new CertificateService(config, stub);
+        var result = await service.GetAsync(2);
+
+        Assert.NotNull(stub.LastRequest);
+        Assert.Equal("v1/certificate/2", stub.LastRequest!.RequestUri!.ToString());
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Id);
+        Assert.Equal("legacy.example.org", result.CommonName);
+    }
 }

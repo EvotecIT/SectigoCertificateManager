@@ -27,7 +27,9 @@ HTML copies of the official API reference are included in the repository:
 
 - [certmgr-api-doc-25.4.html](Documentation/certmgr-api-doc-25.4.html)
 - [certmgr-api-doc-25.5.html](Documentation/certmgr-api-doc-25.5.html)
-- [Admin API OpenAPI spec](Documentation/api.json)
+- [Admin API OpenAPI spec](Documentation/api.json) – this file is a snapshot of the Admin Operations
+  API OpenAPI document downloaded from the Sectigo portal. To refresh it, download the latest JSON
+  from the Admin API docs URL and replace this file.
 
 ## Fluent API (legacy SCM)
 

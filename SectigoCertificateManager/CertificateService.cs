@@ -18,7 +18,7 @@ public sealed class CertificateService : IDisposable {
     private readonly CertificatesClient? _legacyClient;
     private readonly AdminSslClient? _adminClient;
     private readonly ISectigoClient? _ownedLegacyClient;
-    private readonly HttpClient? _ownedAdminHttpClient;
+    private readonly AdminSslClient? _ownedAdminClient;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CertificateService"/> class using legacy API configuration.
@@ -55,9 +55,12 @@ public sealed class CertificateService : IDisposable {
     /// <param name="httpClient">Optional HTTP client.</param>
     public CertificateService(AdminApiConfig config, HttpClient? httpClient) {
         Guard.AgainstNull(config, nameof(config));
-        _ownedAdminHttpClient = httpClient is null ? new HttpClient() : null;
-        var effective = httpClient ?? _ownedAdminHttpClient!;
-        _adminClient = new AdminSslClient(config, effective);
+        if (httpClient is null) {
+            _ownedAdminClient = new AdminSslClient(config);
+            _adminClient = _ownedAdminClient;
+        } else {
+            _adminClient = new AdminSslClient(config, httpClient);
+        }
     }
 
     /// <summary>
@@ -327,7 +330,7 @@ public sealed class CertificateService : IDisposable {
     /// <inheritdoc />
     public void Dispose() {
         (_ownedLegacyClient as IDisposable)?.Dispose();
-        _ownedAdminHttpClient?.Dispose();
+        _ownedAdminClient?.Dispose();
     }
 
     /// <summary>
