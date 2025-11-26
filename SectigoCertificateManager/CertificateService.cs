@@ -146,9 +146,8 @@ public sealed class CertificateService : IDisposable {
             SuspendNotifications = details.SuspendNotifications
         };
 
-        var statusText = details.Status;
-        if (!string.IsNullOrWhiteSpace(statusText)) {
-            var normalized = statusText!.Replace(" ", string.Empty);
+        if (details.Status is string statusText && !string.IsNullOrWhiteSpace(statusText)) {
+            var normalized = statusText.Replace(" ", string.Empty);
             if (Enum.TryParse<CertificateStatus>(normalized, ignoreCase: true, out var status)) {
                 certificate.Status = status;
             }
@@ -264,7 +263,7 @@ public sealed class CertificateService : IDisposable {
             return RevocationReason.Unspecified;
         }
 
-        var value = code!.Trim();
+        var value = code?.Trim() ?? string.Empty;
         return value switch {
             "0" => RevocationReason.Unspecified,
             "1" => RevocationReason.KeyCompromise,

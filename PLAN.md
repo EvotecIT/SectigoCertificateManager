@@ -12,7 +12,9 @@
   - [-] Additional SSL operations (renew, revoke, collect, etc.) mapped to `api.json`:
     - [x] Collect endpoint (`/collect/{sslId}`) for download.
     - [x] Renew by id endpoint (`/renewById/{sslId}`).
-    - [ ] Revoke endpoints (`/revoke/{id}`, `/revoke/serial/{serialNumber}`, `/revoke/manual`)
+    - [-] Revoke endpoints:
+      - [x] By id (`/revoke/{id}`) via `RevokeByIdAsync`.
+      - [ ] By serial/manual (`/revoke/serial/{serialNumber}`, `/revoke/manual`).
     - [ ] Keystore / download (`/keystore/{sslId}/{formatType}`, `/collect/{sslId}`)
     - [ ] Enroll / import (`/enroll`, `/enroll-keygen`, `/import`)
 
@@ -26,7 +28,11 @@
   - [x] `Task<Certificate?> GetAsync(int id, ...)`:
     - [x] Legacy → `CertificatesClient.GetAsync`.
     - [x] Admin → `AdminSslClient.GetAsync` + projection to `Certificate`.
-  - [ ] Later: `RevokeAsync`, `RenewAsync`, `DownloadAsync`, etc., routed similarly.
+  - [x] Additional operations routed through the service:
+    - [x] Status and revocation (`GetStatusAsync`, `GetRevocationAsync`).
+    - [x] Download (`DownloadCertificateAsync` → Admin collect / legacy download).
+    - [x] Renewal (`RenewByIdAsync` → Admin renewById / legacy renew).
+    - [x] Remove (`RemoveAsync` → Admin revokeById / legacy delete).
 - [-] Add targeted unit tests for `CertificateService`:
   - [ ] Legacy path: uses a fake `ISectigoClient` or WireMock endpoints.
   - [x] Admin path: uses a fake `HttpMessageHandler` or WireMock endpoints for `/api/ssl/v2`.
@@ -58,14 +64,14 @@
       - [x] `List` set: `-Size`, `-Position`, optional filters.
     - [x] Impl: use `CertificateService` to route Admin vs legacy.
 - [-] Remove auth parameters from all cmdlets and rely solely on connection state:
-  - [x] Certificates (list + single) – partially done, still needs consolidation.
-  - [x] Inventory (`Get-SectigoInventory`) – now uses legacy config only, rejects Admin for now.
-  - [x] Certificate detail (`Get-SectigoCertificate`) – uses legacy config only, rejects Admin for now.
+  - [x] Certificates (list + single) – auth removed; use `CertificateService` and connection state.
+  - [x] Inventory (`Get-SectigoInventory`) – legacy config only, rejects Admin for now.
+  - [x] Certificate detail (`Get-SectigoCertificate`) – uses `CertificateService` for both Admin and legacy.
   - [x] Certificate status/revocation:
-    - [x] `Get-SectigoCertificateStatus` – legacy only, rejects Admin.
-    - [x] `Get-SectigoCertificateRevocation` – legacy only, rejects Admin.
+    - [x] `Get-SectigoCertificateStatus` – uses `CertificateService` for Admin and legacy.
+    - [x] `Get-SectigoCertificateRevocation` – uses `CertificateService` for Admin and legacy.
   - [x] Export:
-    - [x] `Export-SectigoCertificate` – legacy only, rejects Admin.
+    - [x] `Export-SectigoCertificate` – uses `CertificateService` for Admin and legacy.
   - [x] Orders:
     - [x] `New-SectigoOrder`, `Renew-SectigoCertificate`, `Update-SectigoCertificate` – legacy only, reject Admin.
     - [x] `Get-SectigoOrders`, `Get-SectigoOrdersPage` – legacy only, reject Admin.
@@ -91,16 +97,18 @@ For each area below, the plan is:
 
 ### 5.2 Certificate status, revocation, export
 
-- [ ] Map Admin equivalents in `AdminSslClient` / related clients:
-  - [ ] Status endpoint (if available in Admin API).
-  - [ ] Revocation endpoints (`/revoke`, `/revoke/serial`, `/revoke/manual`).
+- [-] Map Admin equivalents in `AdminSslClient` / related clients:
+  - [x] Status retrieval via `AdminSslClient.GetAsync` + mapping in `CertificateService`.
+  - [x] Revocation by id endpoint (`/revoke/{id}`) via `RevokeByIdAsync`.
+  - [ ] Additional revocation endpoints (`/revoke/serial`, `/revoke/manual`).
   - [x] Download/collect endpoint for export.
-- [ ] Update cmdlets:
-  - [ ] `Get-SectigoCertificateStatus`
-  - [ ] `Get-SectigoCertificateRevocation`
-  - [x] `Export-SectigoCertificate`
-  - All to use services that route Admin vs legacy instead of rejecting Admin.
-- [ ] Tests for both modes (C# + Pester).
+- [x] Update cmdlets:
+  - [x] `Get-SectigoCertificateStatus` → uses `CertificateService` (Admin + legacy).
+  - [x] `Get-SectigoCertificateRevocation` → uses `CertificateService` (Admin + legacy).
+  - [x] `Export-SectigoCertificate` → uses `CertificateService.DownloadCertificateAsync` (Admin + legacy).
+- [-] Tests for both modes:
+  - [x] C#: `CertificateServiceTests` cover Admin status, revocation, download.
+  - [ ] Pester: cmdlets in Admin vs legacy mode (no network) still to be expanded.
 
 ### 5.3 Inventory / search helpers
 

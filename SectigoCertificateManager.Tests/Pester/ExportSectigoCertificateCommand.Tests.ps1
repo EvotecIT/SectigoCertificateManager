@@ -11,11 +11,10 @@ Describe "Export-SectigoCertificate" {
     }
 
     It "throws when CertificateId is less than or equal to zero" {
-        { Export-SectigoCertificate -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -CertificateId 0 -Path 'cert.pem' } | Should -Throw -ErrorId 'InvalidCertificateId,SectigoCertificateManager.PowerShell.ExportSectigoCertificateCommand'
+        { Export-SectigoCertificate -CertificateId 0 -Path 'cert.pem' } | Should -Throw -ErrorId 'InvalidCertificateId,SectigoCertificateManager.PowerShell.ExportSectigoCertificateCommand'
     }
 
     It "throws when Path is null or empty" {
-        { Export-SectigoCertificate -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -CertificateId 1 -Path '' } | Should -Throw -ErrorId 'InvalidPath,SectigoCertificateManager.PowerShell.ExportSectigoCertificateCommand'
+        { Export-SectigoCertificate -CertificateId 1 -Path '' } | Should -Throw -ErrorId 'InvalidPath,SectigoCertificateManager.PowerShell.ExportSectigoCertificateCommand'
     }
 }
-
