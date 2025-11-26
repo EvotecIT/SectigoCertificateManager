@@ -7,7 +7,6 @@ using System.Net.Http;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Globalization;
 using Xunit;
 
 namespace SectigoCertificateManager.Tests;

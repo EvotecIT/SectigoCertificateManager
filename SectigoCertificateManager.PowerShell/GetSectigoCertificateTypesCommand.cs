@@ -2,11 +2,12 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves available certificate types.</summary>
-/// <para>Creates an API client and lists certificate types for the account.</para>
+/// <para>Lists certificate types for the account using the active Sectigo connection.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -16,13 +17,13 @@ namespace SectigoCertificateManager.PowerShell;
 /// <example>
 ///   <summary>List certificate types</summary>
 ///   <prefix>PS&gt; </prefix>
-///   <code>Get-SectigoCertificateTypes -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example"</code>
-///   <para>Outputs all available certificate types.</para>
+///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "example"; Get-SectigoCertificateTypes</code>
+///   <para>Outputs all available certificate types for the connected account.</para>
 /// </example>
 /// <example>
 ///   <summary>Filter by organization</summary>
 ///   <prefix>PS&gt; </prefix>
-///   <code>Get-SectigoCertificateTypes -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrganizationId 42</code>
+///   <code>Get-SectigoCertificateTypes -OrganizationId 42</code>
 ///   <para>Returns types available for the specified organization.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
@@ -30,24 +31,8 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateTypes")]
 [CmdletBinding()]
 [OutputType(typeof(Models.CertificateType))]
-public sealed class GetSectigoCertificateTypesCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
-    /// <summary>The API version to use.</summary>
+public sealed class GetSectigoCertificateTypesCommand : AsyncPSCmdlet {
+    /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
@@ -60,17 +45,24 @@ public sealed class GetSectigoCertificateTypesCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Executes the cmdlet.</summary>
-    /// <para>Creates an API client and outputs all certificate types.</para>
-    protected override void ProcessRecord() {
+    /// <para>Outputs all certificate types.</para>
+    protected override async Task ProcessRecordAsync() {
+        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
+        if (adminConfigObj is not null) {
+            throw new PSInvalidOperationException("Get-SectigoCertificateTypes is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
+        }
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         ISectigoClient? client = null;
         try {
-            var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+            var config = ConnectionHelper.GetLegacyConfig(SessionState);
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var types = new CertificateTypesClient(client);
-            var list = types.ListTypesAsync(OrganizationId, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var list = await types.ListTypesAsync(OrganizationId, effectiveToken)
+                .ConfigureAwait(false);
             foreach (var type in list) {
                 WriteObject(type);
             }

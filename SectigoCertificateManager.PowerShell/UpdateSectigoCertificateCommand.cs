@@ -1,53 +1,25 @@
 using SectigoCertificateManager;
-using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Requests;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Renews an existing certificate.</summary>
-/// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/> to the renew endpoint.</para>
+/// <para>Uses the active Sectigo connection and submits a <see cref="RenewCertificateRequest"/> to the appropriate renew endpoint.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
 ///     <description>Contacts the Sectigo API and replaces the specified certificate.</description>
 ///   </item>
 /// </list>
-/// <example>
-///   <summary>Renew a certificate</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Update-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -Csr "CSR" -DcvMode "Email"</code>
-///   <para>Renews certificate 10 using the provided signing request.</para>
-/// </example>
-/// <example>
-///   <summary>Specify a DCV email</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Update-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -Csr "CSR" -DcvMode "Email" -DcvEmail "admin@example.com"</code>
-///   <para>Sends the domain control validation to a specific address.</para>
-/// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsData.Update, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
 [CmdletBinding()]
 [OutputType(typeof(int))]
-public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
+public sealed class UpdateSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -73,31 +45,36 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Renews a certificate using provided parameters.</summary>
-    /// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/>.</para>
-    protected override void ProcessRecord() {
+    /// <para>Submits a <see cref="RenewCertificateRequest"/> using the active connection.</para>
+    protected override async Task ProcessRecordAsync() {
         if (!ShouldProcess($"Certificate {CertificateId}", "Update")) {
             return;
         }
 
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        ISectigoClient? client = null;
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
+        CertificateService? service = null;
         try {
-            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
-            TestHooks.CreatedClient = client;
-            var certificates = new CertificatesClient(client);
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
+                service = new CertificateService(adminConfig);
+            } else {
+                var config = ConnectionHelper.GetLegacyConfig(SessionState);
+                service = new CertificateService(config);
+            }
+
             var request = new RenewCertificateRequest {
                 Csr = Csr,
                 DcvMode = DcvMode,
                 DcvEmail = DcvEmail
             };
-            var newId = certificates.RenewAsync(CertificateId, request, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+
+            var newId = await service
+                .RenewByIdAsync(CertificateId, request, effectiveToken)
+                .ConfigureAwait(false);
             WriteObject(newId);
         } finally {
-            if (client is IDisposable disposable) {
-                disposable.Dispose();
-            }
+            service?.Dispose();
         }
     }
 }
