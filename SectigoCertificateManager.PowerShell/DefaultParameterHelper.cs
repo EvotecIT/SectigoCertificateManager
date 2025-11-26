@@ -10,7 +10,7 @@ internal static class DefaultParameterHelper {
         "Get-SectigoCertificateStatus", "Get-SectigoCertificateTypes", "Get-SectigoOrderHistory",
         "Get-SectigoCertificates", "Get-SectigoInventory", "Get-SectigoEnrollCertificates", "Get-SectigoOrders", "Get-SectigoOrdersPage", "Get-SectigoOrganizations",
         "Get-SectigoProfile", "Get-SectigoProfiles", "New-SectigoOrder",
-        "New-SectigoOrganization", "Remove-SectigoCertificate", "Renew-SectigoCertificate",
+        "New-SectigoOrganization", "Remove-SectigoCertificate", "Invoke-SectigoCertificateRenewal",
         "Stop-SectigoOrder", "Update-SectigoCertificate", "Wait-SectigoOrder"
     };
 

@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
-/// <summary>Renews a certificate using an order number.</summary>
+/// <summary>Invokes renewal of a certificate using an order number.</summary>
 /// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/> identified by order number.</para>
 /// <list type="alertSet">
 ///   <item>
@@ -17,7 +17,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// </list>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
-[Cmdlet("Renew", "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
+[Cmdlet(VerbsLifecycle.Invoke, "SectigoCertificateRenewal", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
 [CmdletBinding()]
 [OutputType(typeof(int))]
 public sealed class RenewSectigoCertificateCommand : PSCmdlet {
