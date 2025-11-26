@@ -18,19 +18,27 @@ public sealed class AdminSslClientTests {
         private readonly HttpResponseMessage _apiResponse;
 
         public HttpRequestMessage? LastRequest { get; private set; }
+        public string? LastRequestBody { get; private set; }
 
         public TestHandler(HttpResponseMessage tokenResponse, HttpResponseMessage apiResponse) {
             _tokenResponse = tokenResponse;
             _apiResponse = apiResponse;
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             LastRequest = request;
-            if (request.RequestUri!.AbsoluteUri.Contains("protocol/openid-connect/token")) {
-                return Task.FromResult(_tokenResponse);
+
+            if (request.Content is not null) {
+                LastRequestBody = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+            } else {
+                LastRequestBody = null;
             }
 
-            return Task.FromResult(_apiResponse);
+            if (request.RequestUri!.AbsoluteUri.Contains("protocol/openid-connect/token")) {
+                return _tokenResponse;
+            }
+
+            return _apiResponse;
         }
     }
 
@@ -123,7 +131,9 @@ public sealed class AdminSslClientTests {
 
         Assert.NotNull(handler.LastRequest);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/revoke/42", handler.LastRequest!.RequestUri!.ToString());
-        var body = await handler.LastRequest!.Content!.ReadFromJsonAsync<JsonElement>();
+        Assert.False(string.IsNullOrWhiteSpace(handler.LastRequestBody));
+        using var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        var body = doc.RootElement;
         Assert.Equal("1", body.GetProperty("reasonCode").GetString());
         Assert.Equal("compromised", body.GetProperty("reason").GetString());
     }
@@ -150,7 +160,9 @@ public sealed class AdminSslClientTests {
 
         Assert.NotNull(handler.LastRequest);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/revoke/serial/ABC", handler.LastRequest!.RequestUri!.ToString());
-        var body = await handler.LastRequest!.Content!.ReadFromJsonAsync<JsonElement>();
+        Assert.False(string.IsNullOrWhiteSpace(handler.LastRequestBody));
+        using var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        var body = doc.RootElement;
         Assert.Equal("3", body.GetProperty("reasonCode").GetString());
         Assert.Equal("reason-text", body.GetProperty("reason").GetString());
     }
@@ -178,7 +190,9 @@ public sealed class AdminSslClientTests {
 
         Assert.NotNull(handler.LastRequest);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/revoke/manual", handler.LastRequest!.RequestUri!.ToString());
-        var body = await handler.LastRequest!.Content!.ReadFromJsonAsync<JsonElement>();
+        Assert.False(string.IsNullOrWhiteSpace(handler.LastRequestBody));
+        using var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        var body = doc.RootElement;
         Assert.Equal(10, body.GetProperty("certId").GetInt32());
         Assert.Equal("ABC", body.GetProperty("serialNumber").GetString());
         Assert.Equal("CN=Issuer", body.GetProperty("issuer").GetString());
