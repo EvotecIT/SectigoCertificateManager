@@ -26,9 +26,13 @@ public sealed class AdminSslClientTests {
 
         public TestHandler(HttpResponseMessage tokenResponse, HttpResponseMessage apiResponse) {
             _tokenStatus = tokenResponse.StatusCode;
-            _tokenJson = tokenResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            _tokenJson = tokenResponse.Content is null
+                ? string.Empty
+                : tokenResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             _apiStatus = apiResponse.StatusCode;
-            _apiJson = apiResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            _apiJson = apiResponse.Content is null
+                ? string.Empty
+                : apiResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
@@ -427,9 +431,9 @@ public sealed class AdminSslClientTests {
             "secret");
         var client = new AdminSslClient(config, http);
 
-        // Two operations should share the same cached token.
+        // Two separate API calls should share the same cached token.
         _ = await client.ListAsync(5, 0);
-        _ = await client.GetAsync(1);
+        _ = await client.ListAsync(10, 5);
 
         Assert.Equal(1, handler.TokenRequestCount);
     }
