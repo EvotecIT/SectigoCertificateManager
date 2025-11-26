@@ -414,3 +414,4 @@ FodyWeavers.xsd
 # Local build and packaging artifacts
 dotnet-install.sh
 packages-microsoft-prod.deb
+Ignore/*

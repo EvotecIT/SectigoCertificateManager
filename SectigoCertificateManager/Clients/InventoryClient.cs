@@ -5,7 +5,6 @@ using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Utilities;
 using System.Globalization;
 using System.Text;
-using System.Globalization;
 
 /// <summary>
 /// Provides access to inventory related endpoints.

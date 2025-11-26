@@ -1,4 +1,5 @@
 using SectigoCertificateManager.Utilities;
+using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -285,16 +286,32 @@ public sealed class CertificateExportTests {
     [Fact]
     public void CreatePfx_ReturnsValidBytes() {
         using var original = CreateCertificate();
-        var certificate = new X509Certificate2(original.Export(X509ContentType.Cert));
+        var certificate = LoadCertificate(original.Export(X509ContentType.Cert));
         using var key = RSA.Create();
         var pkcs8 = original.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         key.ImportPkcs8PrivateKey(pkcs8, out _);
         Array.Clear(pkcs8, 0, pkcs8.Length);
 
         var bytes = CertificateExport.CreatePfx(certificate, key, "pwd");
-        using var loaded = new X509Certificate2(bytes, "pwd");
+        using var loaded = LoadPkcs12(bytes, "pwd");
 
         Assert.Equal(certificate.Thumbprint, loaded.Thumbprint);
         Assert.True(loaded.HasPrivateKey);
+    }
+
+    private static X509Certificate2 LoadCertificate(byte[] data) {
+#if NET9_0_OR_GREATER
+        return X509CertificateLoader.LoadCertificate(data);
+#else
+        return new X509Certificate2(data);
+#endif
+    }
+
+    private static X509Certificate2 LoadPkcs12(byte[] data, string password) {
+#if NET9_0_OR_GREATER
+        return X509CertificateLoader.LoadPkcs12(data, password);
+#else
+        return new X509Certificate2(data, password);
+#endif
     }
 }
