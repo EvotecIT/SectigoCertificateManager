@@ -8,7 +8,7 @@ using System.Threading;
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Creates a new organization.</summary>
-/// <para>Builds an API client and submits a <see cref="CreateOrganizationRequest"/>.</para>
+/// <para>Submits a <see cref="CreateOrganizationRequest"/> using the active Sectigo connection.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Charges</term>
@@ -18,14 +18,8 @@ namespace SectigoCertificateManager.PowerShell;
 /// <example>
 ///   <summary>Create an organization</summary>
 ///   <prefix>PS&gt; </prefix>
-///   <code>New-SectigoOrganization -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -Name "Example Org"</code>
-///   <para>Creates a new organization with the given name.</para>
-/// </example>
-/// <example>
-///   <summary>Specify state or province</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>New-SectigoOrganization -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -Name "Example Org" -StateOrProvince "NY"</code>
-///   <para>Includes location information when creating the organization.</para>
+///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "example"; New-SectigoOrganization -Name "Example Org"</code>
+///   <para>Creates a new organization with the given name for the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
@@ -33,23 +27,7 @@ namespace SectigoCertificateManager.PowerShell;
 [CmdletBinding()]
 [OutputType(typeof(int))]
 public sealed class NewSectigoOrganizationCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
-    /// <summary>The API version to use.</summary>
+    /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
@@ -74,7 +52,12 @@ public sealed class NewSectigoOrganizationCommand : PSCmdlet {
             ThrowTerminatingError(record);
         }
 
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
+        if (adminConfigObj is not null) {
+            throw new PSInvalidOperationException("New-SectigoOrganization is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
+        }
+
+        var config = ConnectionHelper.GetLegacyConfig(SessionState);
         ISectigoClient? client = null;
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);

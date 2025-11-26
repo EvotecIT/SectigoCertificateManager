@@ -1,5 +1,4 @@
 using SectigoCertificateManager;
-using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Requests;
 using System.Management.Automation;
 using System.Threading;
@@ -7,7 +6,7 @@ using System.Threading;
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Renews an existing certificate.</summary>
-/// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/> to the renew endpoint.</para>
+/// <para>Uses the active Sectigo connection and submits a <see cref="RenewCertificateRequest"/> to the appropriate renew endpoint.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -45,36 +44,34 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Renews a certificate using provided parameters.</summary>
-    /// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/>.</para>
+    /// <para>Submits a <see cref="RenewCertificateRequest"/> using the active connection.</para>
     protected override void ProcessRecord() {
         if (!ShouldProcess($"Certificate {CertificateId}", "Update")) {
             return;
         }
 
-        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
-        if (adminConfigObj is not null) {
-            throw new PSInvalidOperationException("Update-SectigoCertificate is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
-        }
-
-        var config = ConnectionHelper.GetLegacyConfig(SessionState);
-        ISectigoClient? client = null;
+        CertificateService? service = null;
         try {
-            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
-            TestHooks.CreatedClient = client;
-            var certificates = new CertificatesClient(client);
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig)) {
+                service = new CertificateService(adminConfig!);
+            } else {
+                var config = ConnectionHelper.GetLegacyConfig(SessionState);
+                service = new CertificateService(config);
+            }
+
             var request = new RenewCertificateRequest {
                 Csr = Csr,
                 DcvMode = DcvMode,
                 DcvEmail = DcvEmail
             };
-            var newId = certificates.RenewAsync(CertificateId, request, CancellationToken)
+
+            var newId = service
+                .RenewByIdAsync(CertificateId, request, CancellationToken)
                 .GetAwaiter()
                 .GetResult();
             WriteObject(newId);
         } finally {
-            if (client is IDisposable disposable) {
-                disposable.Dispose();
-            }
+            service?.Dispose();
         }
     }
 }

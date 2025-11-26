@@ -1,5 +1,4 @@
 using SectigoCertificateManager;
-using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Utilities;
 using System.Management.Automation;
 using System.Threading;
@@ -7,7 +6,7 @@ using System.Threading;
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Downloads and exports a certificate.</summary>
-/// <para>Creates an API client, downloads the certificate, and saves it to disk.</para>
+/// <para>Uses the active Sectigo connection, downloads the certificate, and saves it to disk.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -19,7 +18,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsData.Export, "SectigoCertificate")]
 [CmdletBinding()]
 public sealed class ExportSectigoCertificateCommand : PSCmdlet {
-    /// <summary>The API version to use.</summary>
+    /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
@@ -45,52 +44,47 @@ public sealed class ExportSectigoCertificateCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Downloads and exports a certificate.</summary>
-    /// <para>Builds an API client, downloads the certificate, and saves it to disk.</para>
+    /// <para>Resolves the active connection, downloads the certificate, and saves it to disk.</para>
     protected override void ProcessRecord() {
         if (CertificateId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(CertificateId));
             var record = new ErrorRecord(ex, "InvalidCertificateId", ErrorCategory.InvalidArgument, CertificateId);
             ThrowTerminatingError(record);
         }
+
         if (string.IsNullOrEmpty(Path)) {
             var ex = new ArgumentException("Path cannot be null or empty.", nameof(Path));
             var record = new ErrorRecord(ex, "InvalidPath", ErrorCategory.InvalidArgument, Path);
             ThrowTerminatingError(record);
         }
 
-        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
-        if (adminConfigObj is not null) {
-            throw new PSInvalidOperationException("Export-SectigoCertificate is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
-        }
-
-        var config = ConnectionHelper.GetLegacyConfig(SessionState);
-        ISectigoClient? client = null;
+        CertificateService? service = null;
         try {
-            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
-            TestHooks.CreatedClient = client;
-            var certificates = new CertificatesClient(client);
-            var certificate = certificates.DownloadAsync(CertificateId, CancellationToken)
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig)) {
+                service = new CertificateService(adminConfig!);
+            } else {
+                var config = ConnectionHelper.GetLegacyConfig(SessionState);
+                service = new CertificateService(config);
+            }
+
+            using var certificate = service
+                .DownloadCertificateAsync(CertificateId, format: null, cancellationToken: CancellationToken)
                 .GetAwaiter()
                 .GetResult();
-            try {
-                switch (Format) {
-                    case CertificateFileFormat.Pem:
-                        CertificateExport.SavePem(certificate, Path);
-                        break;
-                    case CertificateFileFormat.Der:
-                        CertificateExport.SaveDer(certificate, Path);
-                        break;
-                    case CertificateFileFormat.Pfx:
-                        CertificateExport.SavePfx(certificate, Path, PfxPassword);
-                        break;
-                }
-            } finally {
-                certificate.Dispose();
+
+            switch (Format) {
+                case CertificateFileFormat.Pem:
+                    CertificateExport.SavePem(certificate, Path);
+                    break;
+                case CertificateFileFormat.Der:
+                    CertificateExport.SaveDer(certificate, Path);
+                    break;
+                case CertificateFileFormat.Pfx:
+                    CertificateExport.SavePfx(certificate, Path, PfxPassword);
+                    break;
             }
         } finally {
-            if (client is IDisposable disposable) {
-                disposable.Dispose();
-            }
+            service?.Dispose();
         }
     }
 }

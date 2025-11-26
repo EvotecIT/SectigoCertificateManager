@@ -25,7 +25,7 @@ public sealed class AdminSslClientTests {
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             LastRequest = request;
-            if (request.RequestUri!.AbsoluteUri.Contains("auth/realms/apiclients")) {
+            if (request.RequestUri!.AbsoluteUri.Contains("protocol/openid-connect/token")) {
                 return Task.FromResult(_tokenResponse);
             }
 
@@ -100,4 +100,3 @@ public sealed class AdminSslClientTests {
         Assert.Equal("ABC", result.SerialNumber);
     }
 }
-

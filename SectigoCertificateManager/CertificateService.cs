@@ -5,7 +5,9 @@ using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Utilities;
+using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -209,6 +211,39 @@ public sealed class CertificateService : IDisposable {
         throw new InvalidOperationException("No underlying client is configured for CertificateService.");
     }
 
+    /// <summary>
+    /// Downloads an issued certificate and returns an <see cref="System.Security.Cryptography.X509Certificates.X509Certificate2"/> instance.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate.</param>
+    /// <param name="format">
+    /// Optional format parameter for Admin API downloads. When <c>null</c>, the API default (<c>base64</c>) is used.
+    /// Ignored for legacy API calls, which always request base64.
+    /// </param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<System.Security.Cryptography.X509Certificates.X509Certificate2> DownloadCertificateAsync(
+        int certificateId,
+        string? format = null,
+        CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        if (_adminClient is not null) {
+            using var stream = await _adminClient
+                .CollectAsync(certificateId, format, cancellationToken)
+                .ConfigureAwait(false);
+            return Models.Certificate.FromBase64(stream);
+        }
+
+        if (_legacyClient is not null) {
+            return await _legacyClient
+                .DownloadAsync(certificateId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        throw new InvalidOperationException("No underlying client is configured for CertificateService.");
+    }
+
     private static DateTimeOffset? ParseDate(string? value) {
         if (string.IsNullOrWhiteSpace(value)) {
             return null;
@@ -236,9 +271,82 @@ public sealed class CertificateService : IDisposable {
         };
     }
 
+    private static string MapRevocationReasonToAdminCode(RevocationReason reason) {
+        return reason switch {
+            RevocationReason.KeyCompromise => "1",
+            RevocationReason.AffiliationChanged => "3",
+            RevocationReason.Superseded => "4",
+            RevocationReason.CessationOfOperation => "5",
+            _ => "0"
+        };
+    }
+
     /// <inheritdoc />
     public void Dispose() {
         (_ownedLegacyClient as IDisposable)?.Dispose();
         _ownedAdminHttpClient?.Dispose();
+    }
+
+    /// <summary>
+    /// Removes a certificate by identifier using the active API configuration.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to remove.</param>
+    /// <param name="reasonCode">Optional revocation reason used when calling the Admin API.</param>
+    /// <param name="reason">Optional revocation reason text used when calling the Admin API.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task RemoveAsync(
+        int certificateId,
+        RevocationReason reasonCode = RevocationReason.Unspecified,
+        string? reason = null,
+        CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        if (_adminClient is not null) {
+            var code = MapRevocationReasonToAdminCode(reasonCode);
+            await _adminClient.RevokeByIdAsync(certificateId, code, reason, cancellationToken)
+                .ConfigureAwait(false);
+            return;
+        }
+
+        if (_legacyClient is not null) {
+            await _legacyClient.DeleteAsync(certificateId, cancellationToken)
+                .ConfigureAwait(false);
+            return;
+        }
+
+        throw new InvalidOperationException("No underlying client is configured for CertificateService.");
+    }
+
+    /// <summary>
+    /// Renews a certificate by identifier and returns the new certificate identifier.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate to renew.</param>
+    /// <param name="request">Renewal request payload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<int> RenewByIdAsync(
+        int certificateId,
+        RenewCertificateRequest request,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNull(request, nameof(request));
+
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        if (_adminClient is not null) {
+            return await _adminClient
+                .RenewByIdAsync(certificateId, request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (_legacyClient is not null) {
+            return await _legacyClient
+                .RenewAsync(certificateId, request, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        throw new InvalidOperationException("No underlying client is configured for CertificateService.");
     }
 }
