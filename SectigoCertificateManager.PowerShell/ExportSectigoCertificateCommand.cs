@@ -1,53 +1,25 @@
 using SectigoCertificateManager;
-using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Utilities;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Downloads and exports a certificate.</summary>
-/// <para>Creates an API client, downloads the certificate, and saves it to disk.</para>
+/// <para>Uses the active Sectigo connection, downloads the certificate, and saves it to disk.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
 ///     <description>Requires connectivity to the Sectigo API.</description>
 ///   </item>
 /// </list>
-/// <example>
-///   <summary>Export a certificate as PEM</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Export-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -Path "cert.pem" -Format Pem</code>
-///   <para>Downloads certificate 10 and saves it in PEM format.</para>
-/// </example>
-/// <example>
-///   <summary>Export as PFX with password</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Export-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -Path "cert.pfx" -Format Pfx -PfxPassword "pwd"</code>
-///   <para>Downloads certificate 10 and saves it as a password protected PFX.</para>
-/// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsData.Export, "SectigoCertificate")]
 [CmdletBinding()]
-public sealed class ExportSectigoCertificateCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
-    /// <summary>The API version to use.</summary>
+public sealed class ExportSectigoCertificateCommand : AsyncPSCmdlet {
+    /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
@@ -73,47 +45,49 @@ public sealed class ExportSectigoCertificateCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Downloads and exports a certificate.</summary>
-    /// <para>Builds an API client, downloads the certificate, and saves it to disk.</para>
-    protected override void ProcessRecord() {
+    /// <para>Resolves the active connection, downloads the certificate, and saves it to disk.</para>
+    protected override async Task ProcessRecordAsync() {
         if (CertificateId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(CertificateId));
             var record = new ErrorRecord(ex, "InvalidCertificateId", ErrorCategory.InvalidArgument, CertificateId);
             ThrowTerminatingError(record);
         }
+
         if (string.IsNullOrEmpty(Path)) {
             var ex = new ArgumentException("Path cannot be null or empty.", nameof(Path));
             var record = new ErrorRecord(ex, "InvalidPath", ErrorCategory.InvalidArgument, Path);
             ThrowTerminatingError(record);
         }
 
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        ISectigoClient? client = null;
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
+        CertificateService? service = null;
         try {
-            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
-            TestHooks.CreatedClient = client;
-            var certificates = new CertificatesClient(client);
-            var certificate = certificates.DownloadAsync(CertificateId, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
-            try {
-                switch (Format) {
-                    case CertificateFileFormat.Pem:
-                        CertificateExport.SavePem(certificate, Path);
-                        break;
-                    case CertificateFileFormat.Der:
-                        CertificateExport.SaveDer(certificate, Path);
-                        break;
-                    case CertificateFileFormat.Pfx:
-                        CertificateExport.SavePfx(certificate, Path, PfxPassword);
-                        break;
-                }
-            } finally {
-                certificate.Dispose();
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
+                service = new CertificateService(adminConfig);
+            } else {
+                var config = ConnectionHelper.GetLegacyConfig(SessionState);
+                service = new CertificateService(config);
+            }
+
+            using var certificate = await service
+                .DownloadCertificateAsync(CertificateId, format: null, cancellationToken: effectiveToken)
+                .ConfigureAwait(false);
+
+            switch (Format) {
+                case CertificateFileFormat.Pem:
+                    CertificateExport.SavePem(certificate, Path);
+                    break;
+                case CertificateFileFormat.Der:
+                    CertificateExport.SaveDer(certificate, Path);
+                    break;
+                case CertificateFileFormat.Pfx:
+                    CertificateExport.SavePfx(certificate, Path, PfxPassword);
+                    break;
             }
         } finally {
-            if (client is IDisposable disposable) {
-                disposable.Dispose();
-            }
+            service?.Dispose();
         }
     }
 }

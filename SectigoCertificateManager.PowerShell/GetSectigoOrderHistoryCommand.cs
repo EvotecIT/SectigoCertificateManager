@@ -6,7 +6,7 @@ using System.Threading;
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves order history.</summary>
-/// <para>Creates an API client and returns history entries for an order.</para>
+/// <para>Returns history entries for an order using the active Sectigo connection.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -16,14 +16,8 @@ namespace SectigoCertificateManager.PowerShell;
 /// <example>
 ///   <summary>Get history for an order</summary>
 ///   <prefix>PS&gt; </prefix>
-///   <code>Get-SectigoOrderHistory -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrderId 100</code>
-///   <para>Shows all history entries for order 100.</para>
-/// </example>
-/// <example>
-///   <summary>Specify a different API version</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Get-SectigoOrderHistory -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrderId 100 -ApiVersion V25_5</code>
-///   <para>Requests history using API version 25.5.</para>
+///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "example"; Get-SectigoOrderHistory -OrderId 100</code>
+///   <para>Shows all history entries for order 100 on the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
@@ -31,23 +25,7 @@ namespace SectigoCertificateManager.PowerShell;
 [CmdletBinding()]
 [OutputType(typeof(Models.OrderHistoryEntry))]
 public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
-    /// <summary>The API version to use.</summary>
+    /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
@@ -60,7 +38,7 @@ public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Executes the cmdlet.</summary>
-    /// <para>Creates an API client and retrieves the history for the specified order.</para>
+    /// <para>Retrieves the history for the specified order.</para>
     protected override void ProcessRecord() {
         if (OrderId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(OrderId));
@@ -68,7 +46,12 @@ public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
             ThrowTerminatingError(record);
         }
 
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
+        if (adminConfigObj is not null) {
+            throw new PSInvalidOperationException("Get-SectigoOrderHistory is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
+        }
+
+        var config = ConnectionHelper.GetLegacyConfig(SessionState);
         ISectigoClient? client = null;
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);

@@ -3,11 +3,12 @@ using SectigoCertificateManager.Clients;
 using System;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Cancels an order.</summary>
-/// <para>Creates an API client and calls the cancel endpoint.</para>
+/// <para>Calls the cancel endpoint using the active Sectigo connection.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Irreversible</term>
@@ -17,37 +18,15 @@ namespace SectigoCertificateManager.PowerShell;
 /// <example>
 ///   <summary>Cancel an order</summary>
 ///   <prefix>PS&gt; </prefix>
-///   <code>Stop-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrderId 100</code>
-///   <para>Cancels the specified order immediately.</para>
-/// </example>
-/// <example>
-///   <summary>Specify an API version</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Stop-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -OrderId 100 -ApiVersion V25_5</code>
-///   <para>Uses a different API version for the cancellation request.</para>
+///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "example"; Stop-SectigoOrder -OrderId 100</code>
+///   <para>Cancels the specified order immediately for the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/confirmimpact-attribute"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsLifecycle.Stop, "SectigoOrder", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
-public sealed class StopSectigoOrderCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
-    /// <summary>The API version to use.</summary>
+public sealed class StopSectigoOrderCommand : AsyncPSCmdlet {
+    /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
@@ -60,8 +39,8 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Cancels an order.</summary>
-    /// <para>Builds an API client and calls the cancel endpoint.</para>
-    protected override void ProcessRecord() {
+    /// <para>Calls the cancel endpoint for the specified order.</para>
+    protected override async Task ProcessRecordAsync() {
         if (OrderId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(OrderId));
             var record = new ErrorRecord(ex, "InvalidOrderId", ErrorCategory.InvalidArgument, OrderId);
@@ -72,15 +51,23 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
             return;
         }
 
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
+        if (adminConfigObj is not null) {
+            throw new PSInvalidOperationException("Stop-SectigoOrder is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
+        }
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
+        var config = ConnectionHelper.GetLegacyConfig(SessionState);
         ISectigoClient? client = null;
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var orders = new OrdersClient(client);
-            orders.CancelAsync(OrderId, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            await orders
+                .CancelAsync(OrderId, effectiveToken)
+                .ConfigureAwait(false);
         } finally {
             if (client is IDisposable disposable) {
                 disposable.Dispose();

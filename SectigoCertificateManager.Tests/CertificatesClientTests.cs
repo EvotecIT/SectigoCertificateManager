@@ -12,7 +12,6 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
-using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -896,7 +895,7 @@ public sealed class CertificatesClientTests {
 
         Assert.Equal(5, handler.Requests.Count);
         Assert.Equal(3, results.Count);
-        using var cert = new X509Certificate2(results[0]);
+        using var cert = LoadCertificate(results[0]);
         Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", cert.Thumbprint);
     }
 
@@ -926,7 +925,15 @@ public sealed class CertificatesClientTests {
         Assert.Equal(3, results.Count);
         using var ms = new MemoryStream();
         await results[0].CopyToAsync(ms);
-        using var cert = new X509Certificate2(ms.ToArray());
+        using var cert = LoadCertificate(ms.ToArray());
         Assert.Equal("51A908D14C9C984231B7E2F6C37ABB1368A57F1F", cert.Thumbprint);
+    }
+
+    private static X509Certificate2 LoadCertificate(byte[] data) {
+#if NET9_0_OR_GREATER
+        return X509CertificateLoader.LoadCertificate(data);
+#else
+        return new X509Certificate2(data);
+#endif
     }
 }

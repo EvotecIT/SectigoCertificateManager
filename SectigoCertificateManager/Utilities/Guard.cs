@@ -12,7 +12,7 @@ public static class Guard {
             throw new ArgumentNullException(paramName, message);
         }
 
-        return value;
+        return value!;
     }
 
     /// <summary>Throws <see cref="ArgumentException"/> when the string is null or empty.</summary>
@@ -21,7 +21,7 @@ public static class Guard {
             throw new ArgumentException(message ?? "Value cannot be null or empty.", paramName);
         }
 
-        return value;
+        return value!;
     }
 
     /// <summary>Throws <see cref="ArgumentException"/> when the string is null or consists only of whitespace.</summary>
@@ -30,6 +30,6 @@ public static class Guard {
             throw new ArgumentException(message ?? "Value cannot be null or empty.", paramName);
         }
 
-        return value;
+        return value!;
     }
 }
