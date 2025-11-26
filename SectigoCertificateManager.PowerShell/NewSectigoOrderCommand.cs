@@ -14,40 +14,12 @@ namespace SectigoCertificateManager.PowerShell;
 ///     <description>Issuing a certificate may incur costs on your Sectigo account.</description>
 ///   </item>
 /// </list>
-/// <example>
-///   <summary>Issue a certificate</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>New-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CommonName "www.example.com" -ProfileId 1</code>
-///   <para>Creates a one-year certificate for the specified domain.</para>
-/// </example>
-/// <example>
-///   <summary>Include subject alternative names</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>New-SectigoOrder -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CommonName "www.example.com" -ProfileId 1 -SubjectAlternativeNames "api.example.com","mail.example.com"</code>
-///   <para>Issues a certificate that covers multiple host names.</para>
-/// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.New, "SectigoOrder")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Certificate))]
 public sealed class NewSectigoOrderCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
     /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -90,7 +62,12 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
             ThrowTerminatingError(record);
         }
 
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
+        if (adminConfigObj is not null) {
+            throw new PSInvalidOperationException("New-SectigoOrder is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
+        }
+
+        var config = ConnectionHelper.GetLegacyConfig(SessionState);
         ISectigoClient? client = null;
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);

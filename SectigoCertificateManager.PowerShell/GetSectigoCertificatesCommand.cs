@@ -1,10 +1,12 @@
 using SectigoCertificateManager;
-using SectigoCertificateManager.Clients;
-using SectigoCertificateManager.Requests;
-using SectigoCertificateManager.Responses;
 using System.Management.Automation;
 using System.Threading;
 using System.Threading.Tasks;
+using SectigoCertificateManager.Clients;
+using SectigoCertificateManager.Requests;
+using SectigoCertificateManager.Responses;
+using SectigoCertificateManager.Models;
+using SectigoCertificateManager.AdminApi;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -20,22 +22,6 @@ namespace SectigoCertificateManager.PowerShell;
 [CmdletBinding()]
 [OutputType(typeof(CertificateResponse))]
 public sealed class GetSectigoCertificatesCommand : AsyncPSCmdlet {
-    /// <summary>The API base URL (e.g., https://cert-manager.com/api/ssl).</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>User name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>Password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>Customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
     /// <summary>API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_5;
@@ -51,7 +37,26 @@ public sealed class GetSectigoCertificatesCommand : AsyncPSCmdlet {
     /// <summary>Executes the cmdlet and writes certificate search results.</summary>
     /// <para>Builds a client, calls the certificate search endpoint, and writes the response object to the pipeline.</para>
     protected override async Task ProcessRecordAsync() {
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+        if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig)) {
+            var adminClient = new AdminSslClient(adminConfig);
+            var identities = await adminClient.ListAsync(Size, position: 0, cancellationToken: CancellationToken).ConfigureAwait(false);
+            var list = new List<Certificate>();
+            foreach (var identity in identities) {
+                var certificate = new Certificate {
+                    Id = identity.SslId,
+                    CommonName = identity.CommonName,
+                    SerialNumber = identity.SerialNumber,
+                    SubjectAlternativeNames = identity.SubjectAlternativeNames ?? Array.Empty<string>()
+                };
+                list.Add(certificate);
+            }
+            var response = new CertificateResponse { Certificates = list };
+            WriteObject(response, true);
+            return;
+        }
+
+        var config = ConnectionHelper.GetLegacyConfig(SessionState);
+
         ISectigoClient? client = null;
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);

@@ -13,40 +13,12 @@ namespace SectigoCertificateManager.PowerShell;
 ///     <description>Queries the Sectigo API to fetch certificate data.</description>
 ///   </item>
 /// </list>
-/// <example>
-///   <summary>Get a certificate</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Get-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10</code>
-///   <para>Retrieves details for certificate identifier 10.</para>
-/// </example>
-/// <example>
-///   <summary>Retrieve using a different API version</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Get-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -ApiVersion V25_5</code>
-///   <para>Uses API version 25.5 to obtain the certificate.</para>
-/// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificate")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Certificate))]
 public sealed class GetSectigoCertificateCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
     /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -62,9 +34,14 @@ public sealed class GetSectigoCertificateCommand : PSCmdlet {
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and retrieves the certificate.</para>
     protected override void ProcessRecord() {
+        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
+        if (adminConfigObj is not null) {
+            throw new PSInvalidOperationException("Get-SectigoCertificate is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
+        }
+
         ISectigoClient? client = null;
         try {
-            var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+            var config = ConnectionHelper.GetLegacyConfig(SessionState);
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var certificates = new CertificatesClient(client);
