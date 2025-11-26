@@ -1,7 +1,7 @@
 ﻿@{
     AliasesToExport      = @()
     Author               = 'Przemyslaw Klys'
-    CmdletsToExport      = @('Get-SectigoCertificate', 'Get-SectigoOrders', 'Get-SectigoOrdersPage', 'Get-SectigoOrganizations', 'Get-SectigoProfile', 'Get-SectigoProfiles', 'New-SectigoOrder', 'Stop-SectigoOrder', 'Update-SectigoCertificate', 'Renew-SectigoCertificate', 'Remove-SectigoCertificate', 'Wait-SectigoOrder')
+    CmdletsToExport      = @('Export-SectigoCertificate', 'Get-SectigoCertificate', 'Get-SectigoCertificateRevocation', 'Get-SectigoCertificateStatus', 'Get-SectigoCertificateTypes', 'Get-SectigoOrderHistory', 'Get-SectigoOrders', 'Get-SectigoOrdersPage', 'Get-SectigoOrganizations', 'Get-SectigoProfile', 'Get-SectigoProfiles', 'New-SectigoOrder', 'New-SectigoOrganization', 'Remove-SectigoCertificate', 'Renew-SectigoCertificate', 'Stop-SectigoOrder', 'Update-SectigoCertificate', 'Wait-SectigoOrder')
     CompanyName          = 'Evotec'
     CompatiblePSEditions = @('Desktop', 'Core')
     Copyright            = '(c) 2011 - 2025 Przemyslaw Klys @ Evotec. All rights reserved.'
@@ -12,8 +12,9 @@
     PowerShellVersion    = '5.1'
     PrivateData          = @{
         PSData = @{
-            ProjectUri = 'https://github.com/EvotecIT/SectigoCertificateManager'
-            Tags       = @('Windows', 'MacOS', 'Linux')
+            ProjectUri               = 'https://github.com/EvotecIT/SectigoCertificateManager'
+            RequireLicenseAcceptance = $false
+            Tags                     = @('Windows', 'MacOS', 'Linux')
         }
     }
     RootModule           = 'SectigoCertificateManager.psm1'
