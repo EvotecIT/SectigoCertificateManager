@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager.PowerShell;
 
 using SectigoCertificateManager;
+using SectigoCertificateManager.AdminApi;
 using System.Management.Automation;
 
 /// <summary>Creates shared defaults for Sectigo cmdlets.</summary>
@@ -12,39 +13,78 @@ using System.Management.Automation;
 ///   <para>Subsequent <c>Get-SectigoOrders</c> or <c>Get-SectigoCertificate</c> calls will inherit these values automatically.</para>
 /// </example>
 [Cmdlet(VerbsCommunications.Connect, "Sectigo")]
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName = LegacyParameterSet)]
 public sealed class ConnectSectigoCommand : PSCmdlet {
     private const string DefaultBaseUrl = "https://cert-manager.com/api";
+    private const string LegacyParameterSet = "Legacy";
+    private const string AdminParameterSet = "Admin";
+    private const string DefaultAdminBaseUrl = "https://admin.enterprise.sectigo.com";
 
     /// <summary>The API base URL (e.g., https://cert-manager.com/ssl).</summary>
-    [Parameter]
+    [Parameter(ParameterSetName = LegacyParameterSet)]
     public string BaseUrl { get; set; } = DefaultBaseUrl;
 
     /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
+    [Parameter(Mandatory = true, ParameterSetName = LegacyParameterSet)]
     public string Username { get; set; } = string.Empty;
 
     /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
+    [Parameter(Mandatory = true, ParameterSetName = LegacyParameterSet)]
     public string Password { get; set; } = string.Empty;
 
     /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
+    [Parameter(Mandatory = true, ParameterSetName = LegacyParameterSet)]
     public string CustomerUri { get; set; } = string.Empty;
 
     /// <summary>The API version to use.</summary>
-    [Parameter]
+    [Parameter(ParameterSetName = LegacyParameterSet)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_5;
+
+    /// <summary>The OAuth2 client identifier for the Admin API.</summary>
+    [Parameter(Mandatory = true, ParameterSetName = AdminParameterSet)]
+    public string ClientId { get; set; } = string.Empty;
+
+    /// <summary>The OAuth2 client secret for the Admin API.</summary>
+    [Parameter(Mandatory = true, ParameterSetName = AdminParameterSet)]
+    public string ClientSecret { get; set; } = string.Empty;
+
+    /// <summary>The Sectigo instance name (for example, enterprise).</summary>
+    [Parameter(ParameterSetName = AdminParameterSet)]
+    public string Instance { get; set; } = "enterprise";
+
+    /// <summary>Base URL of the Admin API.</summary>
+    [Parameter(ParameterSetName = AdminParameterSet)]
+    public string AdminBaseUrl { get; set; } = DefaultAdminBaseUrl;
+
+    /// <summary>OAuth2 token endpoint URL for the Admin API.</summary>
+    [Parameter(ParameterSetName = AdminParameterSet)]
+    public string TokenUrl { get; set; } = "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token";
 
     /// <summary>Sets default parameter values for all Sectigo cmdlets.</summary>
     protected override void ProcessRecord() {
-        var trimmedBaseUrl = BaseUrl.TrimEnd('/');
-        DefaultParameterHelper.SetDefaults(SessionState, trimmedBaseUrl, Username, Password, CustomerUri, ApiVersion);
-        WriteObject(new {
-            BaseUrl = trimmedBaseUrl,
-            Username,
-            CustomerUri,
-            ApiVersion
-        });
+        if (ParameterSetName == AdminParameterSet) {
+            var trimmedAdminBase = AdminBaseUrl.TrimEnd('/');
+            var config = new AdminApiConfig(trimmedAdminBase, TokenUrl, ClientId, ClientSecret);
+            SessionState.PSVariable.Set("SectigoAdminApiConfig", config);
+            WriteObject(new {
+                Mode = "Admin",
+                BaseUrl = trimmedAdminBase,
+                Instance,
+                TokenUrl,
+                ClientId
+            });
+        } else {
+            var trimmedBaseUrl = BaseUrl.TrimEnd('/');
+            var config = new ApiConfig(trimmedBaseUrl, Username, Password, CustomerUri, ApiVersion);
+            SessionState.PSVariable.Set("SectigoApiConfig", config);
+            DefaultParameterHelper.SetDefaults(SessionState, trimmedBaseUrl, Username, Password, CustomerUri, ApiVersion);
+            WriteObject(new {
+                Mode = "Legacy",
+                BaseUrl = trimmedBaseUrl,
+                Username,
+                CustomerUri,
+                ApiVersion
+            });
+        }
     }
 }
