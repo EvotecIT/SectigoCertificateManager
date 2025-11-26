@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -16,7 +17,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateStatus")]
 [CmdletBinding()]
-public sealed class GetSectigoCertificateStatusCommand : PSCmdlet {
+public sealed class GetSectigoCertificateStatusCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -31,7 +32,10 @@ public sealed class GetSectigoCertificateStatusCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Resolves certificate status through <see cref="CertificateService"/>.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         CertificateService? service = null;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
@@ -41,10 +45,9 @@ public sealed class GetSectigoCertificateStatusCommand : PSCmdlet {
                 service = new CertificateService(config);
             }
 
-            var status = service
-                .GetStatusAsync(CertificateId, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var status = await service
+                .GetStatusAsync(CertificateId, effectiveToken)
+                .ConfigureAwait(false);
             WriteObject(status);
         } finally {
             service?.Dispose();

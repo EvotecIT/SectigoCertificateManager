@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Models;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -199,5 +200,41 @@ public sealed class CertificateServiceTests {
         Assert.NotNull(result);
         Assert.Equal(2, result!.Id);
         Assert.Equal("legacy.example.org", result.CommonName);
+    }
+
+    [Fact]
+    public async Task EnumerateAsync_Admin_StreamsCertificates() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var identities = new[] {
+            new AdminSslIdentity { SslId = 1, CommonName = "example.com", SerialNumber = "123" },
+            new AdminSslIdentity { SslId = 2, CommonName = "example.org", SerialNumber = "456" }
+        };
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create<IReadOnlyList<AdminSslIdentity>>(identities)
+        };
+
+        var handler = new AdminHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var adminConfig = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+
+        using var service = new CertificateService(adminConfig, http);
+        var results = new List<Certificate>();
+        await foreach (var cert in service.EnumerateAsync(pageSize: 10)) {
+            results.Add(cert);
+        }
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal(1, results[0].Id);
+        Assert.Equal(2, results[1].Id);
+        Assert.Equal("example.com", results[0].CommonName);
+        Assert.Equal("example.org", results[1].CommonName);
     }
 }

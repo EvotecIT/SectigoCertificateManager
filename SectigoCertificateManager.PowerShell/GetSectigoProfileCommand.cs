@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -24,7 +25,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsCommon.Get, "SectigoProfile")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Profile))]
-public sealed class GetSectigoProfileCommand : PSCmdlet {
+public sealed class GetSectigoProfileCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -39,11 +40,14 @@ public sealed class GetSectigoProfileCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Retrieves the profile using the active connection.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
         if (adminConfigObj is not null) {
             throw new PSInvalidOperationException("Get-SectigoProfile is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
         }
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
 
         ISectigoClient? client = null;
         try {
@@ -51,9 +55,8 @@ public sealed class GetSectigoProfileCommand : PSCmdlet {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var profiles = new ProfilesClient(client);
-            var profile = profiles.GetAsync(ProfileId, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var profile = await profiles.GetAsync(ProfileId, effectiveToken)
+                .ConfigureAwait(false);
             WriteObject(profile);
         } finally {
             if (client is IDisposable disposable) {

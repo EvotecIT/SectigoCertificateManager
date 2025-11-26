@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using System;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -23,7 +24,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Remove, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
-public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
+public sealed class RemoveSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -38,7 +39,7 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
 
     /// <summary>Deletes a certificate.</summary>
     /// <para>Removes the specified certificate using the active connection.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         if (CertificateId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(CertificateId));
             var record = new ErrorRecord(ex, "InvalidCertificateId", ErrorCategory.InvalidArgument, CertificateId);
@@ -49,6 +50,9 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
             return;
         }
 
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         CertificateService? service = null;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
@@ -58,10 +62,9 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
                 service = new CertificateService(config);
             }
 
-            service
-                .RemoveAsync(CertificateId, cancellationToken: CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            await service
+                .RemoveAsync(CertificateId, cancellationToken: effectiveToken)
+                .ConfigureAwait(false);
         } finally {
             service?.Dispose();
         }

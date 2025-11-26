@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -24,7 +25,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsLifecycle.Wait, "SectigoOrder")]
 [CmdletBinding()]
 [OutputType(typeof(OrderStatus))]
-public sealed class WaitSectigoOrderCommand : PSCmdlet {
+public sealed class WaitSectigoOrderCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -43,7 +44,7 @@ public sealed class WaitSectigoOrderCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Polls the order status until it reaches a terminal value.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         if (OrderId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(OrderId));
             var record = new ErrorRecord(ex, "InvalidOrderId", ErrorCategory.InvalidArgument, OrderId);
@@ -55,16 +56,18 @@ public sealed class WaitSectigoOrderCommand : PSCmdlet {
             throw new PSInvalidOperationException("Wait-SectigoOrder is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
         }
 
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         var config = ConnectionHelper.GetLegacyConfig(SessionState);
         ISectigoClient? client = null;
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var statuses = new OrderStatusClient(client);
-            var status = statuses
-                .WatchAsync(OrderId, PollInterval, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var status = await statuses
+                .WatchAsync(OrderId, PollInterval, effectiveToken)
+                .ConfigureAwait(false);
             WriteObject(status);
         } finally {
             if (client is IDisposable disposable) {

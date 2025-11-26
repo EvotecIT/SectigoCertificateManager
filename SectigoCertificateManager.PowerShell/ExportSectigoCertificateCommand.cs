@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Utilities;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -17,7 +18,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsData.Export, "SectigoCertificate")]
 [CmdletBinding()]
-public sealed class ExportSectigoCertificateCommand : PSCmdlet {
+public sealed class ExportSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -45,7 +46,7 @@ public sealed class ExportSectigoCertificateCommand : PSCmdlet {
 
     /// <summary>Downloads and exports a certificate.</summary>
     /// <para>Resolves the active connection, downloads the certificate, and saves it to disk.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         if (CertificateId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(CertificateId));
             var record = new ErrorRecord(ex, "InvalidCertificateId", ErrorCategory.InvalidArgument, CertificateId);
@@ -58,6 +59,9 @@ public sealed class ExportSectigoCertificateCommand : PSCmdlet {
             ThrowTerminatingError(record);
         }
 
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         CertificateService? service = null;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
@@ -67,10 +71,9 @@ public sealed class ExportSectigoCertificateCommand : PSCmdlet {
                 service = new CertificateService(config);
             }
 
-            using var certificate = service
-                .DownloadCertificateAsync(CertificateId, format: null, cancellationToken: CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            using var certificate = await service
+                .DownloadCertificateAsync(CertificateId, format: null, cancellationToken: effectiveToken)
+                .ConfigureAwait(false);
 
             switch (Format) {
                 case CertificateFileFormat.Pem:
