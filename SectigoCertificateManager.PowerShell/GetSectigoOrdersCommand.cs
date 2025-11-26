@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate orders.</summary>
-/// <para>Creates an API client and lists all orders for the account.</para>
+/// <para>Lists all orders for the active Sectigo connection.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -17,14 +17,8 @@ namespace SectigoCertificateManager.PowerShell;
 /// <example>
 ///   <summary>List all orders</summary>
 ///   <prefix>PS&gt; </prefix>
-///   <code>Get-SectigoOrders -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example"</code>
-///   <para>Retrieves every order for the specified account.</para>
-/// </example>
-/// <example>
-///   <summary>Use a specific API version</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Get-SectigoOrders -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -ApiVersion V25_5</code>
-///   <para>Overrides the default API version.</para>
+///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "example"; Get-SectigoOrders</code>
+///   <para>Retrieves every order for the currently connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
@@ -32,23 +26,7 @@ namespace SectigoCertificateManager.PowerShell;
 [CmdletBinding()]
 [OutputType(typeof(Models.Order))]
 public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
-    /// <summary>The API version to use.</summary>
+    /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
@@ -57,9 +35,14 @@ public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Executes the cmdlet.</summary>
-    /// <para>Creates an API client and outputs all orders.</para>
+    /// <para>Uses the active Sectigo connection and outputs all orders.</para>
     protected override async Task ProcessRecordAsync() {
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
+        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
+        if (adminConfigObj is not null) {
+            throw new PSInvalidOperationException("Get-SectigoOrders is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
+        }
+
+        var config = ConnectionHelper.GetLegacyConfig(SessionState);
         ISectigoClient? client = null;
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);

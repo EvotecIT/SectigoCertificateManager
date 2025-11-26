@@ -1,13 +1,12 @@
 using SectigoCertificateManager;
-using SectigoCertificateManager.Clients;
 using System;
 using System.Management.Automation;
 using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
-/// <summary>Deletes a certificate.</summary>
-/// <para>Builds an API client and calls the delete endpoint.</para>
+/// <summary>Deletes (or revokes) a certificate.</summary>
+/// <para>Uses the active Sectigo connection to remove a certificate, revoking it when using the Admin API.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Irreversible</term>
@@ -17,37 +16,15 @@ namespace SectigoCertificateManager.PowerShell;
 /// <example>
 ///   <summary>Delete a certificate</summary>
 ///   <prefix>PS&gt; </prefix>
-///   <code>Remove-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10</code>
-///   <para>Permanently removes certificate 10.</para>
-/// </example>
-/// <example>
-///   <summary>Use a different API version</summary>
-///   <prefix>PS&gt; </prefix>
-///   <code>Remove-SectigoCertificate -BaseUrl "https://api.example.com" -Username "user" -Password "pass" -CustomerUri "example" -CertificateId 10 -ApiVersion V25_5</code>
-///   <para>Deletes the certificate using API version 25.5.</para>
+///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "example"; Remove-SectigoCertificate -CertificateId 10</code>
+///   <para>Permanently removes certificate 10 for the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/shouldprocess-attribute"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Remove, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
 public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
-    /// <summary>The API base URL.</summary>
-    [Parameter(Mandatory = true)]
-    public string BaseUrl { get; set; } = string.Empty;
-
-    /// <summary>The user name for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>The password for authentication.</summary>
-    [Parameter(Mandatory = true)]
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>The customer URI assigned by Sectigo.</summary>
-    [Parameter(Mandatory = true)]
-    public string CustomerUri { get; set; } = string.Empty;
-
-    /// <summary>The API version to use.</summary>
+    /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
@@ -60,7 +37,7 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Deletes a certificate.</summary>
-    /// <para>Builds an API client and calls the delete endpoint.</para>
+    /// <para>Removes the specified certificate using the active connection.</para>
     protected override void ProcessRecord() {
         if (CertificateId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(CertificateId));
@@ -72,19 +49,21 @@ public sealed class RemoveSectigoCertificateCommand : PSCmdlet {
             return;
         }
 
-        var config = new ApiConfig(BaseUrl, Username, Password, CustomerUri, ApiVersion);
-        ISectigoClient? client = null;
+        CertificateService? service = null;
         try {
-            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
-            TestHooks.CreatedClient = client;
-            var certificates = new CertificatesClient(client);
-            certificates.DeleteAsync(CertificateId, CancellationToken)
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig)) {
+                service = new CertificateService(adminConfig!);
+            } else {
+                var config = ConnectionHelper.GetLegacyConfig(SessionState);
+                service = new CertificateService(config);
+            }
+
+            service
+                .RemoveAsync(CertificateId, cancellationToken: CancellationToken)
                 .GetAwaiter()
                 .GetResult();
         } finally {
-            if (client is IDisposable disposable) {
-                disposable.Dispose();
-            }
+            service?.Dispose();
         }
     }
 }

@@ -1,10 +1,13 @@
 namespace SectigoCertificateManager.AdminApi;
 
+using SectigoCertificateManager.Requests;
+using SectigoCertificateManager.Responses;
 using SectigoCertificateManager.Utilities;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -85,6 +88,116 @@ public sealed class AdminSslClient {
         return details;
     }
 
+    /// <summary>
+    /// Revokes an SSL certificate by identifier.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="reasonCode">
+    /// Optional revocation reason code string as defined by the Admin API
+    /// (for example, "0", "1", "3", "4", "5").
+    /// When <c>null</c>, "0" (unspecified) is used.
+    /// </param>
+    /// <param name="reason">Optional human-readable revocation reason.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task RevokeByIdAsync(
+        int sslId,
+        string? reasonCode = null,
+        string? reason = null,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+        var payload = new RevokeRequest {
+            ReasonCode = string.IsNullOrWhiteSpace(reasonCode) ? "0" : reasonCode,
+            Reason = reason
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/revoke/{sslId}") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Downloads an issued certificate as a raw byte stream.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="format">
+    /// Optional format type. When <c>null</c>, the API default (<c>base64</c>) is used.
+    /// Supported values are documented in the Admin API (for example, <c>base64</c>, <c>x509</c>, <c>pem</c>).
+    /// </param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<Stream> CollectAsync(
+        int sslId,
+        string? format = null,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var path = new StringBuilder($"api/ssl/v2/collect/{sslId}");
+        if (!string.IsNullOrEmpty(format)) {
+            path.Append("?format=").Append(Uri.EscapeDataString(format));
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+#if NETSTANDARD2_0 || NET472
+        return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+#else
+        return await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+#endif
+    }
+
+    /// <summary>
+    /// Renews an SSL certificate by identifier.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="request">Renewal request payload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<int> RenewByIdAsync(
+        int sslId,
+        RenewCertificateRequest request,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        Guard.AgainstNull(request, nameof(request));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var body = new RenewInfo {
+            Csr = request.Csr,
+            DcvMode = request.DcvMode,
+            DcvEmail = request.DcvEmail
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/renewById/{sslId}") {
+            Content = JsonContent.Create(body, options: s_json)
+        };
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content
+            .ReadFromJsonAsyncSafe<RenewCertificateResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+        return result?.SslId ?? 0;
+    }
+
     private string BuildListUri(int? size, int? position) {
         var builder = new StringBuilder("api/ssl/v2");
         var hasQuery = false;
@@ -129,6 +242,26 @@ public sealed class AdminSslClient {
     }
 
     private sealed class TokenResponse {
+        [JsonPropertyName("access_token")]
         public string AccessToken { get; set; } = string.Empty;
+    }
+
+    private sealed class RenewInfo {
+        [JsonPropertyName("csr")]
+        public string? Csr { get; set; }
+
+        [JsonPropertyName("dcvMode")]
+        public string? DcvMode { get; set; }
+
+        [JsonPropertyName("dcvEmail")]
+        public string? DcvEmail { get; set; }
+    }
+
+    private sealed class RevokeRequest {
+        [JsonPropertyName("reasonCode")]
+        public string? ReasonCode { get; set; }
+
+        [JsonPropertyName("reason")]
+        public string? Reason { get; set; }
     }
 }

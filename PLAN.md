@@ -8,27 +8,28 @@
 - [x] Add `AdminSslIdentity` model mirroring `/api/ssl/v2` `SSLIdentity` schema.
 - [x] Add `AdminSslClient` with:
   - [x] `ListAsync` → `GET /api/ssl/v2` (size/position)
-  - [ ] `GetAsync` → `GET /api/ssl/v2/{sslId}` (single certificate details)
-  - [ ] Additional SSL operations (renew, revoke, collect, etc.) mapped to `api.json`:
-    - [ ] Renew endpoints (`/renewById`, `/renew`, `/renew/manual`)
+  - [x] `GetAsync` → `GET /api/ssl/v2/{sslId}` (single certificate details)
+  - [-] Additional SSL operations (renew, revoke, collect, etc.) mapped to `api.json`:
+    - [x] Collect endpoint (`/collect/{sslId}`) for download.
+    - [x] Renew by id endpoint (`/renewById/{sslId}`).
     - [ ] Revoke endpoints (`/revoke/{id}`, `/revoke/serial/{serialNumber}`, `/revoke/manual`)
     - [ ] Keystore / download (`/keystore/{sslId}/{formatType}`, `/collect/{sslId}`)
     - [ ] Enroll / import (`/enroll`, `/enroll-keygen`, `/import`)
 
 ## 2. Unified routing services (C#)
 
-- [ ] Introduce `CertificateService` in core library that routes between legacy and Admin clients:
-  - [ ] Constructor overload for `ApiConfig` (legacy) and `AdminApiConfig` (Admin).
-  - [ ] `Task<IReadOnlyList<Certificate>> ListAsync(...)`:
-    - [ ] Legacy → `CertificatesClient` search.
-    - [ ] Admin → `AdminSslClient.ListAsync` + projection to `Certificate`.
-  - [ ] `Task<Certificate?> GetAsync(int id, ...)`:
-    - [ ] Legacy → `CertificatesClient.GetAsync`.
-    - [ ] Admin → `AdminSslClient.GetAsync` + projection to `Certificate`.
+- [x] Introduce `CertificateService` in core library that routes between legacy and Admin clients:
+  - [x] Constructor overload for `ApiConfig` (legacy) and `AdminApiConfig` (Admin).
+  - [x] `Task<IReadOnlyList<Certificate>> ListAsync(...)`:
+    - [x] Legacy → `CertificatesClient` search.
+    - [x] Admin → `AdminSslClient.ListAsync` + projection to `Certificate`.
+  - [x] `Task<Certificate?> GetAsync(int id, ...)`:
+    - [x] Legacy → `CertificatesClient.GetAsync`.
+    - [x] Admin → `AdminSslClient.GetAsync` + projection to `Certificate`.
   - [ ] Later: `RevokeAsync`, `RenewAsync`, `DownloadAsync`, etc., routed similarly.
-- [ ] Add targeted unit tests for `CertificateService`:
+- [-] Add targeted unit tests for `CertificateService`:
   - [ ] Legacy path: uses a fake `ISectigoClient` or WireMock endpoints.
-  - [ ] Admin path: uses a fake `HttpMessageHandler` or WireMock endpoints for `/api/ssl/v2`.
+  - [x] Admin path: uses a fake `HttpMessageHandler` or WireMock endpoints for `/api/ssl/v2`.
 
 ## 3. Connection model & configuration
 
@@ -48,15 +49,15 @@
 
 ## 4. PowerShell cmdlet surface unification
 
-- [ ] Unify certificate retrieval cmdlets:
-  - [ ] Replace dual `Get-SectigoCertificate` / `Get-SectigoCertificates` classes with a single cmdlet:
-    - [ ] Canonical name: `Get-SectigoCertificate` (singular).
-    - [ ] Alias: `Get-SectigoCertificates`.
-    - [ ] Parameter sets:
-      - [ ] `ById` set: `-CertificateId` (single certificate).
-      - [ ] `List` set: `-Size`, `-Position`, optional filters.
-    - [ ] Impl: use `CertificateService` to route Admin vs legacy.
-- [ ] Remove auth parameters from all cmdlets and rely solely on connection state:
+- [x] Unify certificate retrieval cmdlets:
+  - [x] Replace dual `Get-SectigoCertificate` / `Get-SectigoCertificates` classes with a single cmdlet:
+    - [x] Canonical name: `Get-SectigoCertificate` (singular).
+    - [x] Alias: `Get-SectigoCertificates`.
+    - [x] Parameter sets:
+      - [x] `ById` set: `-CertificateId` (single certificate).
+      - [x] `List` set: `-Size`, `-Position`, optional filters.
+    - [x] Impl: use `CertificateService` to route Admin vs legacy.
+- [-] Remove auth parameters from all cmdlets and rely solely on connection state:
   - [x] Certificates (list + single) – partially done, still needs consolidation.
   - [x] Inventory (`Get-SectigoInventory`) – now uses legacy config only, rejects Admin for now.
   - [x] Certificate detail (`Get-SectigoCertificate`) – uses legacy config only, rejects Admin for now.
@@ -67,10 +68,10 @@
     - [x] `Export-SectigoCertificate` – legacy only, rejects Admin.
   - [x] Orders:
     - [x] `New-SectigoOrder`, `Renew-SectigoCertificate`, `Update-SectigoCertificate` – legacy only, reject Admin.
-    - [x] `Get-SectigoOrders`, `Get-SectigoOrdersPage` – legacy only, reject Admin (requires refactor).
+    - [x] `Get-SectigoOrders`, `Get-SectigoOrdersPage` – legacy only, reject Admin.
   - [x] Organizations / profiles:
     - [x] `Get-SectigoOrganizations` – legacy only, rejects Admin.
-    - [ ] Profiles and related cmdlets – still to be refactored to use connection helper.
+    - [x] Profiles and related cmdlets – legacy only, use connection helper; Admin not yet supported.
 
 ## 5. Admin API support per operation (PowerShell)
 
@@ -83,9 +84,9 @@ For each area below, the plan is:
 ### 5.1 Certificate list + detail
 
 - [x] Admin list via `Get-SectigoCertificate -Size` (through `AdminSslClient.ListAsync`).
-- [ ] Admin single-cert via `Get-SectigoCertificate -CertificateId` (through `AdminSslClient.GetAsync`).
+- [x] Admin single-cert via `Get-SectigoCertificate -CertificateId` (through `AdminSslClient.GetAsync`).
 - [ ] Tests:
-  - [ ] C#: Admin list & get calling correct `/api/ssl/v2` endpoints.
+  - [x] C#: Admin list & get calling correct `/api/ssl/v2` endpoints.
   - [ ] Pester: `Get-SectigoCertificate` behaves correctly in Admin vs legacy mode.
 
 ### 5.2 Certificate status, revocation, export
@@ -93,11 +94,11 @@ For each area below, the plan is:
 - [ ] Map Admin equivalents in `AdminSslClient` / related clients:
   - [ ] Status endpoint (if available in Admin API).
   - [ ] Revocation endpoints (`/revoke`, `/revoke/serial`, `/revoke/manual`).
-  - [ ] Download/collect/keystore endpoints for export.
+  - [x] Download/collect endpoint for export.
 - [ ] Update cmdlets:
   - [ ] `Get-SectigoCertificateStatus`
   - [ ] `Get-SectigoCertificateRevocation`
-  - [ ] `Export-SectigoCertificate`
+  - [x] `Export-SectigoCertificate`
   - All to use services that route Admin vs legacy instead of rejecting Admin.
 - [ ] Tests for both modes (C# + Pester).
 
@@ -138,11 +139,10 @@ For each area below, the plan is:
 
 ## 8. Testing and verification
 
-- [ ] C# tests:
-  - [ ] Add/extend xUnit tests for `AdminSslClient` and service routers.
-  - [ ] Ensure both Admin and legacy paths are covered for list/get at minimum.
+- [x] C# tests:
+  - [x] Add/extend xUnit tests for `AdminSslClient` and service routers.
+  - [x] Ensure Admin paths are covered for list/get (and related service mapping). Legacy paths are already covered by existing tests.
 - [ ] PowerShell tests (Pester):
   - [ ] Update existing tests to use `Connect-Sectigo` instead of per-cmdlet auth where applicable.
   - [ ] Add tests for Admin-mode behaviour (including “not yet supported” paths until wired).
 - [ ] CI: ensure `dotnet test` and Pester suites pass locally and in CI for all target frameworks.
-

@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Models;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -15,23 +16,35 @@ namespace SectigoCertificateManager.Tests;
 /// </summary>
 public sealed class CertificateServiceTests {
     private sealed class AdminHandler : HttpMessageHandler {
-        private readonly HttpResponseMessage _tokenResponse;
-        private readonly HttpResponseMessage _apiResponse;
+        private readonly string _tokenJson;
+        private readonly string _apiJson;
+        private readonly HttpResponseMessage? _streamResponse;
 
         public HttpRequestMessage? LastRequest { get; private set; }
 
-        public AdminHandler(HttpResponseMessage tokenResponse, HttpResponseMessage apiResponse) {
-            _tokenResponse = tokenResponse;
-            _apiResponse = apiResponse;
+        public AdminHandler(HttpResponseMessage tokenResponse, HttpResponseMessage apiResponse, HttpResponseMessage? streamResponse = null) {
+            _tokenJson = tokenResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            _apiJson = apiResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            _streamResponse = streamResponse;
         }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             LastRequest = request;
-            if (request.RequestUri!.AbsoluteUri.Contains("auth/realms/apiclients")) {
-                return Task.FromResult(_tokenResponse);
+            if (request.RequestUri!.AbsoluteUri.Contains("protocol/openid-connect/token")) {
+                var response = new HttpResponseMessage(HttpStatusCode.OK) {
+                    Content = new StringContent(_tokenJson, System.Text.Encoding.UTF8, "application/json")
+                };
+                return Task.FromResult(response);
             }
 
-            return Task.FromResult(_apiResponse);
+            if (_streamResponse is not null && request.RequestUri!.AbsoluteUri.Contains("/collect/")) {
+                return Task.FromResult(_streamResponse);
+            }
+
+            var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(_apiJson, System.Text.Encoding.UTF8, "application/json")
+            };
+            return Task.FromResult(apiResponse);
         }
     }
 
@@ -113,4 +126,5 @@ public sealed class CertificateServiceTests {
         Assert.Equal("ABC", revocation.SerialNumber);
         Assert.Equal(RevocationReason.Superseded, revocation.ReasonCode);
     }
+
 }
