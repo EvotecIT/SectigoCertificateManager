@@ -1,12 +1,11 @@
 using SectigoCertificateManager;
-using SectigoCertificateManager.Clients;
 using System.Management.Automation;
 using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate status.</summary>
-/// <para>Creates an API client and returns the status of a certificate.</para>
+/// <para>Resolves certificate status using the active Sectigo connection.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -31,27 +30,24 @@ public sealed class GetSectigoCertificateStatusCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Executes the cmdlet.</summary>
-    /// <para>Creates an API client and retrieves certificate status.</para>
+    /// <para>Resolves certificate status through <see cref="CertificateService"/>.</para>
     protected override void ProcessRecord() {
-        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
-        if (adminConfigObj is not null) {
-            throw new PSInvalidOperationException("Get-SectigoCertificateStatus is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
-        }
-
-        ISectigoClient? client = null;
+        CertificateService? service = null;
         try {
-            var config = ConnectionHelper.GetLegacyConfig(SessionState);
-            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
-            TestHooks.CreatedClient = client;
-            var certificates = new CertificatesClient(client);
-            var status = certificates.GetStatusAsync(CertificateId, CancellationToken)
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig)) {
+                service = new CertificateService(adminConfig!);
+            } else {
+                var config = ConnectionHelper.GetLegacyConfig(SessionState);
+                service = new CertificateService(config);
+            }
+
+            var status = service
+                .GetStatusAsync(CertificateId, CancellationToken)
                 .GetAwaiter()
                 .GetResult();
             WriteObject(status);
         } finally {
-            if (client is IDisposable disposable) {
-                disposable.Dispose();
-            }
+            service?.Dispose();
         }
     }
 }

@@ -58,6 +58,33 @@ public sealed class AdminSslClient {
         return identities ?? Array.Empty<AdminSslIdentity>();
     }
 
+    /// <summary>
+    /// Retrieves detailed SSL certificate information by identifier.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<AdminSslCertificateDetails?> GetAsync(
+        int sslId,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var details = await response.Content
+            .ReadFromJsonAsyncSafe<AdminSslCertificateDetails>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return details;
+    }
+
     private string BuildListUri(int? size, int? position) {
         var builder = new StringBuilder("api/ssl/v2");
         var hasQuery = false;

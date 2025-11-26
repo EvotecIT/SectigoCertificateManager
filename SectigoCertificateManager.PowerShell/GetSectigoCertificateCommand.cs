@@ -1,5 +1,6 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
+using SectigoCertificateManager.Responses;
 using System.Management.Automation;
 using System.Threading;
 
@@ -15,44 +16,64 @@ namespace SectigoCertificateManager.PowerShell;
 /// </list>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
-[Cmdlet(VerbsCommon.Get, "SectigoCertificate")]
+[Cmdlet(VerbsCommon.Get, "SectigoCertificate", DefaultParameterSetName = ListParameterSet)]
+[Alias("Get-SectigoCertificates")]
 [CmdletBinding()]
-[OutputType(typeof(Models.Certificate))]
+[OutputType(typeof(Models.Certificate), typeof(CertificateResponse))]
 public sealed class GetSectigoCertificateCommand : PSCmdlet {
-    /// <summary>The API version to use.</summary>
+    private const string ByIdParameterSet = "ById";
+    private const string ListParameterSet = "List";
+
+    /// <summary>The API version to use when using the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The certificate identifier.</summary>
-    [Parameter(Mandatory = true, Position = 0)]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = ByIdParameterSet)]
     public int CertificateId { get; set; }
+
+    /// <summary>Maximum number of certificates to retrieve.</summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    public int Size { get; set; } = 30;
+
+    /// <summary>Position offset for paging.</summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    public int Position { get; set; }
 
     /// <summary>Optional cancellation token.</summary>
     [Parameter]
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Executes the cmdlet.</summary>
-    /// <para>Creates an API client and retrieves the certificate.</para>
+    /// <para>Routes certificate retrieval through <see cref="CertificateService"/> using the active connection.</para>
     protected override void ProcessRecord() {
-        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
-        if (adminConfigObj is not null) {
-            throw new PSInvalidOperationException("Get-SectigoCertificate is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
-        }
-
-        ISectigoClient? client = null;
+        var hasAdmin = ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig);
+        CertificateService? service = null;
         try {
-            var config = ConnectionHelper.GetLegacyConfig(SessionState);
-            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
-            TestHooks.CreatedClient = client;
-            var certificates = new CertificatesClient(client);
-            var certificate = certificates.GetAsync(CertificateId, CancellationToken)
+            if (hasAdmin) {
+                service = new CertificateService(adminConfig!);
+            } else {
+                var config = ConnectionHelper.GetLegacyConfig(SessionState);
+                service = new CertificateService(config);
+            }
+
+            if (ParameterSetName == ByIdParameterSet) {
+                var certificate = service
+                    .GetAsync(CertificateId, CancellationToken)
+                    .GetAwaiter()
+                    .GetResult();
+                WriteObject(certificate);
+                return;
+            }
+
+            var certificates = service
+                .ListAsync(Size, Position, CancellationToken)
                 .GetAwaiter()
                 .GetResult();
-            WriteObject(certificate);
+            var response = new CertificateResponse { Certificates = certificates };
+            WriteObject(response);
         } finally {
-            if (client is IDisposable disposable) {
-                disposable.Dispose();
-            }
+            service?.Dispose();
         }
     }
 }
