@@ -5,14 +5,14 @@ using SectigoCertificateManager.AdminApi;
 using System.Management.Automation;
 
 internal static class ConnectionHelper {
-    internal static bool TryGetAdminConfig(SessionState sessionState, out AdminApiConfig config) {
+    internal static bool TryGetAdminConfig(SessionState sessionState, out AdminApiConfig? config) {
         var obj = sessionState.PSVariable.GetValue("SectigoAdminApiConfig");
         if (obj is AdminApiConfig admin) {
             config = admin;
             return true;
         }
 
-        config = null!;
+        config = null;
         return false;
     }
 
@@ -25,4 +25,3 @@ internal static class ConnectionHelper {
         throw new PSInvalidOperationException("No Sectigo legacy connection is configured. Run Connect-Sectigo with legacy credentials before calling this cmdlet.");
     }
 }
-

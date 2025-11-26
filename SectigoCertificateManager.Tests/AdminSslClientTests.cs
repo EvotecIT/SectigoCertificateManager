@@ -43,6 +43,142 @@ public sealed class AdminSslClientTests {
     }
 
     [Fact]
+    public async Task EnrollAsync_PostsToEnrollEndpoint() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var enrollResponse = new AdminSslEnrollResponse {
+            SslId = 10,
+            RenewId = "r1"
+        };
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(enrollResponse)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        var request = new AdminSslEnrollRequest {
+            OrgId = 5,
+            CertType = 123,
+            Term = 365,
+            Csr = "CSR-DATA"
+        };
+
+        var result = await client.EnrollAsync(request);
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/enroll", handler.LastRequest!.RequestUri!.ToString());
+        Assert.Equal(HttpMethod.Post, handler.LastRequest.Method);
+        Assert.NotNull(handler.LastRequestBody);
+        using var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        var body = doc.RootElement;
+        Assert.Equal(5, body.GetProperty("orgId").GetInt32());
+        Assert.Equal(123, body.GetProperty("certType").GetInt32());
+        Assert.Equal(365, body.GetProperty("term").GetInt32());
+        Assert.Equal("CSR-DATA", body.GetProperty("csr").GetString());
+
+        Assert.NotNull(result);
+        Assert.Equal(10, result!.SslId);
+        Assert.Equal("r1", result.RenewId);
+    }
+
+    [Fact]
+    public async Task EnrollWithKeyGenerationAsync_PostsToEnrollKeyGenEndpoint() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var enrollResponse = new AdminSslEnrollResponse {
+            SslId = 20,
+            RenewId = "r2"
+        };
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(enrollResponse)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        var request = new AdminSslEnrollKeyGenRequest {
+            OrgId = 7,
+            CertType = 321,
+            Term = 730,
+            CommonName = "example.com"
+        };
+
+        var result = await client.EnrollWithKeyGenerationAsync(request);
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/enroll-keygen", handler.LastRequest!.RequestUri!.ToString());
+        Assert.Equal(HttpMethod.Post, handler.LastRequest.Method);
+        Assert.NotNull(handler.LastRequestBody);
+        using var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        var body = doc.RootElement;
+        Assert.Equal(7, body.GetProperty("orgId").GetInt32());
+        Assert.Equal(321, body.GetProperty("certType").GetInt32());
+        Assert.Equal(730, body.GetProperty("term").GetInt32());
+        Assert.Equal("example.com", body.GetProperty("commonName").GetString());
+
+        Assert.NotNull(result);
+        Assert.Equal(20, result!.SslId);
+        Assert.Equal("r2", result.RenewId);
+    }
+
+    [Fact]
+    public async Task ImportAsync_PostsMultipartToImportEndpoint() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var report = new ImportCertificateResponse {
+            ProcessedCount = 3,
+            Errors = new[] { "e1" }
+        };
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(report)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        await using var ms = new MemoryStream(new byte[] { 1, 2, 3 });
+        var result = await client.ImportAsync(15, ms, "certs.zip");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/import?orgId=15", handler.LastRequest!.RequestUri!.ToString());
+        Assert.Equal(HttpMethod.Post, handler.LastRequest.Method);
+        Assert.IsType<MultipartFormDataContent>(handler.LastRequest.Content);
+
+        Assert.NotNull(result);
+        Assert.Equal(3, result!.ProcessedCount);
+        Assert.Single(result.Errors);
+        Assert.Equal("e1", result.Errors[0]);
+    }
+
+    [Fact]
     public async Task ListAsync_BuildsQueryAndParsesResponse() {
         var token = new { access_token = "tok" };
         var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {

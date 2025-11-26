@@ -62,11 +62,10 @@ public sealed class GetSectigoCertificateCommand : PSCmdlet {
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Routes certificate retrieval through <see cref="CertificateService"/> using the active connection.</para>
     protected override void ProcessRecord() {
-        var hasAdmin = ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig);
         CertificateService? service = null;
         try {
-            if (hasAdmin) {
-                service = new CertificateService(adminConfig!);
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
+                service = new CertificateService(adminConfig);
             } else {
                 var config = ConnectionHelper.GetLegacyConfig(SessionState);
                 service = new CertificateService(config);

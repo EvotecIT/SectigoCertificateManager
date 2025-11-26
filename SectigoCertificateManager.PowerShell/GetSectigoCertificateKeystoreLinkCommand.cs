@@ -61,7 +61,7 @@ public sealed class GetSectigoCertificateKeystoreLinkCommand : PSCmdlet {
 
         CertificateService? service = null;
         try {
-            service = new CertificateService(adminConfig!);
+            service = new CertificateService(adminConfig);
             var link = service
                 .CreateKeystoreDownloadLinkAsync(CertificateId, FormatType, Passphrase, CancellationToken)
                 .GetAwaiter()
@@ -72,4 +72,3 @@ public sealed class GetSectigoCertificateKeystoreLinkCommand : PSCmdlet {
         }
     }
 }
-

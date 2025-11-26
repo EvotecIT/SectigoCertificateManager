@@ -48,7 +48,7 @@ public sealed class ConnectSectigoCommand : PSCmdlet {
 
     /// <summary>The API version to use.</summary>
     [Parameter(ParameterSetName = LegacyParameterSet)]
-    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_5;
+    public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The OAuth2 client identifier for the Admin API.</summary>
     [Parameter(Mandatory = true, ParameterSetName = AdminParameterSet)]

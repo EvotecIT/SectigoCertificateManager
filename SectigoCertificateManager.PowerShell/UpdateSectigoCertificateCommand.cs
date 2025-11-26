@@ -52,8 +52,8 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
 
         CertificateService? service = null;
         try {
-            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig)) {
-                service = new CertificateService(adminConfig!);
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
+                service = new CertificateService(adminConfig);
             } else {
                 var config = ConnectionHelper.GetLegacyConfig(SessionState);
                 service = new CertificateService(config);

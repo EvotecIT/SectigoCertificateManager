@@ -3,6 +3,7 @@ namespace SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using SectigoCertificateManager.Utilities;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -14,9 +15,12 @@ using System.Threading.Tasks;
 /// <summary>
 /// Minimal client for the Sectigo Admin Operations API SSL endpoints.
 /// </summary>
-public sealed class AdminSslClient {
+public sealed class AdminSslClient : IDisposable {
     private readonly AdminApiConfig _config;
     private readonly HttpClient _httpClient;
+    private readonly bool _ownsHttpClient;
+    private string? _cachedToken;
+    private DateTimeOffset _tokenExpiresAt;
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
     /// <summary>
@@ -24,11 +28,18 @@ public sealed class AdminSslClient {
     /// </summary>
     /// <param name="config">Admin API configuration.</param>
     /// <param name="httpClient">
-    /// Optional <see cref="HttpClient"/> instance. When not provided, a new instance is created.
+    /// Optional <see cref="HttpClient"/> instance. When not provided, a new instance is created
+    /// and disposed with this client.
     /// </param>
     public AdminSslClient(AdminApiConfig config, HttpClient? httpClient = null) {
         _config = Guard.AgainstNull(config, nameof(config));
-        _httpClient = httpClient ?? new HttpClient();
+        if (httpClient is null) {
+            _httpClient = new HttpClient();
+            _ownsHttpClient = true;
+        } else {
+            _httpClient = httpClient;
+            _ownsHttpClient = false;
+        }
         if (!_config.BaseUrl.EndsWith("/", StringComparison.Ordinal)) {
             _httpClient.BaseAddress = new Uri(_config.BaseUrl + "/");
         } else {
@@ -278,6 +289,102 @@ public sealed class AdminSslClient {
     }
 
     /// <summary>
+    /// Submits a request for a new SSL certificate using an existing CSR.
+    /// </summary>
+    /// <param name="request">Enrollment request payload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<AdminSslEnrollResponse?> EnrollAsync(
+        AdminSslEnrollRequest request,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNull(request, nameof(request));
+        if (request.OrgId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(request.OrgId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/enroll") {
+            Content = JsonContent.Create(request, options: s_json)
+        };
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<AdminSslEnrollResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Submits a request for a new SSL certificate with server-side key generation.
+    /// </summary>
+    /// <param name="request">Enrollment request payload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<AdminSslEnrollResponse?> EnrollWithKeyGenerationAsync(
+        AdminSslEnrollKeyGenRequest request,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNull(request, nameof(request));
+        if (request.OrgId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(request.OrgId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/enroll-keygen") {
+            Content = JsonContent.Create(request, options: s_json)
+        };
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<AdminSslEnrollResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Imports certificates into SCM using a zip archive.
+    /// </summary>
+    /// <param name="orgId">Organization identifier.</param>
+    /// <param name="stream">Zip archive containing certificates.</param>
+    /// <param name="fileName">File name to use for the upload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<ImportCertificateResponse?> ImportAsync(
+        int orgId,
+        Stream stream,
+        string fileName,
+        CancellationToken cancellationToken = default) {
+        if (orgId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(orgId));
+        }
+
+        Guard.AgainstNull(stream, nameof(stream));
+        Guard.AgainstNullOrEmpty(fileName, nameof(fileName), "File name cannot be null or empty.");
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var content = new MultipartFormDataContent();
+        var fileContent = new StreamContent(stream);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/zip");
+        content.Add(fileContent, "file", fileName);
+
+        var path = $"api/ssl/v2/import?orgId={orgId}";
+        using var message = new HttpRequestMessage(HttpMethod.Post, path) {
+            Content = content
+        };
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<ImportCertificateResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Creates a keystore download link for the specified certificate.
     /// </summary>
     /// <param name="sslId">Certificate identifier.</param>
@@ -343,6 +450,10 @@ public sealed class AdminSslClient {
     }
 
     private async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) {
+        if (!string.IsNullOrEmpty(_cachedToken) && DateTimeOffset.UtcNow < _tokenExpiresAt) {
+            return _cachedToken;
+        }
+
         using var content = new FormUrlEncodedContent(new Dictionary<string, string> {
             ["grant_type"] = "client_credentials",
             ["client_id"] = _config.ClientId,
@@ -361,12 +472,28 @@ public sealed class AdminSslClient {
             throw new InvalidOperationException("Access token was not present in the Admin API token response.");
         }
 
-        return model.AccessToken;
+        _cachedToken = model.AccessToken;
+        var lifetimeSeconds = model.ExpiresIn > 0 ? model.ExpiresIn : 300;
+        var expiry = DateTimeOffset.UtcNow.AddSeconds(lifetimeSeconds);
+        // Refresh one minute before actual expiry to avoid edge conditions.
+        _tokenExpiresAt = expiry.AddMinutes(-1);
+
+        return _cachedToken;
+    }
+
+    /// <inheritdoc />
+    public void Dispose() {
+        if (_ownsHttpClient) {
+            _httpClient.Dispose();
+        }
     }
 
     private sealed class TokenResponse {
         [JsonPropertyName("access_token")]
         public string AccessToken { get; set; } = string.Empty;
+
+        [JsonPropertyName("expires_in")]
+        public int ExpiresIn { get; set; }
     }
 
     private sealed class RenewInfo {
