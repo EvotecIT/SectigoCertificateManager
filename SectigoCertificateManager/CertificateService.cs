@@ -97,6 +97,51 @@ public sealed class CertificateService : IDisposable {
     }
 
     /// <summary>
+    /// Retrieves available certificate types using the active API configuration.
+    /// </summary>
+    /// <param name="organizationId">Optional organization identifier used to filter types.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<CertificateType>> ListCertificateTypesAsync(
+        int? organizationId = null,
+        CancellationToken cancellationToken = default) {
+        if (_adminClient is not null) {
+            return await _adminClient
+                .ListCertificateTypesAsync(organizationId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (_legacyClient is not null) {
+            var client = new CertificateTypesClient(_ownedLegacyClient ?? throw new InvalidOperationException("Legacy client wrapper is not available."));
+            return await client
+                .ListTypesAsync(organizationId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        throw new InvalidOperationException("No underlying client is configured for CertificateService.");
+    }
+
+    /// <summary>
+    /// Retrieves custom fields using the active API configuration.
+    /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<CustomField>> ListCustomFieldsAsync(
+        CancellationToken cancellationToken = default) {
+        if (_adminClient is not null) {
+            return await _adminClient
+                .ListCustomFieldsAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (_legacyClient is not null) {
+            // Legacy API exposes custom-field creation/update but not a direct "list all" endpoint.
+            // For now, list custom fields is supported only for Admin connections.
+            return Array.Empty<CustomField>();
+        }
+
+        throw new InvalidOperationException("No underlying client is configured for CertificateService.");
+    }
+
+    /// <summary>
     /// Streams certificates using the active API configuration.
     /// </summary>
     /// <param name="pageSize">Number of certificates to request per page.</param>
