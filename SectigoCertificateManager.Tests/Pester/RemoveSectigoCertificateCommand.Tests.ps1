@@ -6,7 +6,7 @@ Describe "Remove-SectigoCertificate" {
     }
 
     It "throws when CertificateId is less than or equal to zero" {
-        { Remove-SectigoCertificate -BaseUrl 'b' -Username 'u' -Password 'p' -CustomerUri 'c' -CertificateId 0 } | Should -Throw -ErrorId 'InvalidCertificateId,SectigoCertificateManager.PowerShell.RemoveSectigoCertificateCommand'
+        { Remove-SectigoCertificate -CertificateId 0 } | Should -Throw -ErrorId 'InvalidCertificateId,SectigoCertificateManager.PowerShell.RemoveSectigoCertificateCommand'
     }
 
     It "supports ShouldProcess" {

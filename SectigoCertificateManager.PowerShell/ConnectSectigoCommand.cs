@@ -5,12 +5,22 @@ using SectigoCertificateManager.AdminApi;
 using System.Management.Automation;
 
 /// <summary>Creates shared defaults for Sectigo cmdlets.</summary>
-/// <para>Stores connection parameters in <c>PSDefaultParameterValues</c> so other Sectigo cmdlets can be called without repeating BaseUrl, Username, Password, CustomerUri, or ApiVersion.</para>
+/// <para>
+/// Stores connection parameters for either the legacy SCM API (username/password)
+/// or the Admin Operations API (OAuth2 client credentials). Other Sectigo cmdlets
+/// reuse the active connection without repeating authentication arguments.
+/// </para>
 /// <example>
-///   <summary>Connect once, reuse across cmdlets</summary>
+///   <summary>Connect using legacy SCM credentials</summary>
 ///   <prefix>PS&gt; </prefix>
-///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/ssl" -Username "user" -Password "pass" -CustomerUri "tenant" -ApiVersion V25_6</code>
-///   <para>Subsequent <c>Get-SectigoOrders</c> or <c>Get-SectigoCertificate</c> calls will inherit these values automatically.</para>
+///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "tenant" -ApiVersion V25_6</code>
+///   <para>Subsequent <c>Get-SectigoOrders</c> or <c>Get-SectigoCertificate</c> calls will use the legacy API configuration.</para>
+/// </example>
+/// <example>
+///   <summary>Connect using Admin Operations API client credentials</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Connect-Sectigo -ClientId "&lt;client id&gt;" -ClientSecret "&lt;client secret&gt;" -Instance "enterprise" -AdminBaseUrl "https://admin.enterprise.sectigo.com"</code>
+///   <para>Subsequent certificate cmdlets such as <c>Get-SectigoCertificate</c> and <c>Export-SectigoCertificate</c> will route through the Admin API.</para>
 /// </example>
 [Cmdlet(VerbsCommunications.Connect, "Sectigo")]
 [CmdletBinding(DefaultParameterSetName = LegacyParameterSet)]

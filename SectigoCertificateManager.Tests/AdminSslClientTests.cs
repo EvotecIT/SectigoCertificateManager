@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Xunit;
 
 namespace SectigoCertificateManager.Tests;
@@ -98,5 +99,89 @@ public sealed class AdminSslClientTests {
         Assert.Equal(2, result!.Id);
         Assert.Equal("example.org", result.CommonName);
         Assert.Equal("ABC", result.SerialNumber);
+    }
+
+    [Fact]
+    public async Task RevokeByIdAsync_BuildsUriAndBody() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.NoContent);
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        await client.RevokeByIdAsync(42, "1", "compromised");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/revoke/42", handler.LastRequest!.RequestUri!.ToString());
+        var body = await handler.LastRequest!.Content!.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("1", body.GetProperty("reasonCode").GetString());
+        Assert.Equal("compromised", body.GetProperty("reason").GetString());
+    }
+
+    [Fact]
+    public async Task RevokeBySerialAsync_BuildsUriAndBody() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.NoContent);
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        await client.RevokeBySerialAsync("ABC", "3", "reason-text");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/revoke/serial/ABC", handler.LastRequest!.RequestUri!.ToString());
+        var body = await handler.LastRequest!.Content!.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("3", body.GetProperty("reasonCode").GetString());
+        Assert.Equal("reason-text", body.GetProperty("reason").GetString());
+    }
+
+    [Fact]
+    public async Task MarkAsRevokedAsync_BuildsUriAndBody() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.NoContent);
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        var revokeDate = new DateTimeOffset(2025, 1, 2, 3, 4, 5, TimeSpan.Zero);
+        await client.MarkAsRevokedAsync(certId: 10, serialNumber: "ABC", issuer: "CN=Issuer", revokeDate: revokeDate, reasonCode: "4");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/revoke/manual", handler.LastRequest!.RequestUri!.ToString());
+        var body = await handler.LastRequest!.Content!.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(10, body.GetProperty("certId").GetInt32());
+        Assert.Equal("ABC", body.GetProperty("serialNumber").GetString());
+        Assert.Equal("CN=Issuer", body.GetProperty("issuer").GetString());
+        Assert.Equal("4", body.GetProperty("reasonCode").GetString());
     }
 }

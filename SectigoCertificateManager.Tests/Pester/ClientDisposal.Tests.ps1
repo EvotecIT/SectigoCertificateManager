@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 public sealed class NullHandler : HttpMessageHandler {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent("[]") });
-}
+        }
 '@
         [SectigoCertificateManager.PowerShell.TestHooks]::ClientFactory = [System.Func[SectigoCertificateManager.ApiConfig,SectigoCertificateManager.ISectigoClient]]{
             param($cfg)
@@ -21,6 +21,7 @@ public sealed class NullHandler : HttpMessageHandler {
             $http = [System.Net.Http.HttpClient]::new($handler)
             [SectigoCertificateManager.SectigoClient]::new($cfg, $http)
         }
+        Connect-Sectigo -BaseUrl 'https://example.com' -Username 'u' -Password 'p' -CustomerUri 'c' | Out-Null
     }
     AfterAll {
         [SectigoCertificateManager.PowerShell.TestHooks]::ClientFactory = $null
@@ -28,7 +29,7 @@ public sealed class NullHandler : HttpMessageHandler {
     }
     It "disposes the client" {
         [SectigoCertificateManager.PowerShell.TestHooks]::CreatedClient = $null
-        Get-SectigoCertificateTypes -BaseUrl 'https://example.com' -Username 'u' -Password 'p' -CustomerUri 'c'
+        Get-SectigoCertificateTypes
         $client = [SectigoCertificateManager.PowerShell.TestHooks]::CreatedClient
         $client | Should -Not -BeNullOrEmpty
         $field = $client.GetType().GetField('_disposed', [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance)

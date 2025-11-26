@@ -1,6 +1,7 @@
 using SectigoCertificateManager.Examples.Examples;
 
 await BasicApiExample.RunAsync();
+await AdminCertificatesExample.RunAsync();
 await SearchCertificatesExample.RunAsync();
 await DownloadCertificateExample.RunAsync();
 await DownloadCertificateObjectExample.RunAsync();

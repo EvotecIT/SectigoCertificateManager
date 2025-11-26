@@ -7,13 +7,28 @@ using System.Threading;
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate details.</summary>
-/// <para>Builds an API client and returns the certificate for the specified identifier.</para>
+/// <para>
+/// Uses <see cref="CertificateService"/> to retrieve certificate information
+/// for the active Sectigo connection (legacy SCM or Admin Operations API).
+/// </para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
 ///     <description>Queries the Sectigo API to fetch certificate data.</description>
 ///   </item>
 /// </list>
+/// <example>
+///   <summary>Get a single certificate</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Connect-Sectigo -ClientId "&lt;client id&gt;" -ClientSecret "&lt;client secret&gt;"; Get-SectigoCertificate -CertificateId 12345</code>
+///   <para>Connects using the Admin API and retrieves certificate 12345.</para>
+/// </example>
+/// <example>
+///   <summary>List the latest certificates (legacy SCM)</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "tenant"; Get-SectigoCertificate -Size 30</code>
+///   <para>Connects using legacy credentials and lists the latest 30 certificates.</para>
+/// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificate", DefaultParameterSetName = ListParameterSet)]

@@ -6,20 +6,27 @@ The library defaults to **API version 25.6** as defined in `ApiConfigBuilder`.
 Support for version 25.5 remains available via `ApiVersion.V25_5`. To target
 version 25.6 explicitly, use `ApiVersion.V25_6`.
 
+The core library now supports two connection modes:
+
+- **Legacy SCM API** – username/password + customer URI (`ApiConfig`).
+- **Admin Operations API** – OAuth2 client credentials (`AdminApiConfig`) with
+  routing handled by `CertificateService`.
+
 ## Documentation
 
 HTML copies of the official API reference are included in the repository:
 
 - [certmgr-api-doc-25.4.html](Documentation/certmgr-api-doc-25.4.html)
 - [certmgr-api-doc-25.5.html](Documentation/certmgr-api-doc-25.5.html)
+- [Admin API OpenAPI spec](Documentation/api.json)
 
-## Fluent API
+## Fluent API (legacy SCM)
 
 Create an `ApiConfig` using the fluent builder:
 
 ```csharp
 var config = new ApiConfigBuilder()
-    .WithBaseUrl("https://example.com")
+    .WithBaseUrl("https://cert-manager.com/api")
     .WithCredentials("user", "pass")
     .WithCustomerUri("cst1")
     .WithApiVersion(ApiVersion.V25_6)
@@ -28,42 +35,123 @@ var config = new ApiConfigBuilder()
     .WithHttpClientHandler(h => h.AllowAutoRedirect = false)
     .WithClientCertificate(myCert)
     .Build();
+
+using var client = new SectigoClient(config);
+var certificates = new CertificatesClient(client);
+var cert = await certificates.GetAsync(12345);
 ```
 
-Use the resulting `ApiConfig` to instantiate `SectigoClient`.
+## Fluent API (Admin Operations API + CertificateService)
 
+Use OAuth2 client credentials generated in the **API Keys** area of the
+Sectigo Certificate Manager portal, and route calls through
+`CertificateService`:
+
+```csharp
+using SectigoCertificateManager;
+using SectigoCertificateManager.AdminApi;
+
+var adminConfig = new AdminApiConfig(
+    "https://admin.enterprise.sectigo.com",
+    "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+    "<client id>",
+    "<client secret>");
+
+using var service = new CertificateService(adminConfig);
+var list = await service.ListAsync(size: 10, position: 0);
+
+foreach (var cert in list)
+{
+    Console.WriteLine($"{cert.Id}: {cert.CommonName}");
+}
+```
+
+The same `CertificateService` can be constructed from `ApiConfig` to talk to
+the legacy API; callers do not need to care which API is active.
 
 ## PowerShell Module
 
-Import the module and call the cmdlets:
+Import the module once, then connect using either legacy or Admin mode.
+Subsequent cmdlets reuse the active connection.
 
 ```powershell
 Import-Module ./SectigoCertificateManager.PowerShell.dll
-
-Get-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123 -ApiVersion V25_6
-
-Get-SectigoProfile -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ProfileId 2 -ApiVersion V25_6
-
-New-SectigoOrder -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CommonName "example.com" -ProfileId 1 -SubjectAlternativeNames "www.example.com","admin.example.com" -ApiVersion V25_6
-
-Get-SectigoOrders -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ApiVersion V25_6
-
-Update-SectigoCertificate -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 123 -Csr "<csr>" -DcvMode "EMAIL" -DcvEmail "admin@example.com" -ApiVersion V25_6
 ```
 
-Use `-SubjectAlternativeNames` to specify multiple SAN values when placing an order.
+### Legacy connection (username/password)
 
-Validate a certificate request before issuing it:
+```powershell
+Connect-Sectigo -BaseUrl "https://cert-manager.com/api" `
+                -Username "user" `
+                -Password "pass" `
+                -CustomerUri "tenant1" `
+                -ApiVersion V25_6
 
-```csharp
-var validation = await certificates.ValidateCertificateRequestAsync(
-    new ValidateCertificateRequest { Csr = "<csr>" });
+# Retrieve a single certificate
+Get-SectigoCertificate -CertificateId 12345
+
+# List certificates
+Get-SectigoCertificate -Size 50 -Position 0
+
+# Download a certificate
+Export-SectigoCertificate -CertificateId 12345 -Path './cert.pem'
+
+# Check status / revocation
+Get-SectigoCertificateStatus -CertificateId 12345
+Get-SectigoCertificateRevocation -CertificateId 12345
+
+# Legacy-only operations (inventory, orders, organizations):
+Get-SectigoInventory
+Get-SectigoOrders
+Get-SectigoOrganizations
 ```
+
+### Admin Operations API connection (OAuth2 client credentials)
+
+```powershell
+Connect-Sectigo -ClientId "<client id>" `
+                -ClientSecret "<client secret>" `
+                -Instance "enterprise" `
+                -AdminBaseUrl "https://admin.enterprise.sectigo.com"
+
+# The same cmdlets route through the Admin API:
+Get-SectigoCertificate -CertificateId 17331734
+Export-SectigoCertificate -CertificateId 17331734 -Path './admin-cert.pem'
+Get-SectigoCertificateStatus -CertificateId 17331734
+Get-SectigoCertificateRevocation -CertificateId 17331734
+
+# Inventory and most order/organization-related cmdlets currently remain
+# legacy-only and will throw if used with an Admin connection.
+```
+
+Use `-SubjectAlternativeNames` on `New-SectigoOrder` to specify multiple SAN
+values when placing an order (legacy mode only for now).
 
 ## CLI
 
-Download the issuing chain for a certificate:
+The CLI shares the same routing logic as PowerShell: if Admin OAuth2
+environment variables are present it uses the Admin API; otherwise it uses the
+legacy configuration loaded by `ApiConfigLoader`.
+
+### Legacy usage
+
+Configure your legacy API settings in the JSON file consumed by
+`ApiConfigLoader` (see `ApiConfigLoaderTests` for examples), then run:
 
 ```bash
 dotnet run --project SectigoCertificateManager.CLI get-ca-chain 123 ./chain.pem
 ```
+
+### Admin Operations API usage
+
+```bash
+export SECTIGO_CLIENT_ID="<client id>"
+export SECTIGO_CLIENT_SECRET="<client secret>"
+export SECTIGO_ADMIN_BASE_URL="https://admin.enterprise.sectigo.com"
+export SECTIGO_TOKEN_URL="https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token"
+
+dotnet run --project SectigoCertificateManager.CLI get-ca-chain 17331734 ./chain.pem
+```
+
+The `search-orders` CLI command currently remains legacy-only and uses the
+classic SCM API endpoints.

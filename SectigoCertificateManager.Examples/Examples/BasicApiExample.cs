@@ -5,7 +5,7 @@ using SectigoCertificateManager.Requests;
 namespace SectigoCertificateManager.Examples.Examples;
 
 /// <summary>
-/// Demonstrates configuring the API client and retrieving a certificate.
+/// Demonstrates configuring the legacy SCM API client and retrieving a certificate.
 /// Credentials are generated in the Sectigo Certificate Manager portal.
 /// Navigate to <strong>Administration</strong> \u2192 <strong>Users</strong>, edit your user
 /// and create API credentials. Use the generated login and password below.

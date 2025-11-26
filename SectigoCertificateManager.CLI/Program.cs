@@ -1,13 +1,35 @@
 using SectigoCertificateManager;
+using SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Requests;
+using SectigoCertificateManager.Utilities;
 using System.Net.Http;
 
 static void PrintUsage()
 {
     Console.WriteLine("Commands:");
     Console.WriteLine("  get-ca-chain <certificateId> <outputPath>  Download issuing CA chain");
-    Console.WriteLine("  search-orders [size] [position]            List orders page");
+    Console.WriteLine("  search-orders [size] [position]            List orders page (legacy API only)");
+}
+
+static CertificateService CreateCertificateService()
+{
+    var clientId = Environment.GetEnvironmentVariable("SECTIGO_CLIENT_ID");
+    var clientSecret = Environment.GetEnvironmentVariable("SECTIGO_CLIENT_SECRET");
+
+    if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
+    {
+        var adminBase = Environment.GetEnvironmentVariable("SECTIGO_ADMIN_BASE_URL")
+                        ?? "https://admin.enterprise.sectigo.com";
+        var tokenUrl = Environment.GetEnvironmentVariable("SECTIGO_TOKEN_URL")
+                       ?? "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token";
+        var trimmedBase = adminBase.TrimEnd('/');
+        var adminConfig = new AdminApiConfig(trimmedBase, tokenUrl, clientId!, clientSecret!);
+        return new CertificateService(adminConfig);
+    }
+
+    var legacyConfig = ApiConfigLoader.Load();
+    return new CertificateService(legacyConfig);
 }
 
 if (args.Length == 0)
@@ -24,12 +46,9 @@ if (string.Equals(args[0], "get-ca-chain", StringComparison.OrdinalIgnoreCase))
         return;
     }
 
-    var config = ApiConfigLoader.Load();
-    using var httpClient = new HttpClient();
-    var client = new SectigoClient(config, httpClient);
-    var certificates = new CertificatesClient(client);
-
-    await certificates.GetCaChainAsync(certId, args[2]);
+    using var service = CreateCertificateService();
+    using var certificate = await service.DownloadCertificateAsync(certId);
+    CertificateExport.SavePemChain(certificate, args[2]);
     Console.WriteLine($"Chain written to {args[2]}");
 }
 else if (string.Equals(args[0], "search-orders", StringComparison.OrdinalIgnoreCase))

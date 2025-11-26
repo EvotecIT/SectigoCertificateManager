@@ -124,6 +124,85 @@ public sealed class AdminSslClient {
     }
 
     /// <summary>
+    /// Revokes an SSL certificate by serial number.
+    /// </summary>
+    /// <param name="serialNumber">Certificate serial number.</param>
+    /// <param name="reasonCode">
+    /// Optional revocation reason code string as defined by the Admin API
+    /// (for example, "0", "1", "3", "4", "5").
+    /// When <c>null</c>, "0" (unspecified) is used.
+    /// </param>
+    /// <param name="reason">Optional human-readable revocation reason.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task RevokeBySerialAsync(
+        string serialNumber,
+        string? reasonCode = null,
+        string? reason = null,
+        CancellationToken cancellationToken = default) {
+        if (string.IsNullOrWhiteSpace(serialNumber)) {
+            throw new ArgumentException("Serial number cannot be null or empty.", nameof(serialNumber));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+        var payload = new RevokeRequest {
+            ReasonCode = string.IsNullOrWhiteSpace(reasonCode) ? "0" : reasonCode,
+            Reason = reason
+        };
+
+        var encodedSerial = Uri.EscapeDataString(serialNumber);
+        using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/revoke/serial/{encodedSerial}") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Marks an SSL certificate as revoked in SCM without contacting the CA.
+    /// </summary>
+    /// <param name="certId">Optional certificate identifier.</param>
+    /// <param name="serialNumber">Optional certificate serial number.</param>
+    /// <param name="issuer">Optional certificate issuer used together with <paramref name="serialNumber"/>.</param>
+    /// <param name="revokeDate">Optional revocation date.</param>
+    /// <param name="reasonCode">
+    /// Optional revocation reason code string as defined by the Admin API
+    /// (for example, "0", "1", "3", "4", "5").
+    /// When <c>null</c>, "0" (unspecified) is used.
+    /// </param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task MarkAsRevokedAsync(
+        int? certId = null,
+        string? serialNumber = null,
+        string? issuer = null,
+        DateTimeOffset? revokeDate = null,
+        string? reasonCode = null,
+        CancellationToken cancellationToken = default) {
+        if (!certId.HasValue && string.IsNullOrWhiteSpace(serialNumber)) {
+            throw new ArgumentException("Either certId or serialNumber must be provided.");
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new MarkAsRevokedRequest {
+            CertId = certId,
+            SerialNumber = serialNumber,
+            Issuer = issuer,
+            RevokeDate = revokeDate,
+            ReasonCode = string.IsNullOrWhiteSpace(reasonCode) ? "0" : reasonCode
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/revoke/manual") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
     /// Downloads an issued certificate as a raw byte stream.
     /// </summary>
     /// <param name="sslId">Certificate identifier.</param>
@@ -263,5 +342,22 @@ public sealed class AdminSslClient {
 
         [JsonPropertyName("reason")]
         public string? Reason { get; set; }
+    }
+
+    private sealed class MarkAsRevokedRequest {
+        [JsonPropertyName("certId")]
+        public int? CertId { get; set; }
+
+        [JsonPropertyName("serialNumber")]
+        public string? SerialNumber { get; set; }
+
+        [JsonPropertyName("issuer")]
+        public string? Issuer { get; set; }
+
+        [JsonPropertyName("revokeDate")]
+        public DateTimeOffset? RevokeDate { get; set; }
+
+        [JsonPropertyName("reasonCode")]
+        public string? ReasonCode { get; set; }
     }
 }
