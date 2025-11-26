@@ -19,7 +19,7 @@ public sealed class AdminSslClient : IDisposable {
     private readonly AdminApiConfig _config;
     private readonly HttpClient _httpClient;
     private readonly bool _ownsHttpClient;
-    private string? _cachedToken;
+    private string _cachedToken = string.Empty;
     private DateTimeOffset _tokenExpiresAt;
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
@@ -167,6 +167,68 @@ public sealed class AdminSslClient : IDisposable {
         message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Approves an SSL certificate request that requires approval.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="message">
+    /// Optional message containing additional information about the approval action.
+    /// </param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task ApproveAsync(
+        int sslId,
+        string? message = null,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new ApproveDeclineRequest {
+            Message = message
+        };
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/approve/{sslId}") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    /// <summary>
+    /// Declines an SSL certificate request.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="message">
+    /// Optional message containing additional information about the decline action.
+    /// </param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task DeclineAsync(
+        int sslId,
+        string? message = null,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new ApproveDeclineRequest {
+            Message = message
+        };
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/decline/{sslId}") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -530,6 +592,11 @@ public sealed class AdminSslClient : IDisposable {
 
         [JsonPropertyName("reasonCode")]
         public string? ReasonCode { get; set; }
+    }
+
+    private sealed class ApproveDeclineRequest {
+        [JsonPropertyName("message")]
+        public string? Message { get; set; }
     }
 
     private sealed class DownloadLinkRequest {

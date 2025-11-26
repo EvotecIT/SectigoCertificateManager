@@ -35,7 +35,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Alias("Get-SectigoCertificates")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Certificate), typeof(CertificateResponse))]
-public sealed class GetSectigoCertificateCommand : PSCmdlet {
+public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
     private const string ByIdParameterSet = "ById";
     private const string ListParameterSet = "List";
 
@@ -61,7 +61,10 @@ public sealed class GetSectigoCertificateCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Routes certificate retrieval through <see cref="CertificateService"/> using the active connection.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         CertificateService? service = null;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
@@ -72,18 +75,16 @@ public sealed class GetSectigoCertificateCommand : PSCmdlet {
             }
 
             if (ParameterSetName == ByIdParameterSet) {
-                var certificate = service
-                    .GetAsync(CertificateId, CancellationToken)
-                    .GetAwaiter()
-                    .GetResult();
+                var certificate = await service
+                    .GetAsync(CertificateId, effectiveToken)
+                    .ConfigureAwait(false);
                 WriteObject(certificate);
                 return;
             }
 
-            var certificates = service
-                .ListAsync(Size, Position, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var certificates = await service
+                .ListAsync(Size, Position, effectiveToken)
+                .ConfigureAwait(false);
             var response = new CertificateResponse { Certificates = certificates };
             WriteObject(response);
         } finally {

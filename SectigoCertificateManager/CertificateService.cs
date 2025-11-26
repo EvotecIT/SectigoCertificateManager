@@ -8,6 +8,7 @@ using SectigoCertificateManager.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -93,6 +94,52 @@ public sealed class CertificateService : IDisposable {
         }
 
         throw new InvalidOperationException("No underlying client is configured for CertificateService.");
+    }
+
+    /// <summary>
+    /// Streams certificates using the active API configuration.
+    /// </summary>
+    /// <param name="pageSize">Number of certificates to request per page.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async IAsyncEnumerable<Certificate> EnumerateAsync(
+        int pageSize = 200,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+        if (pageSize <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(pageSize));
+        }
+
+        if (_adminClient is not null) {
+            var position = 0;
+            while (true) {
+                var page = await _adminClient
+                    .ListAsync(pageSize, position, cancellationToken)
+                    .ConfigureAwait(false);
+                if (page is null || page.Count == 0) {
+                    yield break;
+                }
+
+                foreach (var identity in page) {
+                    yield return MapIdentity(identity);
+                }
+
+                if (page.Count < pageSize) {
+                    yield break;
+                }
+
+                position += pageSize;
+            }
+        }
+        else if (_legacyClient is not null) {
+            var request = new CertificateSearchRequest { Size = pageSize };
+            await foreach (var certificate in _legacyClient
+                .EnumerateSearchAsync(request, cancellationToken)
+                .ConfigureAwait(false)) {
+                yield return certificate;
+            }
+        }
+        else {
+            throw new InvalidOperationException("No underlying client is configured for CertificateService.");
+        }
     }
 
     /// <summary>

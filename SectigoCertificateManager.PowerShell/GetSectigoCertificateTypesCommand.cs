@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -30,7 +31,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateTypes")]
 [CmdletBinding()]
 [OutputType(typeof(Models.CertificateType))]
-public sealed class GetSectigoCertificateTypesCommand : PSCmdlet {
+public sealed class GetSectigoCertificateTypesCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -45,11 +46,14 @@ public sealed class GetSectigoCertificateTypesCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Outputs all certificate types.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
         if (adminConfigObj is not null) {
             throw new PSInvalidOperationException("Get-SectigoCertificateTypes is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
         }
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
 
         ISectigoClient? client = null;
         try {
@@ -57,9 +61,8 @@ public sealed class GetSectigoCertificateTypesCommand : PSCmdlet {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var types = new CertificateTypesClient(client);
-            var list = types.ListTypesAsync(OrganizationId, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var list = await types.ListTypesAsync(OrganizationId, effectiveToken)
+                .ConfigureAwait(false);
             foreach (var type in list) {
                 WriteObject(type);
             }

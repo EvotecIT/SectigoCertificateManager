@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using System;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -26,7 +27,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateKeystoreLink")]
 [CmdletBinding()]
 [OutputType(typeof(string))]
-public sealed class GetSectigoCertificateKeystoreLinkCommand : PSCmdlet {
+public sealed class GetSectigoCertificateKeystoreLinkCommand : AsyncPSCmdlet {
     /// <summary>The certificate identifier.</summary>
     [Parameter(Mandatory = true, Position = 0)]
     public int CertificateId { get; set; }
@@ -46,29 +47,26 @@ public sealed class GetSectigoCertificateKeystoreLinkCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates a keystore download link using the Admin Operations API.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         if (CertificateId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(CertificateId));
             var record = new ErrorRecord(ex, "InvalidCertificateId", ErrorCategory.InvalidArgument, CertificateId);
             ThrowTerminatingError(record);
         }
 
-        if (!ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig)) {
+        if (!ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) || adminConfig == null) {
             var ex = new PSInvalidOperationException("Get-SectigoCertificateKeystoreLink is only supported with an Admin (OAuth2) connection. Use Connect-Sectigo -ClientId / -ClientSecret first.");
             var record = new ErrorRecord(ex, "AdminConnectionRequired", ErrorCategory.InvalidOperation, null);
             ThrowTerminatingError(record);
         }
 
-        CertificateService? service = null;
-        try {
-            service = new CertificateService(adminConfig);
-            var link = service
-                .CreateKeystoreDownloadLinkAsync(CertificateId, FormatType, Passphrase, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
-            WriteObject(link);
-        } finally {
-            service?.Dispose();
-        }
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
+        var service = new CertificateService(adminConfig!);
+        var link = await service
+            .CreateKeystoreDownloadLinkAsync(CertificateId, FormatType, Passphrase, effectiveToken)
+            .ConfigureAwait(false);
+        WriteObject(link);
     }
 }

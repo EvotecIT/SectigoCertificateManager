@@ -1,4 +1,5 @@
 using SectigoCertificateManager.AdminApi;
+using SectigoCertificateManager.Responses;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -14,15 +15,20 @@ namespace SectigoCertificateManager.Tests;
 /// </summary>
 public sealed class AdminSslClientTests {
     private sealed class TestHandler : HttpMessageHandler {
-        private readonly HttpResponseMessage _tokenResponse;
-        private readonly HttpResponseMessage _apiResponse;
+        private readonly string _tokenJson;
+        private readonly HttpStatusCode _tokenStatus;
+        private readonly string _apiJson;
+        private readonly HttpStatusCode _apiStatus;
 
         public HttpRequestMessage? LastRequest { get; private set; }
         public string? LastRequestBody { get; private set; }
+        public int TokenRequestCount { get; private set; }
 
         public TestHandler(HttpResponseMessage tokenResponse, HttpResponseMessage apiResponse) {
-            _tokenResponse = tokenResponse;
-            _apiResponse = apiResponse;
+            _tokenStatus = tokenResponse.StatusCode;
+            _tokenJson = tokenResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            _apiStatus = apiResponse.StatusCode;
+            _apiJson = apiResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
@@ -35,10 +41,17 @@ public sealed class AdminSslClientTests {
             }
 
             if (request.RequestUri!.AbsoluteUri.Contains("protocol/openid-connect/token")) {
-                return _tokenResponse;
+                TokenRequestCount++;
+                var tokenResponse = new HttpResponseMessage(_tokenStatus) {
+                    Content = new StringContent(_tokenJson, System.Text.Encoding.UTF8, "application/json")
+                };
+                return tokenResponse;
             }
 
-            return _apiResponse;
+            var apiResponse = new HttpResponseMessage(_apiStatus) {
+                Content = new StringContent(_apiJson, System.Text.Encoding.UTF8, "application/json")
+            };
+            return apiResponse;
         }
     }
 
@@ -164,7 +177,7 @@ public sealed class AdminSslClientTests {
             "secret");
         var client = new AdminSslClient(config, http);
 
-        await using var ms = new MemoryStream(new byte[] { 1, 2, 3 });
+        using var ms = new MemoryStream(new byte[] { 1, 2, 3 });
         var result = await client.ImportAsync(15, ms, "certs.zip");
 
         Assert.NotNull(handler.LastRequest);
@@ -333,5 +346,91 @@ public sealed class AdminSslClientTests {
         Assert.Equal("ABC", body.GetProperty("serialNumber").GetString());
         Assert.Equal("CN=Issuer", body.GetProperty("issuer").GetString());
         Assert.Equal("4", body.GetProperty("reasonCode").GetString());
+    }
+
+    [Fact]
+    public async Task ApproveAsync_BuildsUriAndBody() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.NoContent);
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        await client.ApproveAsync(99, "approved");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/approve/99", handler.LastRequest!.RequestUri!.ToString());
+        Assert.False(string.IsNullOrWhiteSpace(handler.LastRequestBody));
+        using var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        var body = doc.RootElement;
+        Assert.Equal("approved", body.GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task DeclineAsync_BuildsUriAndBody() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.NoContent);
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        await client.DeclineAsync(77, "declined");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/decline/77", handler.LastRequest!.RequestUri!.ToString());
+        Assert.False(string.IsNullOrWhiteSpace(handler.LastRequestBody));
+        using var doc = JsonDocument.Parse(handler.LastRequestBody!);
+        var body = doc.RootElement;
+        Assert.Equal("declined", body.GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task TokenIsCachedAcrossMultipleApiCalls() {
+        var token = new { access_token = "tok", expires_in = 3600 };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var identities = new[] {
+            new AdminSslIdentity { SslId = 1, CommonName = "example.com", SerialNumber = "123" }
+        };
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(identities)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        // Two operations should share the same cached token.
+        _ = await client.ListAsync(5, 0);
+        _ = await client.GetAsync(1);
+
+        Assert.Equal(1, handler.TokenRequestCount);
     }
 }

@@ -3,6 +3,7 @@ using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Requests;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -19,7 +20,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsCommon.New, "SectigoOrder")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Certificate))]
-public sealed class NewSectigoOrderCommand : PSCmdlet {
+public sealed class NewSectigoOrderCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -47,7 +48,7 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
 
     /// <summary>Issues a certificate using provided parameters.</summary>
     /// <para>Builds an API client and submits an <see cref="IssueCertificateRequest"/>.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         foreach (var san in SubjectAlternativeNames) {
             if (string.IsNullOrWhiteSpace(san)) {
                 var ex = new ArgumentException("Value cannot be empty.", nameof(SubjectAlternativeNames));
@@ -67,6 +68,9 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
             throw new PSInvalidOperationException("New-SectigoOrder is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
         }
 
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         var config = ConnectionHelper.GetLegacyConfig(SessionState);
         ISectigoClient? client = null;
         try {
@@ -79,9 +83,8 @@ public sealed class NewSectigoOrderCommand : PSCmdlet {
                 Term = Term,
                 SubjectAlternativeNames = SubjectAlternativeNames
             };
-            var certificate = certificates.IssueAsync(request, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var certificate = await certificates.IssueAsync(request, effectiveToken)
+                .ConfigureAwait(false);
             WriteObject(certificate);
         } finally {
             if (client is IDisposable disposable) {

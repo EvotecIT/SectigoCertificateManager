@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -17,7 +18,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoOrganizations")]
 [OutputType(typeof(Models.Organization))]
-public sealed class GetSectigoOrganizationsCommand : PSCmdlet {
+public sealed class GetSectigoOrganizationsCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -28,11 +29,14 @@ public sealed class GetSectigoOrganizationsCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Creates an API client and outputs all organizations.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
         if (adminConfigObj is not null) {
             throw new PSInvalidOperationException("Get-SectigoOrganizations is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
         }
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
 
         ISectigoClient? client = null;
         try {
@@ -40,9 +44,8 @@ public sealed class GetSectigoOrganizationsCommand : PSCmdlet {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var organizations = new OrganizationsClient(client);
-            var list = organizations.ListOrganizationsAsync(CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var list = await organizations.ListOrganizationsAsync(effectiveToken)
+                .ConfigureAwait(false);
             foreach (var org in list) {
                 WriteObject(org);
             }

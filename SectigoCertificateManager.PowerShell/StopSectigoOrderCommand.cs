@@ -3,6 +3,7 @@ using SectigoCertificateManager.Clients;
 using System;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -24,7 +25,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsLifecycle.Stop, "SectigoOrder", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
-public sealed class StopSectigoOrderCommand : PSCmdlet {
+public sealed class StopSectigoOrderCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -39,7 +40,7 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
 
     /// <summary>Cancels an order.</summary>
     /// <para>Calls the cancel endpoint for the specified order.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         if (OrderId <= 0) {
             var ex = new ArgumentOutOfRangeException(nameof(OrderId));
             var record = new ErrorRecord(ex, "InvalidOrderId", ErrorCategory.InvalidArgument, OrderId);
@@ -55,15 +56,18 @@ public sealed class StopSectigoOrderCommand : PSCmdlet {
             throw new PSInvalidOperationException("Stop-SectigoOrder is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
         }
 
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         var config = ConnectionHelper.GetLegacyConfig(SessionState);
         ISectigoClient? client = null;
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var orders = new OrdersClient(client);
-            orders.CancelAsync(OrderId, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            await orders
+                .CancelAsync(OrderId, effectiveToken)
+                .ConfigureAwait(false);
         } finally {
             if (client is IDisposable disposable) {
                 disposable.Dispose();

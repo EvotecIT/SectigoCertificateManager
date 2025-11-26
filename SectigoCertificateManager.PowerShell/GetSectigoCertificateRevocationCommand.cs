@@ -1,6 +1,7 @@
 using SectigoCertificateManager;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -17,7 +18,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateRevocation")]
 [CmdletBinding()]
 [OutputType(typeof(Models.CertificateRevocation))]
-public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet {
+public sealed class GetSectigoCertificateRevocationCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -32,7 +33,10 @@ public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Resolves certificate revocation details through <see cref="CertificateService"/>.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
+
         CertificateService? service = null;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
@@ -42,10 +46,9 @@ public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet {
                 service = new CertificateService(config);
             }
 
-            var revocation = service
-                .GetRevocationAsync(CertificateId, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var revocation = await service
+                .GetRevocationAsync(CertificateId, effectiveToken)
+                .ConfigureAwait(false);
             WriteObject(revocation);
         } finally {
             service?.Dispose();

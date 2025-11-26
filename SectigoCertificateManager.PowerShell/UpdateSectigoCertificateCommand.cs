@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Requests;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -18,7 +19,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsData.Update, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
 [CmdletBinding()]
 [OutputType(typeof(int))]
-public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
+public sealed class UpdateSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -45,10 +46,13 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
 
     /// <summary>Renews a certificate using provided parameters.</summary>
     /// <para>Submits a <see cref="RenewCertificateRequest"/> using the active connection.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         if (!ShouldProcess($"Certificate {CertificateId}", "Update")) {
             return;
         }
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
 
         CertificateService? service = null;
         try {
@@ -65,10 +69,9 @@ public sealed class UpdateSectigoCertificateCommand : PSCmdlet {
                 DcvEmail = DcvEmail
             };
 
-            var newId = service
-                .RenewByIdAsync(CertificateId, request, CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var newId = await service
+                .RenewByIdAsync(CertificateId, request, effectiveToken)
+                .ConfigureAwait(false);
             WriteObject(newId);
         } finally {
             service?.Dispose();

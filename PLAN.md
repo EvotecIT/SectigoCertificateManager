@@ -65,7 +65,7 @@
       - [x] `ById` set: `-CertificateId` (single certificate).
       - [x] `List` set: `-Size`, `-Position`, optional filters.
     - [x] Impl: use `CertificateService` to route Admin vs legacy.
-- [-] Remove auth parameters from all cmdlets and rely solely on connection state:
+- [x] Remove auth parameters from all cmdlets and rely solely on connection state:
   - [x] Certificates (list + single) – auth removed; use `CertificateService` and connection state.
   - [x] Inventory (`Get-SectigoInventory`) – legacy config only, rejects Admin for now.
   - [x] Certificate detail (`Get-SectigoCertificate`) – uses `CertificateService` for both Admin and legacy.
@@ -149,7 +149,26 @@
 - [x] C# tests:
   - [x] Add/extend xUnit tests for `AdminSslClient` and service routers.
   - [x] Ensure Admin paths are covered for list/get (and related service mapping). Legacy paths are already covered by existing tests.
-- [-] PowerShell tests (Pester):
+- [x] PowerShell tests (Pester):
   - [x] Update existing tests to use `Connect-Sectigo` instead of per-cmdlet auth where applicable.
   - [x] Add tests for Admin-mode behaviour (including “not yet supported” paths until wired).
 - [x] CI: ensure `dotnet test` and Pester suites pass locally and in CI for all target frameworks.
+
+## 9. Async friendliness and PowerShell migration
+
+The long-term execution order for remaining work is:
+
+1. Complete API surface for the scenarios we support (covered in sections 1–5).
+2. Extend tests for error paths and edge conditions (section 8).
+3. Ensure the core library is fully async-friendly (no internal blocking on async calls).
+4. Migrate PowerShell cmdlets to use `AsyncPSCmdlet` where appropriate.
+
+Concretely:
+
+- [x] Library async audit:
+  - [x] Scan core library for `.Result` / `.GetAwaiter().GetResult()` and replace with async flow where feasible.
+  - [x] Consider adding streaming helpers on `CertificateService` (for example, `EnumerateCertificatesAsync`) to avoid large in-memory lists.
+- [x] PowerShell async migration:
+  - [x] Convert certificate-centric cmdlets (`Get/Export/Remove/Update-SectigoCertificate`, `Get-SectigoCertificateKeystoreLink`, status/revocation) to derive from `AsyncPSCmdlet`.
+  - [x] Gradually convert remaining cmdlets (`Get-SectigoOrders*`, `Wait-SectigoOrder`, etc.) where async semantics provide clear benefit.
+  - [x] Keep synchronous behaviour for simple, quick operations where async does not materially improve UX.

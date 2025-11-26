@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using System.Management.Automation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SectigoCertificateManager.PowerShell;
 
@@ -24,7 +25,7 @@ namespace SectigoCertificateManager.PowerShell;
 [Cmdlet(VerbsCommon.Get, "SectigoProfiles")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Profile))]
-public sealed class GetSectigoProfilesCommand : PSCmdlet {
+public sealed class GetSectigoProfilesCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
@@ -35,11 +36,14 @@ public sealed class GetSectigoProfilesCommand : PSCmdlet {
 
     /// <summary>Executes the cmdlet.</summary>
     /// <para>Outputs all profiles using the active connection.</para>
-    protected override void ProcessRecord() {
+    protected override async Task ProcessRecordAsync() {
         var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
         if (adminConfigObj is not null) {
             throw new PSInvalidOperationException("Get-SectigoProfiles is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
         }
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
+        var effectiveToken = linked.Token;
 
         ISectigoClient? client = null;
         try {
@@ -47,9 +51,8 @@ public sealed class GetSectigoProfilesCommand : PSCmdlet {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
             var profilesClient = new ProfilesClient(client);
-            var list = profilesClient.ListProfilesAsync(CancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            var list = await profilesClient.ListProfilesAsync(effectiveToken)
+                .ConfigureAwait(false);
             foreach (var profile in list) {
                 WriteObject(profile);
             }
