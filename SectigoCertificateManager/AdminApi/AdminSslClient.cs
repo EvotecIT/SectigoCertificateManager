@@ -277,6 +277,50 @@ public sealed class AdminSslClient {
         return result?.SslId ?? 0;
     }
 
+    /// <summary>
+    /// Creates a keystore download link for the specified certificate.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="formatType">
+    /// Keystore format type as defined by the Admin API (for example, <c>key</c>, <c>p12</c>, <c>p12aes</c>, <c>jks</c>, <c>pem</c>).
+    /// </param>
+    /// <param name="passphrase">Optional passphrase used to protect the keystore.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<string> CreateKeystoreLinkAsync(
+        int sslId,
+        string formatType,
+        string? passphrase = null,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        if (string.IsNullOrWhiteSpace(formatType)) {
+            throw new ArgumentException("Format type cannot be null or empty.", nameof(formatType));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new DownloadLinkRequest {
+            Passphrase = passphrase
+        };
+
+        var path = $"api/ssl/v2/keystore/{sslId}/{Uri.EscapeDataString(formatType)}";
+        using var message = new HttpRequestMessage(HttpMethod.Post, path) {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content
+            .ReadFromJsonAsyncSafe<DownloadFromPkResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return result?.Link ?? string.Empty;
+    }
+
     private string BuildListUri(int? size, int? position) {
         var builder = new StringBuilder("api/ssl/v2");
         var hasQuery = false;
@@ -359,5 +403,15 @@ public sealed class AdminSslClient {
 
         [JsonPropertyName("reasonCode")]
         public string? ReasonCode { get; set; }
+    }
+
+    private sealed class DownloadLinkRequest {
+        [JsonPropertyName("passphrase")]
+        public string? Passphrase { get; set; }
+    }
+
+    private sealed class DownloadFromPkResponse {
+        [JsonPropertyName("link")]
+        public string? Link { get; set; }
     }
 }

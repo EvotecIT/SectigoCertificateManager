@@ -246,6 +246,46 @@ public sealed class CertificateService : IDisposable {
         throw new InvalidOperationException("No underlying client is configured for CertificateService.");
     }
 
+    /// <summary>
+    /// Creates a keystore download link for a certificate using the Admin API.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate.</param>
+    /// <param name="formatType">
+    /// Keystore format type as defined by the Admin API (for example, <c>key</c>, <c>p12</c>, <c>p12aes</c>, <c>jks</c>, <c>pem</c>).
+    /// </param>
+    /// <param name="passphrase">Optional passphrase used to protect the keystore.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>A keystore download link.</returns>
+    /// <remarks>
+    /// This operation is only supported when the service is configured with an Admin API configuration.
+    /// When configured with a legacy API configuration, a <see cref="NotSupportedException"/> is thrown.
+    /// </remarks>
+    public async Task<string> CreateKeystoreDownloadLinkAsync(
+        int certificateId,
+        string formatType,
+        string? passphrase = null,
+        CancellationToken cancellationToken = default) {
+        if (certificateId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(certificateId));
+        }
+
+        if (string.IsNullOrWhiteSpace(formatType)) {
+            throw new ArgumentException("Format type cannot be null or empty.", nameof(formatType));
+        }
+
+        if (_adminClient is not null) {
+            return await _adminClient
+                .CreateKeystoreLinkAsync(certificateId, formatType, passphrase, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (_legacyClient is not null) {
+            throw new NotSupportedException("Keystore download is only supported when using the Admin Operations API configuration.");
+        }
+
+        throw new InvalidOperationException("No underlying client is configured for CertificateService.");
+    }
+
     private static DateTimeOffset? ParseDate(string? value) {
         if (string.IsNullOrWhiteSpace(value)) {
             return null;

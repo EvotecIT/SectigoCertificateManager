@@ -12,6 +12,15 @@ The core library now supports two connection modes:
 - **Admin Operations API** – OAuth2 client credentials (`AdminApiConfig`) with
   routing handled by `CertificateService`.
 
+## Choosing legacy vs Admin API
+
+- Use the **legacy SCM API** when you already rely on username/password
+  credentials and require features that are not yet exposed via the Admin
+  Operations API (for example, some inventory and order/organization flows).
+- Use the **Admin Operations API** when you want modern OAuth2 client
+  credentials, better alignment with the web portal’s “Admin” experience, and
+  access to newer SSL endpoints such as `/api/ssl/v2`.
+
 ## Documentation
 
 HTML copies of the official API reference are included in the repository:

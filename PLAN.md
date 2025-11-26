@@ -12,10 +12,12 @@
   - [-] Additional SSL operations (renew, revoke, collect, etc.) mapped to `api.json`:
     - [x] Collect endpoint (`/collect/{sslId}`) for download.
     - [x] Renew by id endpoint (`/renewById/{sslId}`).
-    - [-] Revoke endpoints:
+  - [x] Revoke endpoints:
       - [x] By id (`/revoke/{id}`) via `RevokeByIdAsync`.
-      - [ ] By serial/manual (`/revoke/serial/{serialNumber}`, `/revoke/manual`).
-    - [ ] Keystore / download (`/keystore/{sslId}/{formatType}`, `/collect/{sslId}`)
+      - [x] By serial/manual (`/revoke/serial/{serialNumber}`, `/revoke/manual`) via `RevokeBySerialAsync` and `MarkAsRevokedAsync`.
+    - [-] Keystore / download:
+      - [x] Keystore link (`/keystore/{sslId}/{formatType}`) via `CreateKeystoreLinkAsync` and `CertificateService.CreateKeystoreDownloadLinkAsync`.
+      - [x] Download certificate (`/collect/{sslId}`) via `CollectAsync` and `CertificateService.DownloadCertificateAsync`.
     - [ ] Enroll / import (`/enroll`, `/enroll-keygen`, `/import`)
 
 ## 2. Unified routing services (C#)
@@ -34,7 +36,7 @@
     - [x] Renewal (`RenewByIdAsync` → Admin renewById / legacy renew).
     - [x] Remove (`RemoveAsync` → Admin revokeById / legacy delete).
 - [-] Add targeted unit tests for `CertificateService`:
-  - [ ] Legacy path: uses a fake `ISectigoClient` or WireMock endpoints.
+  - [ ] Legacy path: uses a fake `ISectigoClient` or WireMock endpoints (covered today by broader client tests, but not a dedicated service test).
   - [x] Admin path: uses a fake `HttpMessageHandler` or WireMock endpoints for `/api/ssl/v2`.
 
 ## 3. Connection model & configuration
@@ -97,17 +99,17 @@ For each area below, the plan is:
 
 ### 5.2 Certificate status, revocation, export
 
-- [-] Map Admin equivalents in `AdminSslClient` / related clients:
+- [x] Map Admin equivalents in `AdminSslClient` / related clients:
   - [x] Status retrieval via `AdminSslClient.GetAsync` + mapping in `CertificateService`.
   - [x] Revocation by id endpoint (`/revoke/{id}`) via `RevokeByIdAsync`.
-  - [ ] Additional revocation endpoints (`/revoke/serial`, `/revoke/manual`).
+  - [x] Additional revocation endpoints (`/revoke/serial`, `/revoke/manual`) via `RevokeBySerialAsync` and `MarkAsRevokedAsync`.
   - [x] Download/collect endpoint for export.
 - [x] Update cmdlets:
   - [x] `Get-SectigoCertificateStatus` → uses `CertificateService` (Admin + legacy).
   - [x] `Get-SectigoCertificateRevocation` → uses `CertificateService` (Admin + legacy).
   - [x] `Export-SectigoCertificate` → uses `CertificateService.DownloadCertificateAsync` (Admin + legacy).
 - [-] Tests for both modes:
-  - [x] C#: `CertificateServiceTests` cover Admin status, revocation, download.
+  - [x] C#: `CertificateServiceTests` and `AdminSslClientTests` cover Admin status, revocation, download.
   - [ ] Pester: cmdlets in Admin vs legacy mode (no network) still to be expanded.
 
 ### 5.3 Inventory / search helpers
@@ -139,18 +141,18 @@ For each area below, the plan is:
 
 ## 7. Documentation & examples
 
-- [ ] Update `README.md` PowerShell examples to:
-  - [ ] Use `Connect-Sectigo` (legacy) instead of per-cmdlet auth parameters.
-  - [ ] Add examples for Admin mode (`ClientId`/`ClientSecret`) with `Get-SectigoCertificate`.
-- [ ] Add a short “Choosing legacy vs Admin API” section.
-- [ ] Update examples in `SectigoCertificateManager.Examples` to include Admin API usage.
+- [x] Update `README.md` PowerShell examples to:
+  - [x] Use `Connect-Sectigo` (legacy) instead of per-cmdlet auth parameters.
+  - [x] Add examples for Admin mode (`ClientId`/`ClientSecret`) with `Get-SectigoCertificate`.
+- [x] Add a short “Choosing legacy vs Admin API” section.
+- [x] Update examples in `SectigoCertificateManager.Examples` to include Admin API usage.
 
 ## 8. Testing and verification
 
 - [x] C# tests:
   - [x] Add/extend xUnit tests for `AdminSslClient` and service routers.
   - [x] Ensure Admin paths are covered for list/get (and related service mapping). Legacy paths are already covered by existing tests.
-- [ ] PowerShell tests (Pester):
-  - [ ] Update existing tests to use `Connect-Sectigo` instead of per-cmdlet auth where applicable.
+- [-] PowerShell tests (Pester):
+  - [x] Update existing tests to use `Connect-Sectigo` instead of per-cmdlet auth where applicable.
   - [ ] Add tests for Admin-mode behaviour (including “not yet supported” paths until wired).
 - [ ] CI: ensure `dotnet test` and Pester suites pass locally and in CI for all target frameworks.
