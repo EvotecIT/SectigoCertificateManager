@@ -75,7 +75,7 @@
   - [x] Export:
     - [x] `Export-SectigoCertificate` – uses `CertificateService` for Admin and legacy.
   - [x] Orders:
-    - [x] `New-SectigoOrder`, `Renew-SectigoCertificate`, `Update-SectigoCertificate` – legacy only, reject Admin.
+    - [x] `New-SectigoOrder`, `Invoke-SectigoCertificateRenewal`, `Update-SectigoCertificate` – legacy only, reject Admin.
     - [x] `Get-SectigoOrders`, `Get-SectigoOrdersPage` – legacy only, reject Admin.
   - [x] Organizations / profiles:
     - [x] `Get-SectigoOrganizations` – legacy only, rejects Admin.
