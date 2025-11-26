@@ -3,6 +3,7 @@ namespace SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using SectigoCertificateManager.Utilities;
+using System.IO;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -302,14 +303,19 @@ public sealed class AdminSslClient : IDisposable {
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        using var response = await _httpClient
+            .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
+        var buffer = new MemoryStream();
 #if NETSTANDARD2_0 || NET472
-        return await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        await response.Content.CopyToAsync(buffer).ConfigureAwait(false);
 #else
-        return await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        await response.Content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
 #endif
+        buffer.Position = 0;
+        return buffer;
     }
 
     /// <summary>
