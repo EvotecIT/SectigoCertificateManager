@@ -1,12 +1,11 @@
 using SectigoCertificateManager;
-using SectigoCertificateManager.Clients;
 using System.Management.Automation;
 using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate revocation information.</summary>
-/// <para>Creates an API client and returns revocation details for the specified certificate.</para>
+/// <para>Resolves revocation details for the specified certificate using the active Sectigo connection.</para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -32,27 +31,24 @@ public sealed class GetSectigoCertificateRevocationCommand : PSCmdlet {
     public CancellationToken CancellationToken { get; set; }
 
     /// <summary>Executes the cmdlet.</summary>
-    /// <para>Creates an API client and retrieves certificate revocation details.</para>
+    /// <para>Resolves certificate revocation details through <see cref="CertificateService"/>.</para>
     protected override void ProcessRecord() {
-        var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
-        if (adminConfigObj is not null) {
-            throw new PSInvalidOperationException("Get-SectigoCertificateRevocation is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
-        }
-
-        ISectigoClient? client = null;
+        CertificateService? service = null;
         try {
-            var config = ConnectionHelper.GetLegacyConfig(SessionState);
-            client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
-            TestHooks.CreatedClient = client;
-            var certificates = new CertificatesClient(client);
-            var revocation = certificates.GetRevocationAsync(CertificateId, CancellationToken)
+            if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig)) {
+                service = new CertificateService(adminConfig!);
+            } else {
+                var config = ConnectionHelper.GetLegacyConfig(SessionState);
+                service = new CertificateService(config);
+            }
+
+            var revocation = service
+                .GetRevocationAsync(CertificateId, CancellationToken)
                 .GetAwaiter()
                 .GetResult();
             WriteObject(revocation);
         } finally {
-            if (client is IDisposable disposable) {
-                disposable.Dispose();
-            }
+            service?.Dispose();
         }
     }
 }
