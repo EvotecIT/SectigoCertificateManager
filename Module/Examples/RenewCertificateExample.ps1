@@ -7,5 +7,4 @@ Connect-Sectigo -BaseUrl "https://example.com" `
                 -CustomerUri "cst1" `
                 -ApiVersion V25_6 | Out-Null
 
-Invoke-SectigoCertificateRenewal -OrderNumber 10 -Csr "CSR" -DcvMode "Email"
-
+Invoke-SectigoCertificateRenewal -OrderNumber 10 -Csr "CSR" -DcvMode Email

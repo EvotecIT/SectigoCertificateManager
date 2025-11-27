@@ -35,7 +35,7 @@ public sealed class RenewSectigoCertificateCommand : PSCmdlet {
 
     /// <summary>The domain control validation mode.</summary>
     [Parameter(Mandatory = true)]
-    public string DcvMode { get; set; } = string.Empty;
+    public DcvMode DcvMode { get; set; } = DcvMode.Email;
 
     /// <summary>The domain control validation email address.</summary>
     [Parameter]
@@ -68,6 +68,8 @@ public sealed class RenewSectigoCertificateCommand : PSCmdlet {
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose(
+                $"Renewing certificate for order number {OrderNumber} using the legacy API at '{config.BaseUrl}' with DCV mode '{DcvMode}'.");
             var certificates = new CertificatesClient(client);
             var request = new RenewCertificateRequest {
                 Csr = Csr,

@@ -33,6 +33,14 @@ public sealed class RemoveSectigoCertificateCommand : AsyncPSCmdlet {
     [Parameter(Mandatory = true, Position = 0)]
     public int CertificateId { get; set; }
 
+    /// <summary>The revocation reason code used when revoking via the Admin API.</summary>
+    [Parameter]
+    public RevocationReason ReasonCode { get; set; } = RevocationReason.Unspecified;
+
+    /// <summary>Optional human-readable revocation reason text used when revoking via the Admin API.</summary>
+    [Parameter]
+    public string? Reason { get; set; }
+
     /// <summary>Optional cancellation token.</summary>
     [Parameter]
     public CancellationToken CancellationToken { get; set; }
@@ -54,16 +62,22 @@ public sealed class RemoveSectigoCertificateCommand : AsyncPSCmdlet {
         var effectiveToken = linked.Token;
 
         CertificateService? service = null;
+        var usingAdmin = false;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
                 service = new CertificateService(adminConfig);
+                usingAdmin = true;
             } else {
                 var config = ConnectionHelper.GetLegacyConfig(SessionState);
                 service = new CertificateService(config);
             }
 
+            WriteVerbose(usingAdmin
+                ? $"Revoking certificate {CertificateId} using the Admin API with reason code '{ReasonCode}' and reason '{Reason ?? "<none>"}'."
+                : $"Deleting certificate {CertificateId} using the legacy API.");
+
             await service
-                .RemoveAsync(CertificateId, cancellationToken: effectiveToken)
+                .RemoveAsync(CertificateId, ReasonCode, Reason, effectiveToken)
                 .ConfigureAwait(false);
         } finally {
             service?.Dispose();

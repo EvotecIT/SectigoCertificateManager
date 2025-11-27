@@ -25,7 +25,7 @@ public static class RenewCertificateExample {
         Console.WriteLine("Renewing certificate...");
         var request = new RenewCertificateRequest {
             Csr = "<csr>",
-            DcvMode = "EMAIL",
+            DcvMode = DcvMode.Email,
             DcvEmail = "admin@example.com"
         };
         var newId = await certificates.RenewAsync(12345, request);

@@ -360,7 +360,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
 
         var body = new RenewInfo {
             Csr = request.Csr,
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -395,7 +395,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
 
         var body = new RenewInfo {
             Csr = request.Csr,
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -525,7 +525,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var body = new RenewManualBody {
             Id = request.Id > 0 ? request.Id : sslId,
             OrderNumber = request.OrderNumber,
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -561,7 +561,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
             Reason = request.Reason,
             CommonName = request.CommonName,
             SubjectAlternativeNames = request.SubjectAlternativeNames ?? Array.Empty<string>(),
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -933,6 +933,18 @@ public sealed class AdminSslClient : AdminApiClientBase {
 
         [JsonPropertyName("dcvEmail")]
         public string? DcvEmail { get; set; }
+    }
+
+    private static string? MapDcvMode(DcvMode mode) {
+        return mode switch {
+            DcvMode.None => null,
+            DcvMode.Email => "EMAIL",
+            DcvMode.Cname => "CNAME",
+            DcvMode.Http => "HTTP",
+            DcvMode.Https => "HTTPS",
+            DcvMode.Txt => "TXT",
+            _ => null
+        };
     }
 
     private sealed class RevokeRequest {

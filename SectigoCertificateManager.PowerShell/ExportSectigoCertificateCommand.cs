@@ -63,13 +63,19 @@ public sealed class ExportSectigoCertificateCommand : AsyncPSCmdlet {
         var effectiveToken = linked.Token;
 
         CertificateService? service = null;
+        var usingAdmin = false;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
                 service = new CertificateService(adminConfig);
+                usingAdmin = true;
             } else {
                 var config = ConnectionHelper.GetLegacyConfig(SessionState);
                 service = new CertificateService(config);
             }
+
+            WriteVerbose(usingAdmin
+                ? $"Downloading certificate {CertificateId} using the Admin API and exporting as {Format} to '{Path}'."
+                : $"Downloading certificate {CertificateId} using the legacy API and exporting as {Format} to '{Path}'.");
 
             using var certificate = await service
                 .DownloadCertificateAsync(CertificateId, format: null, cancellationToken: effectiveToken)

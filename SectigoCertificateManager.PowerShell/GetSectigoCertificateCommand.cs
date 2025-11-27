@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Responses;
 using System;
+using System.Linq;
 using System.Management.Automation;
 using System.Net.Http;
 using System.Threading;
@@ -67,8 +68,7 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
     /// Optional certificate status filter (for example, Issued, Expired). When specified, applies only to Admin connections.
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet)]
-    [ValidateNotNullOrEmpty]
-    public string Status { get; set; } = string.Empty;
+    public CertificateStatus Status { get; set; } = CertificateStatus.Any;
 
     /// <summary>
     /// Optional organization identifier filter. When specified, applies only to Admin connections.
@@ -92,6 +92,14 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
     [Parameter(ParameterSetName = ListParameterSet)]
     [ValidateRange(1, int.MaxValue)]
     public int? ExpiresWithinDays { get; set; }
+
+    /// <summary>
+    /// Optional maximum number of certificates to scan when searching for expiring certificates.
+    /// Intended primarily for testing and exploratory use when combined with <see cref="ExpiresWithinDays"/>.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    [ValidateRange(1, int.MaxValue)]
+    public int? MaxCertificatesToScan { get; set; }
 
     /// <summary>
     /// Optional upper bound for the certificate expiration date. When specified, only certificates
@@ -152,7 +160,7 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
             }
 
             IReadOnlyList<Models.Certificate> certificates;
-            var statusFilter = string.IsNullOrWhiteSpace(Status) ? null : Status;
+            var statusFilter = Status;
             int? orgIdFilter = OrgId > 0 ? OrgId : null;
             var requesterFilter = string.IsNullOrWhiteSpace(Requester) ? null : Requester;
             DateTimeOffset? expiresBeforeFilter = ExpiresBefore is null ? null : new DateTimeOffset(ExpiresBefore.Value);
@@ -164,10 +172,11 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                     }
 
                     var expiresWithin = ExpiresWithinDays.Value;
+                    var maxScan = MaxCertificatesToScan;
                     var activityId = 1;
                     var activity = $"Finding certificates expiring within {expiresWithin} days";
                     WriteVerbose(
-                        $"Searching for certificates with Status='{statusFilter ?? "<any>"}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}' that expire within the next {expiresWithin} days using the Admin API.");
+                        $"Searching for certificates with Status='{statusFilter}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}' that expire within the next {expiresWithin} days using the Admin API.");
                     int? total = null;
                     var lastReportedPercent = -1;
                     var lastReportedProcessed = 0;
@@ -176,7 +185,7 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                             var absoluteTotal = -value;
                             total = absoluteTotal;
                             WriteVerbose(
-                                $"Total matching certificates (Status='{statusFilter ?? "<any>"}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}'): {absoluteTotal}.");
+                                $"Total matching certificates (Status='{statusFilter}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}'): {absoluteTotal}.");
                             var initial = new ProgressRecord(activityId, activity, $"Processed 0 of {absoluteTotal} certificates...");
                             initial.PercentComplete = 0;
                             WriteProgress(initial);
@@ -215,7 +224,7 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                     });
 
                     certificates = await service
-                        .ListExpiringAsync(expiresWithin, statusFilter, orgIdFilter, requesterFilter, effectiveToken, progress)
+                        .ListExpiringAsync(expiresWithin, statusFilter, orgIdFilter, requesterFilter, effectiveToken, progress, maxScan)
                         .ConfigureAwait(false);
                 } else if (Detailed.IsPresent) {
                     certificates = await service
@@ -225,6 +234,10 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                     certificates = await service
                         .ListAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
                         .ConfigureAwait(false);
+                }
+
+                if (usingAdmin) {
+                    WriteAdminDetailFallbackSummary(certificates);
                 }
 
                 WriteObject(certificates, enumerateCollection: true);
@@ -249,6 +262,30 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
         } else {
             WriteWarning(exception.Message);
         }
+    }
+
+    private void WriteAdminDetailFallbackSummary(IReadOnlyList<Models.Certificate> certificates) {
+        if (certificates is null || certificates.Count == 0) {
+            return;
+        }
+
+        var fallbackCount = certificates.Count(c => c.IsAdminDetailFallback);
+        if (fallbackCount <= 0) {
+            return;
+        }
+
+        var total = certificates.Count;
+        var firstError = certificates
+            .Where(c => c.IsAdminDetailFallback && !string.IsNullOrWhiteSpace(c.AdminDetailError))
+            .Select(c => c.AdminDetailError)
+            .FirstOrDefault();
+
+        var message = $"Admin detail retrieval failed for {fallbackCount} of {total} certificates. Only summary list data is available for these entries.";
+        if (!string.IsNullOrWhiteSpace(firstError)) {
+            message += $" Example error: {firstError}";
+        }
+
+        WriteWarning(message);
     }
 
     private bool ShouldTreatAsTerminating() {

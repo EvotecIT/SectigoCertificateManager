@@ -174,6 +174,10 @@ Concretely:
   - [x] Convert certificate-centric cmdlets (`Get/Export/Remove/Update-SectigoCertificate`, `Get-SectigoCertificateKeystoreLink`, status/revocation) to derive from `AsyncPSCmdlet`.
 - [x] Gradually convert remaining cmdlets (`Get-SectigoOrders*`, `Wait-SectigoOrder`, etc.) where async semantics provide clear benefit.
 - [x] Keep synchronous behaviour for simple, quick operations where async does not materially improve UX.
+- [x] Introduce typed enums for core certificate operations and surface them through facades and cmdlets:
+  - [x] Use `CertificateStatus` for all service-level status filters (`CertificateService.ListAsync`, `ListDetailedAsync`, `ListExpiringAsync`) and for the `Status` parameter on `Get-SectigoCertificate`.
+  - [x] Introduce `DcvMode` enum for domain-control validation and use it in `RenewCertificateRequest`, `AdminSslManualRenewRequest`, `AdminSslReplaceRequest`, and related Admin device models.
+  - [x] Map `DcvMode` consistently to legacy/Admin string values in low-level clients (`CertificatesClient`, `AdminSslClient`, `AdminDeviceClient`) while keeping PowerShell/CLI surfaces strongly typed.
 
 ## 9a. Expiring certificates & progress (Admin API)
 
@@ -189,20 +193,20 @@ Concretely:
   - [x] Wire `-ExpiresWithinDays` to call `CertificateService.ListExpiringAsync(...)` when connected via Admin.
   - [x] When `-ExpiresWithinDays` is used with a legacy connection, throw a clear `PSInvalidOperationException` explaining Admin-only support.
   - [x] Keep `-Detailed` and `-ExpiresBefore`/`-ExpiresAfter` behaviour unchanged for other scenarios.
-- [ ] Add paging/progress reporting for long-running Admin list operations:
-  - [ ] Extend `CertificateService.ListExpiringAsync` with an optional `IProgress<int>` (certificates processed).
-  - [ ] In `Get-SectigoCertificate`, when `-ExpiresWithinDays` is used and `-Verbose` is set:
-    - [ ] Create a `Progress<int>` source that calls `WriteVerbose` with a running count.
-    - [ ] Optionally surface a single `ProgressRecord` via `WriteProgress` to indicate activity.
-  - [ ] Ensure progress reporting is safe with `AsyncPSCmdlet` cross-thread pipeline writes.
-- [ ] Improve error/warning semantics for Admin list/detail paths:
-  - [ ] For known non-critical conditions (for example, Web API operations disabled for an organization), prefer `WriteWarning` by default and escalate to terminating error only when `-ErrorAction Stop` is in effect.
-  - [ ] Ensure `ApiException` codes from Admin SSL/DCV clients are surfaced with clear messages in PowerShell.
-- [ ] Document expiry usage:
-  - [ ] Update README with examples:
-    - [ ] `Get-SectigoCertificate -Status Issued -ExpiresWithinDays 30`
-    - [ ] Grouping by `Requester` for email notifications.
-  - [ ] Add a `Module/Examples` script that demonstrates collecting expiring certificates and sending notifications (without hard-coding a particular mail sender).
+- [x] Add paging/progress reporting for long-running Admin list operations:
+  - [x] Extend `CertificateService.ListExpiringAsync` with an optional `IProgress<int>` (certificates processed).
+  - [x] In `Get-SectigoCertificate`, when `-ExpiresWithinDays` is used and `-Verbose` is set:
+    - [x] Create a `Progress<int>` source that calls `WriteVerbose` with a running count.
+    - [x] Surface a `ProgressRecord` via `WriteProgress` to indicate activity.
+  - [x] Ensure progress reporting is safe with `AsyncPSCmdlet` cross-thread pipeline writes.
+- [x] Improve error/warning semantics for Admin list/detail paths:
+  - [x] For known non-critical conditions (for example, Web API operations disabled for an organization), prefer `WriteWarning` by default and escalate to terminating error only when `-ErrorAction Stop` is in effect.
+  - [x] Ensure `ApiException` codes from Admin SSL/DCV clients are surfaced with clear messages in PowerShell.
+- [x] Document expiry usage:
+  - [x] Update README with examples:
+    - [x] `Get-SectigoCertificate -Status Issued -ExpiresWithinDays 30`
+    - [x] Grouping by `Requester` for email notifications.
+  - [x] Add a `Module/Examples` script that demonstrates collecting expiring certificates and sending notifications (without hard-coding a particular mail sender).
 
 ## 10. Admin API – SSL extras (DCV, locations, metadata)
 
