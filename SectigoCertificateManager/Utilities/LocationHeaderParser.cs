@@ -6,6 +6,11 @@ using System.Net.Http;
 /// <summary>
 /// Helper for extracting identifiers from <c>Location</c> headers.
 /// </summary>
+/// <remarks>
+/// When the <c>Location</c> header is missing, empty, or the last
+/// path segment cannot be parsed as an integer, this helper returns
+/// <c>0</c>. Callers should treat <c>0</c> as "no identifier found".
+/// </remarks>
 internal static class LocationHeaderParser {
     public static int ParseId(HttpResponseMessage response) {
         if (response is null) {
@@ -31,4 +36,3 @@ internal static class LocationHeaderParser {
         return int.TryParse(lastSegment, out var id) ? id : 0;
     }
 }
-

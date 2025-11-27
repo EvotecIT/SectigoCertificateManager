@@ -47,6 +47,17 @@ internal static class QueryStringBuilder {
             return this;
         }
 
+        /// <summary>
+        /// Adds an optional boolean query parameter.
+        /// </summary>
+        /// <param name="name">Query parameter name.</param>
+        /// <param name="value">Boolean value to emit.</param>
+        /// <param name="emitFalse">
+        /// When <c>false</c>, only <c>true</c> values are emitted and
+        /// <c>false</c> values are omitted. When <c>true</c>, both
+        /// <c>true</c> and <c>false</c> values are emitted using
+        /// the lowercase strings <c>true</c> and <c>false</c>.
+        /// </param>
         public QueryBuilder AddBool(string name, bool? value, bool emitFalse = false) {
             if (!value.HasValue) {
                 return this;

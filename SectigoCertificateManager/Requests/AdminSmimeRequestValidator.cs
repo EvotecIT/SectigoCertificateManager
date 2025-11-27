@@ -68,7 +68,8 @@ internal static class AdminSmimeRequestValidator {
             return true;
         } catch (FormatException) {
             return false;
+        } catch (ArgumentException) {
+            return false;
         }
     }
 }
-
