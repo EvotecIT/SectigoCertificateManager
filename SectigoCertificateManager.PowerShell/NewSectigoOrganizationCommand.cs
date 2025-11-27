@@ -62,6 +62,9 @@ public sealed class NewSectigoOrganizationCommand : PSCmdlet {
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            var statePart = string.IsNullOrWhiteSpace(StateOrProvince) ? string.Empty : $", StateOrProvince='{StateOrProvince}'";
+            WriteVerbose(
+                $"Creating a new organization with Name='{Name}'{statePart} using the legacy API at '{config.BaseUrl}'.");
             var organizations = new OrganizationsClient(client);
             var request = new CreateOrganizationRequest {
                 Name = Name,

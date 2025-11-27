@@ -56,6 +56,8 @@ public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose(
+                $"Retrieving order history for OrderId={OrderId} using the legacy API at '{config.BaseUrl}'.");
             var orders = new OrdersClient(client);
             var history = orders.GetHistoryAsync(OrderId, CancellationToken)
                 .GetAwaiter()

@@ -304,8 +304,8 @@ Concretely:
   - [ ] Client to manage MS and network agents, servers, and nodes (`/ms`, `/network`, `/server`, `/node`).
   - [ ] Tests to ensure correct URIs for agent, server, and node operations.
 - [ ] Azure Key Vault accounts (`/api/azure/v1/*`):
-  - [ ] Client to manage Azure accounts, checks, delegations, and to list resource groups and vaults.
-  - [ ] Tests for URI construction and basic response parsing for Azure-related operations.
+  - [x] Client to manage Azure accounts, checks, delegations, and to list resource groups and vaults.
+  - [x] Tests for URI construction and basic response parsing for Azure-related operations.
 - [ ] DNS connectors (`/api/connector/v1/dns*`):
   - [ ] Client to manage DNS connector instances and providers.
   - [ ] Tests for connector create/update/delete and provider configuration endpoints.
@@ -323,7 +323,7 @@ Concretely:
   - [ ] Clients for `/api/discovery/v1/*` and `/api/discovery/v4/*` (tasks, operations, buckets, assignment rules).
   - [ ] Clients for `/api/agent/v1/ms*` and `/api/agent/v1/network*` (agent lifecycle, server/node operations).
 - [ ] Azure accounts (`/api/azure/v1/*`):
-  - [ ] Client for Azure account registration, validation, delegations, resource-group/vault enumeration.
+  - [x] Client for Azure account registration, validation, delegations, resource-group/vault enumeration.
 - [ ] DNS connectors (`/api/connector/v1/dns*`):
   - [ ] Client for DNS connector registration and provider management.
 - [ ] Code-signing certificates (`/api/cscert/v1/*`):
