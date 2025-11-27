@@ -164,17 +164,16 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                     }
 
                     var expiresWithin = ExpiresWithinDays.Value;
-                    IProgress<int>? progress = null;
-                    if (MyInvocation.BoundParameters.ContainsKey("Verbose")) {
-                        var activityId = 1;
-                        var activity = $"Finding certificates expiring within {expiresWithin} days";
-                        progress = new Progress<int>(count => {
-                            var record = new ProgressRecord(activityId, activity, $"Processed {count} certificates...");
-                            record.PercentComplete = -1;
-                            WriteProgress(record);
-                            WriteVerbose($"Processed {count} certificates while searching for expiring certificates.");
-                        });
-                    }
+                    var activityId = 1;
+                    var activity = $"Finding certificates expiring within {expiresWithin} days";
+                    WriteVerbose(
+                        $"Searching for certificates with Status='{statusFilter ?? "<any>"}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}' that expire within the next {expiresWithin} days using the Admin API.");
+                    IProgress<int>? progress = new Progress<int>(count => {
+                        var record = new ProgressRecord(activityId, activity, $"Processed {count} certificates...");
+                        record.PercentComplete = -1;
+                        WriteProgress(record);
+                        WriteVerbose($"Processed {count} certificates while searching for expiring certificates.");
+                    });
 
                     certificates = await service
                         .ListExpiringAsync(expiresWithin, statusFilter, orgIdFilter, requesterFilter, effectiveToken, progress)

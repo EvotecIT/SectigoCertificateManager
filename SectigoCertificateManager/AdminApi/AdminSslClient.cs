@@ -6,6 +6,7 @@ using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using SectigoCertificateManager.Utilities;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -59,6 +60,20 @@ public sealed class AdminSslClient : AdminApiClientBase {
         DateTimeOffset? expiresBefore = null,
         DateTimeOffset? expiresAfter = null,
         CancellationToken cancellationToken = default) {
+        var result = await ListWithTotalAsync(size, position, status, orgId, requester, expiresBefore, expiresAfter, cancellationToken)
+            .ConfigureAwait(false);
+        return result.Items;
+    }
+
+    internal async Task<(IReadOnlyList<AdminSslIdentity> Items, int? TotalCount)> ListWithTotalAsync(
+        int? size,
+        int? position,
+        string? status,
+        int? orgId,
+        string? requester,
+        DateTimeOffset? expiresBefore,
+        DateTimeOffset? expiresAfter,
+        CancellationToken cancellationToken) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, BuildListUri(size, position, status, orgId, requester, expiresBefore, expiresAfter));
@@ -67,11 +82,21 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
+        int? totalCount = null;
+        if (response.Headers.TryGetValues("X-Total-Count", out var values)) {
+            foreach (var value in values) {
+                if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)) {
+                    totalCount = parsed;
+                    break;
+                }
+            }
+        }
+
         var identities = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminSslIdentity>>(s_json, cancellationToken)
             .ConfigureAwait(false);
 
-        return identities ?? Array.Empty<AdminSslIdentity>();
+        return (identities ?? Array.Empty<AdminSslIdentity>(), totalCount);
     }
 
     /// <summary>
