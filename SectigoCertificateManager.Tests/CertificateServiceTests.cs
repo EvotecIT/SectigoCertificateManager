@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -46,6 +47,47 @@ public sealed class CertificateServiceTests {
                 Content = new StringContent(_apiJson, System.Text.Encoding.UTF8, "application/json")
             };
             return Task.FromResult(apiResponse);
+        }
+    }
+
+    private sealed class AdminListThenDetailHandler : HttpMessageHandler {
+        private readonly string _tokenJson;
+        private readonly string _listJson;
+        private readonly string _detailJson;
+
+        public HttpRequestMessage? LastRequest { get; private set; }
+
+        public AdminListThenDetailHandler(
+            HttpResponseMessage tokenResponse,
+            HttpResponseMessage listResponse,
+            HttpResponseMessage detailResponse) {
+            _tokenJson = tokenResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            _listJson = listResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            _detailJson = detailResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            LastRequest = request;
+            var uri = request.RequestUri!.AbsoluteUri;
+
+            if (uri.Contains("protocol/openid-connect/token")) {
+                var response = new HttpResponseMessage(HttpStatusCode.OK) {
+                    Content = new StringContent(_tokenJson, Encoding.UTF8, "application/json")
+                };
+                return Task.FromResult(response);
+            }
+
+            if (uri.Contains("/api/ssl/v2?")) {
+                var listResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+                    Content = new StringContent(_listJson, Encoding.UTF8, "application/json")
+                };
+                return Task.FromResult(listResponse);
+            }
+
+            var detailResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(_detailJson, Encoding.UTF8, "application/json")
+            };
+            return Task.FromResult(detailResponse);
         }
     }
 
@@ -108,6 +150,55 @@ public sealed class CertificateServiceTests {
         Assert.Equal(1, cert.Id);
         Assert.Equal("example.com", cert.CommonName);
         Assert.Equal("123", cert.SerialNumber);
+    }
+
+    [Fact]
+    public async Task ListDetailedAsync_Admin_UsesDetailsEndpoint() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var identities = new[] {
+            new AdminSslIdentity { SslId = 1, CommonName = "summary", SerialNumber = "SUMMARY" }
+        };
+        var details = new AdminSslCertificateDetails {
+            Id = 1,
+            CommonName = "detailed.example.com",
+            OrgId = 10,
+            Status = "Issued",
+            SerialNumber = "DETAIL",
+            Term = 365
+        };
+
+        var listResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create<IReadOnlyList<AdminSslIdentity>>(identities)
+        };
+        var detailResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(details)
+        };
+
+        var handler = new AdminListThenDetailHandler(tokenResponse, listResponse, detailResponse);
+
+        using var http = new HttpClient(handler);
+        var adminConfig = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+
+        using var service = new CertificateService(adminConfig, http);
+
+        var certificates = await service.ListDetailedAsync(10, 0);
+
+        Assert.Single(certificates);
+        var cert = certificates[0];
+        Assert.Equal(1, cert.Id);
+        Assert.Equal("detailed.example.com", cert.CommonName);
+        Assert.Equal("DETAIL", cert.SerialNumber);
+        Assert.Equal(10, cert.OrgId);
+        Assert.Equal(365, cert.Term);
+        Assert.Equal(CertificateStatus.Issued, cert.Status);
     }
 
     [Fact]

@@ -29,12 +29,18 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <code>Connect-Sectigo -BaseUrl "https://cert-manager.com/api" -Username "user" -Password "pass" -CustomerUri "tenant"; Get-SectigoCertificate -Size 30</code>
 ///   <para>Connects using legacy credentials and lists the latest 30 certificates.</para>
 /// </example>
+/// <example>
+///   <summary>Filter Admin certificates by status, requester and expiration</summary>
+///   <prefix>PS&gt; </prefix>
+///   <code>Connect-Sectigo -ClientId "&lt;client id&gt;" -ClientSecret "&lt;client secret&gt;"; Get-SectigoCertificate -Size 50 -Status Issued -Requester "user@example.com" -ExpiresBefore (Get-Date).AddDays(30) -Detailed</code>
+///   <para>Connects using the Admin API and lists detailed certificates that are issued, requested by the specified user and expiring within the next 30 days.</para>
+/// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificate", DefaultParameterSetName = ListParameterSet)]
 [Alias("Get-SectigoCertificates")]
 [CmdletBinding()]
-[OutputType(typeof(Models.Certificate), typeof(CertificateResponse))]
+[OutputType(typeof(Models.Certificate))]
 public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
     private const string ByIdParameterSet = "ById";
     private const string ListParameterSet = "List";
@@ -54,6 +60,49 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>Position offset for paging.</summary>
     [Parameter(ParameterSetName = ListParameterSet)]
     public int Position { get; set; }
+
+    /// <summary>
+    /// Optional certificate status filter (for example, Issued, Expired). When specified, applies only to Admin connections.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    [ValidateNotNullOrEmpty]
+    public string Status { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional organization identifier filter. When specified, applies only to Admin connections.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    public int OrgId { get; set; }
+
+    /// <summary>
+    /// Optional requester filter. When specified, applies only to Admin connections.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    [ValidateNotNullOrEmpty]
+    public string Requester { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional upper bound for the certificate expiration date. When specified, only certificates
+    /// expiring on or before this date (inclusive) are returned when using the Admin API.
+    /// Ignored for the legacy API.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    public DateTime? ExpiresBefore { get; set; }
+
+    /// <summary>
+    /// Optional lower bound for the certificate expiration date. When specified, only certificates
+    /// expiring on or after this date (inclusive) are returned when using the Admin API.
+    /// Ignored for the legacy API.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    public DateTime? ExpiresAfter { get; set; }
+
+    /// <summary>
+    /// When specified, retrieves full certificate details for each entry when using the Admin Operations API.
+    /// Ignored when using the legacy API, which already returns detailed certificate objects.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    public SwitchParameter Detailed { get; set; }
 
     /// <summary>Optional cancellation token.</summary>
     [Parameter]
@@ -82,11 +131,23 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                 return;
             }
 
-            var certificates = await service
-                .ListAsync(Size, Position, effectiveToken)
-                .ConfigureAwait(false);
-            var response = new CertificateResponse { Certificates = certificates };
-            WriteObject(response);
+            IReadOnlyList<Models.Certificate> certificates;
+            var statusFilter = string.IsNullOrWhiteSpace(Status) ? null : Status;
+            int? orgIdFilter = OrgId > 0 ? OrgId : null;
+            var requesterFilter = string.IsNullOrWhiteSpace(Requester) ? null : Requester;
+            DateTimeOffset? expiresBeforeFilter = ExpiresBefore is null ? null : new DateTimeOffset(ExpiresBefore.Value);
+            DateTimeOffset? expiresAfterFilter = ExpiresAfter is null ? null : new DateTimeOffset(ExpiresAfter.Value);
+            if (Detailed.IsPresent) {
+                certificates = await service
+                    .ListDetailedAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
+                    .ConfigureAwait(false);
+            } else {
+                certificates = await service
+                    .ListAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
+                    .ConfigureAwait(false);
+            }
+
+            WriteObject(certificates, enumerateCollection: true);
         } finally {
             service?.Dispose();
         }
