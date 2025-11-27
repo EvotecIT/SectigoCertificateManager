@@ -44,23 +44,11 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder("api/device/v1");
-        var hasQuery = false;
+        var path = QueryStringBuilder.Build("api/device/v1", q => q
+            .AddInt("size", size)
+            .AddInt("position", position));
 
-        void AppendInt(string name, int? value) {
-            if (!value.HasValue) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(name).Append('=').Append(value.Value);
-            hasQuery = true;
-        }
-
-        AppendInt("size", size);
-        AppendInt("position", position);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, builder.ToString());
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -593,16 +581,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var location = response.Headers.Location;
-        if (location is not null) {
-            var url = location.ToString().Trim().TrimEnd('/');
-            var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length > 0 && int.TryParse(segments[segments.Length - 1], out var id)) {
-                return id;
-            }
-        }
-
-        return 0;
+        return LocationHeaderParser.ParseId(response);
     }
 
     /// <summary>

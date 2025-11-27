@@ -105,16 +105,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var location = response.Headers.Location;
-        if (location is not null) {
-            var url = location.ToString().Trim().TrimEnd('/');
-            var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length > 0 && int.TryParse(segments[segments.Length - 1], out var id)) {
-                return id;
-            }
-        }
-
-        return 0;
+        return LocationHeaderParser.ParseId(response);
     }
 
     /// <summary>

@@ -713,16 +713,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var location = response.Headers.Location;
-        if (location is not null) {
-            var url = location.ToString().Trim().TrimEnd('/');
-            var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length > 0 && int.TryParse(segments[segments.Length - 1], out var id)) {
-                return id;
-            }
-        }
-
-        return 0;
+        return LocationHeaderParser.ParseId(response);
     }
 
     /// <summary>
@@ -837,24 +828,9 @@ public sealed class AdminSslClient : AdminApiClientBase {
     }
 
     private string BuildListUri(int? size, int? position) {
-        var builder = new StringBuilder("api/ssl/v2");
-        var hasQuery = false;
-
-        void AppendInt(string name, int value) {
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(name).Append('=').Append(value);
-            hasQuery = true;
-        }
-
-        if (size is { } s) {
-            AppendInt("size", s);
-        }
-
-        if (position is { } p) {
-            AppendInt("position", p);
-        }
-
-        return builder.ToString();
+        return QueryStringBuilder.Build("api/ssl/v2", q => q
+            .AddInt("size", size)
+            .AddInt("position", position));
     }
 
     private sealed class RenewInfo {

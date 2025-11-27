@@ -35,37 +35,15 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder("api/acme/v2/account");
-        var hasQuery = false;
+        var path = QueryStringBuilder.Build("api/acme/v2/account", q => q
+            .AddInt("size", size)
+            .AddInt("position", position)
+            .AddInt("organizationId", organizationId)
+            .AddString("certValidationType", certValidationType)
+            .AddString("name", name)
+            .AddString("acmeServer", acmeServer));
 
-        void Append(string key, string? value) {
-            if (string.IsNullOrWhiteSpace(value)) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
-            hasQuery = true;
-        }
-
-        void AppendInt(string key, int? value) {
-            if (!value.HasValue) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(value.Value);
-            hasQuery = true;
-        }
-
-        AppendInt("size", size);
-        AppendInt("position", position);
-        AppendInt("organizationId", organizationId);
-        Append("certValidationType", certValidationType);
-        Append("name", name);
-        Append("acmeServer", acmeServer);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, builder.ToString());
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -124,19 +102,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var location = response.Headers.Location;
-        if (location is null) {
-            return 0;
-        }
-
-        var url = location.ToString().Trim().TrimEnd('/');
-        var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length == 0) {
-            return 0;
-        }
-
-        var lastSegment = segments[segments.Length - 1];
-        return int.TryParse(lastSegment, out var id) ? id : 0;
+        return LocationHeaderParser.ParseId(response);
     }
 
     /// <summary>
@@ -156,36 +122,14 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
 
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder($"api/acme/v2/account/{accountId}/domain");
-        var hasQuery = false;
+        var path = QueryStringBuilder.Build($"api/acme/v2/account/{accountId}/domain", q => q
+            .AddInt("size", size)
+            .AddInt("position", position)
+            .AddString("name", name)
+            .AddInt("expiresWithinNextDays", expiresWithinNextDays)
+            .AddInt("stickyExpiresWithinNextDays", stickyExpiresWithinNextDays));
 
-        void Append(string key, string? value) {
-            if (string.IsNullOrWhiteSpace(value)) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
-            hasQuery = true;
-        }
-
-        void AppendInt(string key, int? value) {
-            if (!value.HasValue) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(value.Value);
-            hasQuery = true;
-        }
-
-        AppendInt("size", size);
-        AppendInt("position", position);
-        Append("name", name);
-        AppendInt("expiresWithinNextDays", expiresWithinNextDays);
-        AppendInt("stickyExpiresWithinNextDays", stickyExpiresWithinNextDays);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, builder.ToString());
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -290,37 +234,15 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
 
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder($"api/acme/v2/account/{accountId}/client");
-        var hasQuery = false;
+        var path = QueryStringBuilder.Build($"api/acme/v2/account/{accountId}/client", q => q
+            .AddInt("size", size)
+            .AddInt("position", position)
+            .AddString("contacts", contacts)
+            .AddString("userAgent", userAgent)
+            .AddString("ipAddress", ipAddress)
+            .AddInt("lastActivityWithinPrevDays", lastActivityWithinPrevDays));
 
-        void Append(string key, string? value) {
-            if (string.IsNullOrWhiteSpace(value)) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
-            hasQuery = true;
-        }
-
-        void AppendInt(string key, int? value) {
-            if (!value.HasValue) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(value.Value);
-            hasQuery = true;
-        }
-
-        AppendInt("size", size);
-        AppendInt("position", position);
-        Append("contacts", contacts);
-        Append("userAgent", userAgent);
-        Append("ipAddress", ipAddress);
-        AppendInt("lastActivityWithinPrevDays", lastActivityWithinPrevDays);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, builder.ToString());
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
