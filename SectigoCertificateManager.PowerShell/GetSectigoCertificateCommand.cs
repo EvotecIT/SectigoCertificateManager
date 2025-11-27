@@ -147,6 +147,10 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
 
             if (ParameterSetName == ByIdParameterSet) {
                 try {
+                    WriteVerbose(
+                        usingAdmin
+                            ? $"Retrieving certificate Id={CertificateId} using the Admin API."
+                            : $"Retrieving certificate Id={CertificateId} using the legacy API.");
                     var certificate = await service
                         .GetAsync(CertificateId, effectiveToken)
                         .ConfigureAwait(false);
@@ -227,10 +231,18 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                         .ListExpiringAsync(expiresWithin, statusFilter, orgIdFilter, requesterFilter, effectiveToken, progress, maxScan)
                         .ConfigureAwait(false);
                 } else if (Detailed.IsPresent) {
+                    WriteVerbose(
+                        usingAdmin
+                            ? $"Listing up to {Size} detailed certificates starting at Position={Position} with Status='{statusFilter}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}' using the Admin API."
+                            : $"Listing up to {Size} detailed certificates starting at Position={Position} using the legacy API with Status='{statusFilter}'.");
                     certificates = await service
                         .ListDetailedAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
                         .ConfigureAwait(false);
                 } else {
+                    WriteVerbose(
+                        usingAdmin
+                            ? $"Listing up to {Size} certificates starting at Position={Position} with Status='{statusFilter}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}' using the Admin API."
+                            : $"Listing up to {Size} certificates starting at Position={Position} using the legacy API with Status='{statusFilter}'.");
                     certificates = await service
                         .ListAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
                         .ConfigureAwait(false);
