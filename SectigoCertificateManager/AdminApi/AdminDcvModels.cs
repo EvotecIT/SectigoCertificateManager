@@ -93,12 +93,16 @@ public sealed class DomainHttpsResponse {
 /// Represents DCV email options for a domain.
 /// </summary>
 public sealed class DomainDcvEmails {
+    /// <summary>Domain name for which email validation options are provided.</summary>
     public string? DomainName { get; set; }
 
+    /// <summary>WHOIS email addresses available for DCV.</summary>
     public IReadOnlyList<string> WhoisEmails { get; set; } = Array.Empty<string>();
 
+    /// <summary>Administrative email addresses (admin/administrator/webmaster/etc.).</summary>
     public IReadOnlyList<string> AdminEmails { get; set; } = Array.Empty<string>();
 
+    /// <summary>DCV email addresses discovered from DNS TXT records.</summary>
     public IReadOnlyList<string> DnsTxtEmails { get; set; } = Array.Empty<string>();
 }
 
@@ -106,8 +110,10 @@ public sealed class DomainDcvEmails {
 /// Represents the response returned for email DCV start/submit operations.
 /// </summary>
 public sealed class DomainEmailResponse {
+    /// <summary>All eligible email addresses for the requested domain.</summary>
     public IReadOnlyList<string> Emails { get; set; } = Array.Empty<string>();
 
+    /// <summary>Grouped DCV email options per domain when multiple domains are involved.</summary>
     public IReadOnlyList<DomainDcvEmails> DcvEmails { get; set; } = Array.Empty<DomainDcvEmails>();
 }
 
@@ -115,8 +121,10 @@ public sealed class DomainEmailResponse {
 /// Represents CNAME DCV response details.
 /// </summary>
 public sealed class DomainCnameResponse {
+    /// <summary>Host name to create for the CNAME DCV record.</summary>
     public string? Host { get; set; }
 
+    /// <summary>Target value that the CNAME record should point to.</summary>
     public string? Point { get; set; }
 }
 
@@ -124,18 +132,25 @@ public sealed class DomainCnameResponse {
 /// Represents the result of DCV submit operations.
 /// </summary>
 public sealed class SubmitDomainResponse {
+    /// <summary>Overall DCV status (for example, PENDING, COMPLETED).</summary>
     public string? Status { get; set; }
 
+    /// <summary>Order-level status returned by the API.</summary>
     public string? OrderStatus { get; set; }
 
+    /// <summary>Message returned by the API describing the outcome.</summary>
     public string? Message { get; set; }
 
+    /// <summary>Backend order identifier associated with the DCV request.</summary>
     public string? OrderBackendId { get; set; }
 
+    /// <summary>Email validation reference number, when email DCV is used.</summary>
     public string? EmailValidationReferenceNumber { get; set; }
 
+    /// <summary>Host value for CNAME/TXT validation (when applicable).</summary>
     public string? Host { get; set; }
 
+    /// <summary>Target value for CNAME/TXT validation (when applicable).</summary>
     public string? Point { get; set; }
 }
 
@@ -143,5 +158,6 @@ public sealed class SubmitDomainResponse {
 /// Represents a simple message response (used by TXT start).
 /// </summary>
 public sealed class ResponseMessage {
+    /// <summary>Message text returned by the API.</summary>
     public string? Message { get; set; }
 }
