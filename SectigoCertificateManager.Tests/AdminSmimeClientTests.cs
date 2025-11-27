@@ -1,6 +1,7 @@
 using SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -11,10 +12,10 @@ using Xunit;
 
 namespace SectigoCertificateManager.Tests;
 
-/// <summary>
+    /// <summary>
 /// Unit tests for <see cref="AdminSmimeClient"/>.
 /// </summary>
-public sealed class AdminSmimeClientTests {
+    public sealed class AdminSmimeClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         private readonly string _tokenJson;
         private readonly HttpStatusCode _tokenStatus;
@@ -309,6 +310,69 @@ public sealed class AdminSmimeClientTests {
         Assert.Equal(HttpMethod.Post, handler.LastRequest.Method);
         Assert.NotNull(result);
         Assert.Equal("bc-renew-serial", result!.BackendCertId);
+    }
+
+    [Fact]
+    public async Task EnrollAsync_InvalidEmail_ThrowsArgumentException() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        // API response will not be used because validation fails before sending the request.
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new AdminSmimeEnrollResponse { BackendCertId = "ignored" })
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSmimeClient(config, http);
+
+        var request = new AdminSmimeEnrollRequest {
+            OrgId = 5,
+            FirstName = "Alice",
+            LastName = "User",
+            Email = "not-an-email",
+            Csr = "CSR-DATA",
+            CertType = 123,
+            Term = 365
+        };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => client.EnrollAsync(request));
+    }
+
+    [Fact]
+    public async Task DownloadPfxAsync_InvalidEncryptionType_ThrowsArgumentException() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        // API response will not be used because validation fails before sending the request.
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new byte[] { 1, 2, 3 })
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSmimeClient(config, http);
+
+        var request = new AdminSmimeP12DownloadRequest {
+            Passphrase = "pass",
+            EncryptionType = "INVALID"
+        };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => client.DownloadPfxAsync(10, request));
     }
 
     [Fact]

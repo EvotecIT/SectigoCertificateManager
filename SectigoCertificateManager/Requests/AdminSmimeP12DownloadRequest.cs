@@ -8,8 +8,12 @@ public sealed class AdminSmimeP12DownloadRequest {
     public string? Passphrase { get; set; }
 
     /// <summary>
-    /// Gets or sets the P12 encryption type (for example, "AES256-SHA256" or "TripleDES-SHA1").
+    /// Gets or sets the P12 encryption type.
+    /// <para>
+    /// Supported values are defined by the Admin Operations API (for example,
+    /// <see cref="AdminSmimeP12EncryptionTypes.Aes256Sha256"/> or
+    /// <see cref="AdminSmimeP12EncryptionTypes.TripleDesSha1"/>).
+    /// </para>
     /// </summary>
     public string? EncryptionType { get; set; }
 }
-

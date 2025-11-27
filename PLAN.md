@@ -282,7 +282,7 @@ Concretely:
   - [ ] Client to manage discovery buckets, assignments, delegations, and rule execution.
   - [ ] Tests to validate URI construction and core task/bucket workflows.
 
-## 15. Admin API – Discovery, agents, Azure, connectors, code-signing
+## 16. Admin API – Discovery, agents, Azure, connectors, code-signing
 
 - [ ] Discovery & agents:
   - [ ] Clients for `/api/discovery/v1/*` and `/api/discovery/v4/*` (tasks, operations, buckets, assignment rules).

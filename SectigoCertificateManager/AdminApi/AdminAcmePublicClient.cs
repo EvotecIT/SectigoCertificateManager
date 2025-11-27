@@ -45,7 +45,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
             .AddString("acmeServer", acmeServer));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -70,7 +70,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/acme/v2/account/{id}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -98,7 +98,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/acme/v2/account") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -131,7 +131,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
             .AddInt("stickyExpiresWithinNextDays", stickyExpiresWithinNextDays));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -168,7 +168,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/acme/v2/account/{accountId}/domain") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -205,7 +205,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Delete, $"api/acme/v2/account/{accountId}/domain") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -244,7 +244,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
             .AddInt("lastActivityWithinPrevDays", lastActivityWithinPrevDays));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -274,7 +274,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(
             HttpMethod.Put,
             $"api/acme/v2/account/{accountId}/client/{Uri.EscapeDataString(clientId)}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);

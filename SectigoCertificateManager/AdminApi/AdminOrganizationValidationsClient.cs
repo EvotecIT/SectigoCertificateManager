@@ -46,7 +46,7 @@ public sealed class AdminOrganizationValidationsClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
             $"api/organization/v2/{organizationId}/validations");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -81,7 +81,7 @@ public sealed class AdminOrganizationValidationsClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
             $"api/organization/v2/{organizationId}/validations/{validationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -116,7 +116,7 @@ public sealed class AdminOrganizationValidationsClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
             $"api/organization/v2/{organizationId}/validations/{validationId}/sync");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -151,7 +151,7 @@ public sealed class AdminOrganizationValidationsClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(
             HttpMethod.Delete,
             $"api/organization/v2/{organizationId}/validations/{validationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
