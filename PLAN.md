@@ -269,8 +269,8 @@ Concretely:
   - [-] Client for organization validations:
     - [x] List/get/delete validations and synchronize with CA backend (`/api/organization/v2/{orgId}/validations*`).
     - [ ] Submit/revalidate/validator assignment endpoints (modeled requests and helpers) – deferred.
-- [ ] DCV operations (`/api/dcv/v2/*`):
-  - [-] Client for starting DCV via CNAME/HTTP/HTTPS/TXT/email (start/submit flows).
+- [x] DCV operations (`/api/dcv/v2/*`):
+  - [x] Client for starting DCV via CNAME/HTTP/HTTPS/TXT/email (start/submit flows).
   - [x] List and status queries, plus clear/delete endpoints, via a dedicated Admin DCV client.
 - [ ] ACME accounts and servers:
   - [ ] Client for `/api/acme/v1/*`, `/api/acme/v2/*` (account/client/domain management).
@@ -307,8 +307,8 @@ Concretely:
   - [x] Client to manage Azure accounts, checks, delegations, and to list resource groups and vaults.
   - [x] Tests for URI construction and basic response parsing for Azure-related operations.
 - [ ] DNS connectors (`/api/connector/v1/dns*`):
-  - [ ] Client to manage DNS connector instances and providers.
-  - [ ] Tests for connector create/update/delete and provider configuration endpoints.
+  - [x] Client to list DNS connector instances and providers.
+  - [x] Tests for connector list/details/provider endpoints.
 - [ ] Code-signing certificates (`/api/cscert/v1/*`):
   - [ ] Client to support import and manual revocation of code-signing certificates.
   - [ ] Tests for request payloads and error handling for code-signing operations.

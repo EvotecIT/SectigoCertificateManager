@@ -131,15 +131,22 @@ public sealed partial class CertificatesClient : BaseClient {
             AppendInt("sslTypeId", request.SslTypeId.Value);
         }
 
-        Append("discoveryStatus", request.DiscoveryStatus);
+        if (request.DiscoveryStatus.HasValue) {
+            Append("discoveryStatus", MapDiscoveryStatus(request.DiscoveryStatus.Value));
+        }
         Append("vendor", request.Vendor);
 
         if (request.OrgId.HasValue) {
             AppendInt("orgId", request.OrgId.Value);
         }
 
-        Append("installStatus", request.InstallStatus);
-        Append("renewalStatus", request.RenewalStatus);
+        if (request.InstallStatus.HasValue) {
+            Append("installStatus", MapInstallStatus(request.InstallStatus.Value));
+        }
+
+        if (request.RenewalStatus.HasValue) {
+            Append("renewalStatus", MapRenewalStatus(request.RenewalStatus.Value));
+        }
         Append("issuer", request.Issuer);
         Append("issuerDN", request.IssuerDn);
         Append("serialNumber", request.SerialNumber);
@@ -162,5 +169,42 @@ public sealed partial class CertificatesClient : BaseClient {
         AppendDate("dateTo", request.DateTo);
 
         return builder.ToString();
+    }
+
+    private static string MapDiscoveryStatus(DiscoveryStatus status) {
+        return status switch {
+            DiscoveryStatus.NotDeployed => "NotDeployed",
+            DiscoveryStatus.Deployed => "Deployed",
+            _ => "NotDeployed"
+        };
+    }
+
+    private static string MapInstallStatus(InstallStatus status) {
+        return status switch {
+            InstallStatus.NotConfigured => "Not configured",
+            InstallStatus.NotStarted => "Not started",
+            InstallStatus.KeyProcessing => "Key processing",
+            InstallStatus.KeyAndCsrReady => "Key and CSR ready",
+            InstallStatus.CertificateProcessing => "Certificate processing",
+            InstallStatus.InstallationScheduled => "Installation scheduled",
+            InstallStatus.InstallationProcessing => "Installation processing",
+            InstallStatus.ActionRequired => "Action required",
+            InstallStatus.ReadyForInstall => "Ready for install",
+            InstallStatus.ServerRestartRequired => "Server restart required",
+            InstallStatus.Completed => "Completed",
+            InstallStatus.InvalidConfiguration => "Invalid configuration",
+            _ => "Not configured"
+        };
+    }
+
+    private static string MapRenewalStatus(RenewalStatus status) {
+        return status switch {
+            RenewalStatus.NotScheduled => "Not scheduled",
+            RenewalStatus.Scheduled => "Scheduled",
+            RenewalStatus.Started => "Started",
+            RenewalStatus.Successful => "Successful",
+            RenewalStatus.Failed => "Failed",
+            _ => "Not scheduled"
+        };
     }
 }

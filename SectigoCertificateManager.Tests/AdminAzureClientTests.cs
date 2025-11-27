@@ -40,7 +40,7 @@ public sealed class AdminAzureClientTests {
 
         var client = new AdminAzureClient(CreateConfig(), httpClient);
 
-        var (items, total) = await client.ListAccountsAsync(5, 10, CancellationToken.None).ConfigureAwait(false);
+        var (items, total) = await client.ListAccountsAsync(5, 10, CancellationToken.None);
 
         Assert.Equal("https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token", handler.TokenRequest?.RequestUri?.ToString());
 
@@ -78,13 +78,13 @@ public sealed class AdminAzureClientTests {
             ApplicationSecret = "secret"
         };
 
-        var id = await client.CreateAccountAsync(request, CancellationToken.None).ConfigureAwait(false);
+        var id = await client.CreateAccountAsync(request, CancellationToken.None);
 
         Assert.NotNull(handler.ApiRequest);
         Assert.Equal(HttpMethod.Post, handler.ApiRequest!.Method);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/azure/v1/accounts", handler.ApiRequest.RequestUri!.ToString());
 
-        var body = await handler.ApiRequest.Content!.ReadAsStringAsync().ConfigureAwait(false);
+        var body = await handler.ApiRequest.Content!.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
         var root = doc.RootElement;
         Assert.Equal("kv-account", root.GetProperty("name").GetString());
@@ -120,4 +120,3 @@ public sealed class AdminAzureClientTests {
         }
     }
 }
-
