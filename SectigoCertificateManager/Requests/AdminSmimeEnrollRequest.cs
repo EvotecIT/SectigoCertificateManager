@@ -36,10 +36,14 @@ public sealed class AdminSmimeEnrollRequest {
     /// <summary>Gets or sets the term in days.</summary>
     public int Term { get; set; }
 
+    /// <summary>
+    /// Gets or sets custom fields to be applied to the requested certificate.
+    /// </summary>
+    public IReadOnlyList<AdminApiCertField>? CustomFields { get; set; }
+
     /// <summary>Gets or sets the common name.</summary>
     public string? CommonName { get; set; }
 
     /// <summary>Gets or sets comments for the enrollment request.</summary>
     public string? Comments { get; set; }
 }
-

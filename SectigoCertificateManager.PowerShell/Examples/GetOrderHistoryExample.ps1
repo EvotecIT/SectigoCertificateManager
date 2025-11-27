@@ -1,2 +1,3 @@
 # Demonstrates retrieving history for an order.
-Get-SectigoOrderHistory -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -OrderId 10 -ApiVersion V25_6
+Connect-Sectigo -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ApiVersion V25_6 | Out-Null
+Get-SectigoOrderHistory -OrderId 10

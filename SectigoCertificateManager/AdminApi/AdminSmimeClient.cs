@@ -1,5 +1,6 @@
 namespace SectigoCertificateManager.AdminApi;
 
+using SectigoCertificateManager;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Utilities;
@@ -51,7 +52,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminSmimeCertificate>>(s_json, cancellationToken)
@@ -115,16 +116,9 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         using var response = await _httpClient
             .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
-        var buffer = new MemoryStream();
-#if NETSTANDARD2_0 || NET472
-        await response.Content.CopyToAsync(buffer).ConfigureAwait(false);
-#else
-        await response.Content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
-#endif
-        buffer.Position = 0;
-        return buffer;
+        return await response.Content.CopyToMemoryStreamAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -148,7 +142,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
             .ReadFromJsonAsyncSafe<AdminSmimeEnrollResponse>(s_json, cancellationToken)
@@ -163,6 +157,9 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
     /// <param name="certId">Certificate identifier.</param>
     /// <param name="request">Download parameters.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <remarks>
+    /// The caller is responsible for disposing the returned <see cref="Stream"/>.
+    /// </remarks>
     public async Task<Stream> DownloadPfxAsync(
         int certId,
         AdminSmimeP12DownloadRequest request,
