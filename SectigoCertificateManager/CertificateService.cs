@@ -297,11 +297,16 @@ public sealed class CertificateService : IDisposable {
         var position = 0;
         const int pageSize = 200;
         var processed = 0;
+        int? total = null;
 
         while (true) {
-            var identities = await _adminClient
-                .ListAsync(pageSize, position, status, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
+            var listResult = await _adminClient
+                .ListWithTotalAsync(pageSize, position, status, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
                 .ConfigureAwait(false);
+            var identities = listResult.Items;
+            if (total is null && listResult.TotalCount.HasValue) {
+                total = listResult.TotalCount;
+            }
 
             if (identities.Count == 0) {
                 break;
@@ -320,13 +325,21 @@ public sealed class CertificateService : IDisposable {
                 }
 
                 var certificate = details is not null ? MapDetails(details) : MapIdentity(identity);
+                processed++;
+                if (progress is not null) {
+                    if (total is not null && total.Value > 0) {
+                        var percent = (int)Math.Min(100, (processed * 100.0 / total.Value));
+                        progress.Report(percent);
+                    } else {
+                        progress.Report(-1);
+                    }
+                }
+
                 if (!ShouldIncludeByExpiry(certificate.Expires, cutoff, now)) {
                     continue;
                 }
 
                 result.Add(certificate);
-                processed++;
-                progress?.Report(processed);
             }
 
             if (identities.Count < pageSize) {
