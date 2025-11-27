@@ -15,6 +15,11 @@ using System.Threading.Tasks;
 public sealed class AdminAzureClient : AdminApiClientBase {
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
+    /// <summary>
+    /// Creates a new Azure client using the provided Admin API configuration.
+    /// </summary>
+    /// <param name="config">Admin API configuration (base URL and OAuth2 client credentials).</param>
+    /// <param name="httpClient">Optional HTTP client instance; when omitted a new one is created and disposed with the client.</param>
     public AdminAzureClient(AdminApiConfig config, HttpClient? httpClient = null)
         : base(config, httpClient) {
     }

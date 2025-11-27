@@ -80,8 +80,10 @@ public enum NotificationFrequency {
 /// Organization details for a notification.
 /// </summary>
 public sealed class AdminNotificationOrgDetails {
+    /// <summary>Organization selection mode (any, any department, or explicit selection).</summary>
     public NotificationOrgSelectionType? SelectedOrgType { get; set; }
 
+    /// <summary>List of organization or department identifiers targeted by the notification.</summary>
     public IReadOnlyList<int>? OrgDelegations { get; set; }
 }
 
@@ -89,8 +91,10 @@ public sealed class AdminNotificationOrgDetails {
 /// Notification recipient details.
 /// </summary>
 public sealed class AdminNotificationRecipientDetails {
+    /// <summary>Recipient roles to notify (for example, approver, requester, MRAO).</summary>
     public IReadOnlyList<NotificationRecipientRole>? NotifyRoles { get; set; }
 
+    /// <summary>Explicit recipient entries (email, Slack, Teams, webhook).</summary>
     public IReadOnlyList<AdminNotificationRecipient>? Recipients { get; set; }
 }
 
@@ -98,8 +102,10 @@ public sealed class AdminNotificationRecipientDetails {
 /// Notification recipient entry.
 /// </summary>
 public sealed class AdminNotificationRecipient {
+    /// <summary>Channel/type of the recipient (email, Slack, Teams, webhook).</summary>
     public NotificationRecipientType Type { get; set; }
 
+    /// <summary>Destination value (email address, webhook URL, or channel identifier).</summary>
     public string? Value { get; set; }
 }
 
@@ -107,14 +113,19 @@ public sealed class AdminNotificationRecipient {
 /// Additional notification details.
 /// </summary>
 public sealed class AdminNotificationAdditionalDetails {
+    /// <summary>Day threshold used by the notification (for example, days before expiry).</summary>
     public int? Days { get; set; }
 
+    /// <summary>Certificate type identifier the notification applies to.</summary>
     public int? CertTypeId { get; set; }
 
+    /// <summary>Notification frequency (once or daily).</summary>
     public NotificationFrequency? Freq { get; set; }
 
+    /// <summary>True to notify when revoked by an administrator.</summary>
     public bool? RevokedByAdmin { get; set; }
 
+    /// <summary>True to notify when revoked by the end user.</summary>
     public bool? RevokedByUser { get; set; }
 }
 
@@ -122,14 +133,19 @@ public sealed class AdminNotificationAdditionalDetails {
 /// Notification definition used when creating or updating a notification.
 /// </summary>
 public sealed class AdminNotificationRequest {
+    /// <summary>Human-readable description of the notification.</summary>
     public string? Description { get; set; }
 
+    /// <summary>True to keep the notification active; false to disable it.</summary>
     public bool? Active { get; set; }
 
+    /// <summary>Organization scope for the notification.</summary>
     public AdminNotificationOrgDetails? OrgData { get; set; }
 
+    /// <summary>Recipients and roles that will receive the notification.</summary>
     public AdminNotificationRecipientDetails? RecipientData { get; set; }
 
+    /// <summary>Additional parameters such as days-to-expiry and certificate type.</summary>
     public AdminNotificationAdditionalDetails? AdditionalData { get; set; }
 }
 
@@ -137,16 +153,22 @@ public sealed class AdminNotificationRequest {
 /// Notification definition returned by the Admin API.
 /// </summary>
 public sealed class AdminNotification {
+    /// <summary>Notification identifier.</summary>
     public int Id { get; set; }
 
+    /// <summary>Human-readable description of the notification.</summary>
     public string? Description { get; set; }
 
+    /// <summary>Indicates whether the notification is currently active.</summary>
     public bool Active { get; set; }
 
+    /// <summary>Organization scope for the notification.</summary>
     public AdminNotificationOrgDetails? OrgData { get; set; }
 
+    /// <summary>Recipients and roles that will receive the notification.</summary>
     public AdminNotificationRecipientDetails? RecipientData { get; set; }
 
+    /// <summary>Additional parameters such as days-to-expiry and certificate type.</summary>
     public AdminNotificationAdditionalDetails? AdditionalData { get; set; }
 
     /// <summary>
@@ -154,11 +176,15 @@ public sealed class AdminNotification {
     /// </summary>
     public string? Type { get; set; }
 
+    /// <summary>UTC timestamp when the notification was created.</summary>
     public DateTime? Created { get; set; }
 
+    /// <summary>User that created the notification.</summary>
     public string? CreatedBy { get; set; }
 
+    /// <summary>UTC timestamp when the notification was last modified.</summary>
     public DateTime? Modified { get; set; }
 
+    /// <summary>User that last modified the notification.</summary>
     public string? ModifiedBy { get; set; }
 }

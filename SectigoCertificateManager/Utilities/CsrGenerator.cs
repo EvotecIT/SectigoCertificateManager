@@ -7,11 +7,23 @@ using System.Security.Cryptography;
 /// Provides helpers for generating certificate signing requests.
 /// </summary>
 public static class CsrGenerator {
+    /// <summary>
+    /// Generates an RSA-based CSR (not supported on NETSTANDARD2_0; will throw).
+    /// </summary>
+    /// <param name="subjectName">Distinguished name for the certificate subject.</param>
+    /// <param name="keySize">RSA key size in bits.</param>
+    /// <param name="hashAlgorithm">Optional hash algorithm.</param>
     public static (string Csr, RSA Key) GenerateRsa(
         string subjectName,
         int keySize = 2048,
         HashAlgorithmName? hashAlgorithm = null) => throw new PlatformNotSupportedException();
 
+    /// <summary>
+    /// Generates an ECDSA-based CSR (not supported on NETSTANDARD2_0; will throw).
+    /// </summary>
+    /// <param name="subjectName">Distinguished name for the certificate subject.</param>
+    /// <param name="curve">Optional EC curve; defaults to P-256 when supported.</param>
+    /// <param name="hashAlgorithm">Optional hash algorithm.</param>
     public static (string Csr, ECDsa Key) GenerateEcdsa(
         string subjectName,
         ECCurve? curve = null,
@@ -27,6 +39,13 @@ using System.Security.Cryptography.X509Certificates;
 /// Provides helpers for generating certificate signing requests.
 /// </summary>
 public static class CsrGenerator {
+    /// <summary>
+    /// Generates an RSA-based CSR and returns both the CSR (Base64) and the RSA key.
+    /// </summary>
+    /// <param name="subjectName">Distinguished name for the certificate subject (for example, CN=example.com).</param>
+    /// <param name="keySize">RSA key size in bits (default 2048).</param>
+    /// <param name="hashAlgorithm">Optional hash algorithm; defaults to SHA256.</param>
+    /// <returns>Tuple containing the CSR string and the generated RSA key.</returns>
     public static (string Csr, RSA Key) GenerateRsa(
         string subjectName,
         int keySize = 2048,
@@ -38,6 +57,13 @@ public static class CsrGenerator {
         return (csr, rsa);
     }
 
+    /// <summary>
+    /// Generates an ECDSA-based CSR and returns both the CSR (Base64) and the ECDSA key.
+    /// </summary>
+    /// <param name="subjectName">Distinguished name for the certificate subject (for example, CN=example.com).</param>
+    /// <param name="curve">Elliptic curve to use; defaults to NIST P-256.</param>
+    /// <param name="hashAlgorithm">Optional hash algorithm; defaults to SHA256.</param>
+    /// <returns>Tuple containing the CSR string and the generated ECDSA key.</returns>
     public static (string Csr, ECDsa Key) GenerateEcdsa(
         string subjectName,
         ECCurve? curve = null,
