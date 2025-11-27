@@ -273,8 +273,8 @@ Concretely:
   - [x] Client for starting DCV via CNAME/HTTP/HTTPS/TXT/email (start/submit flows).
   - [x] List and status queries, plus clear/delete endpoints, via a dedicated Admin DCV client.
 - [ ] ACME accounts and servers:
-  - [ ] Client for `/api/acme/v1/*`, `/api/acme/v2/*` (account/client/domain management).
-  - [ ] Client for `/api/acme/v1/server` and `/api/acme/v1/evdetails/validation` as needed.
+  - [x] Client for `/api/acme/v1/*`, `/api/acme/v2/*` (account/client/domain management).
+  - [x] Client for `/api/acme/v1/server` (public ACME servers).
 - [x] Global custom fields (`/api/customField/v2`):
   - [x] Client for listing custom fields across SSL/S/MIME/Device using the `certType` filter, plus get/create/update operations.
 - [ ] Add tests for the above clients (URI building, minimal happy-path parsing) for domains, organizations, DCV, and ACME clients.
@@ -296,10 +296,10 @@ Concretely:
 
 ## 15. Admin API – Admin accounts, connectors, discovery, Azure, and code signing
 
-- [ ] Admin users and roles (`/api/admin/v1/*`):
-  - [ ] Client to list/get admin users, manage passwords (`changepassword`, `password`), and unlink accounts.
-  - [ ] Client to list roles, privileges, and IdP configurations (`/api/admin/v1/roles`, `/privileges`, `/idp`).
-  - [ ] Tests to validate URI construction and basic parsing for admin account operations.
+- [x] Admin users and roles (`/api/admin/v1/*`):
+  - [x] Client to list/get admin users, manage passwords (`changepassword`, `password`), and unlink accounts.
+  - [x] Client to list roles, privileges, and IdP configurations (`/api/admin/v1/roles`, `/privileges`, `/idp`).
+  - [x] Tests to validate URI construction and basic parsing for admin account operations.
 - [ ] Agents and network connectors (`/api/agent/v1/*`):
   - [ ] Client to manage MS and network agents, servers, and nodes (`/ms`, `/network`, `/server`, `/node`).
   - [ ] Tests to ensure correct URIs for agent, server, and node operations.
@@ -310,8 +310,8 @@ Concretely:
   - [x] Client to list DNS connector instances and providers.
   - [x] Tests for connector list/details/provider endpoints.
 - [ ] Code-signing certificates (`/api/cscert/v1/*`):
-  - [ ] Client to support import and manual revocation of code-signing certificates.
-  - [ ] Tests for request payloads and error handling for code-signing operations.
+  - [x] Client to support import and manual revocation of code-signing certificates.
+  - [x] Tests for request payloads and basic success-path handling for code-signing operations.
 - [ ] Discovery tasks and buckets (`/api/discovery/v1/*`, `/api/discovery/v4/*`):
   - [ ] Client to manage discovery tasks (Azure/AD/network), including start/stop and operations (`/operation`, `/result`).
   - [ ] Client to manage discovery buckets, assignments, delegations, and rule execution.
@@ -327,7 +327,7 @@ Concretely:
 - [ ] DNS connectors (`/api/connector/v1/dns*`):
   - [ ] Client for DNS connector registration and provider management.
 - [ ] Code-signing certificates (`/api/cscert/v1/*`):
-  - [ ] Client for code-signing import/revoke/manual operations.
-- [ ] Admins and roles (`/api/admin/v1/*`):
-  - [ ] Client for administrator users, roles, privileges, and password/IdP operations.
+  - [x] Client for code-signing import/revoke/manual operations.
+- [x] Admins and roles (`/api/admin/v1/*`):
+  - [x] Client for administrator users, roles, privileges, and password/IdP operations.
 - [ ] Decide which of these higher-level admin/infra features should be in scope for this library vs. left to future iterations.

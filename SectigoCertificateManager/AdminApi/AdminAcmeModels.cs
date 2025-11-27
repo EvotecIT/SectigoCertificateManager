@@ -55,3 +55,21 @@ public sealed class AdminPrivateAcmeAccount {
     public string? ProfileName { get; set; }
 }
 
+/// <summary>
+/// Represents metadata about a public ACME server.
+/// </summary>
+public sealed class AcmeServerInfo {
+    public string? Url { get; set; }
+
+    public int? CaId { get; set; }
+
+    public string? Name { get; set; }
+
+    public int? SingleProductId { get; set; }
+
+    public int? MultiProductId { get; set; }
+
+    public int? WcProductId { get; set; }
+
+    public string? CertValidationType { get; set; }
+}
