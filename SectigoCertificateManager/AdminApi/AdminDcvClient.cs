@@ -159,4 +159,317 @@ public sealed class AdminDcvClient : AdminApiClientBase {
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Starts DNS TXT DCV and returns the informational message.
+    /// </summary>
+    public async Task<string?> StartTxtAsync(
+        string domain,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new AdminDomainRequest {
+            Domain = domain
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/start/domain/txt") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var result = await response.Content
+            .ReadFromJsonAsyncSafe<ResponseMessage>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return result?.Message;
+    }
+
+    /// <summary>
+    /// Starts HTTPS DCV and returns validation file details.
+    /// </summary>
+    public async Task<DomainHttpsResponse?> StartHttpsAsync(
+        string domain,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new AdminDomainRequest {
+            Domain = domain
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/start/domain/https") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<DomainHttpsResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Starts HTTP DCV and returns validation file details.
+    /// </summary>
+    public async Task<DomainHttpResponse?> StartHttpAsync(
+        string domain,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new AdminDomainRequest {
+            Domain = domain
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/start/domain/http") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<DomainHttpResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Starts email DCV and returns available email addresses.
+    /// </summary>
+    public async Task<DomainEmailResponse?> StartEmailAsync(
+        string domain,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new AdminDomainRequest {
+            Domain = domain
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/start/domain/email") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<DomainEmailResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Starts CNAME DCV and returns host and point details.
+    /// </summary>
+    public async Task<DomainCnameResponse?> StartCnameAsync(
+        string domain,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new AdminDomainRequest {
+            Domain = domain
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/start/domain/cname") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<DomainCnameResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Submits TXT DCV for the specified domain.
+    /// </summary>
+    public async Task<SubmitDomainResponse?> SubmitTxtAsync(
+        string domain,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new AdminDomainRequest {
+            Domain = domain
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/submit/domain/txt") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<SubmitDomainResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Submits HTTPS DCV for the specified domain.
+    /// </summary>
+    public async Task<SubmitDomainResponse?> SubmitHttpsAsync(
+        string domain,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new AdminDomainRequest {
+            Domain = domain
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/submit/domain/https") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<SubmitDomainResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Submits HTTP DCV for the specified domain.
+    /// </summary>
+    public async Task<SubmitDomainResponse?> SubmitHttpAsync(
+        string domain,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new AdminDomainRequest {
+            Domain = domain
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/submit/domain/http") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<SubmitDomainResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Submits email DCV for the specified domain.
+    /// </summary>
+    public async Task<DomainEmailResponse?> SubmitEmailAsync(
+        string domain,
+        string email,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+        Guard.AgainstNullOrWhiteSpace(email, nameof(email));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new DomainEmailRequest {
+            Domain = domain,
+            Email = email
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/submit/domain/email") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<DomainEmailResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Submits bulk email DCV for the specified domains.
+    /// </summary>
+    public async Task<DomainEmailResponse?> SubmitBulkEmailAsync(
+        IReadOnlyList<string> domains,
+        string email,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNull(domains, nameof(domains));
+        if (domains.Count == 0) {
+            throw new ArgumentException("At least one domain is required.", nameof(domains));
+        }
+
+        Guard.AgainstNullOrWhiteSpace(email, nameof(email));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new DomainEmailBulkRequest {
+            Domains = domains,
+            Email = email
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/submit-bulk/domain/email") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<DomainEmailResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Submits CNAME DCV for the specified domain.
+    /// </summary>
+    public async Task<DomainHttpResponse?> SubmitCnameAsync(
+        string domain,
+        string? dnsAgentUuid = null,
+        string? dnsProviderName = null,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(domain, nameof(domain));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var payload = new DomainCnameRequest {
+            Domain = domain,
+            Domains = null,
+            DnsAgentUuid = dnsAgentUuid,
+            DnsProviderName = dnsProviderName
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/submit/domain/cname") {
+            Content = JsonContent.Create(payload, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return await response.Content
+            .ReadFromJsonAsyncSafe<DomainHttpResponse>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

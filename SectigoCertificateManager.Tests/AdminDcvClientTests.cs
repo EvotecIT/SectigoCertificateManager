@@ -289,4 +289,141 @@ public sealed class AdminDcvClientTests {
         await Assert.ThrowsAsync<ApiException>(() => client.ListAsync(domain: "example.com"));
         Assert.Equal(1, handler.TokenRequestCount);
     }
+
+    [Fact]
+    public async Task StartEmailAsync_BuildsUriAndParsesResponse() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var apiJson = """
+        {
+          "emails": ["admin@example.com"],
+          "dcvEmails": [
+            {
+              "domainName": "example.com",
+              "whoisEmails": ["whois@example.com"],
+              "adminEmails": ["admin@example.com"],
+              "dnsTxtEmails": ["txt@example.com"]
+            }
+          ]
+        }
+        """;
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent(apiJson, System.Text.Encoding.UTF8, "application/json")
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminDcvClient(config, http);
+
+        var result = await client.StartEmailAsync("example.com");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/dcv/v2/validation/start/domain/email", handler.LastRequest!.RequestUri!.ToString());
+        Assert.Equal(HttpMethod.Post, handler.LastRequest.Method);
+        Assert.NotNull(result);
+        Assert.Single(result!.Emails);
+        Assert.Equal("admin@example.com", result.Emails[0]);
+        Assert.Single(result.DcvEmails);
+        Assert.Equal("example.com", result.DcvEmails[0].DomainName);
+    }
+
+    [Fact]
+    public async Task SubmitEmailAsync_BuildsUriAndParsesResponse() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var apiJson = """
+        {
+          "emails": ["admin@example.com"],
+          "dcvEmails": []
+        }
+        """;
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent(apiJson, System.Text.Encoding.UTF8, "application/json")
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminDcvClient(config, http);
+
+        var result = await client.SubmitEmailAsync("example.com", "admin@example.com");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/dcv/v2/validation/submit/domain/email", handler.LastRequest!.RequestUri!.ToString());
+        Assert.Equal(HttpMethod.Post, handler.LastRequest.Method);
+        Assert.NotNull(handler.LastRequestBody);
+        using (var doc = JsonDocument.Parse(handler.LastRequestBody!)) {
+            var root = doc.RootElement;
+            Assert.Equal("example.com", root.GetProperty("domain").GetString());
+            Assert.Equal("admin@example.com", root.GetProperty("email").GetString());
+        }
+
+        Assert.NotNull(result);
+        Assert.Single(result!.Emails);
+        Assert.Equal("admin@example.com", result.Emails[0]);
+    }
+
+    [Fact]
+    public async Task SubmitTxtAsync_BuildsUriAndParsesResponse() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var apiJson = """
+        {
+          "status": "Validated",
+          "orderStatus": "Submitted",
+          "message": "OK",
+          "orderBackendId": "123",
+          "emailValidationReferenceNumber": "ref-1",
+          "host": "_acme-challenge.example.com",
+          "point": "value"
+        }
+        """;
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent(apiJson, System.Text.Encoding.UTF8, "application/json")
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminDcvClient(config, http);
+
+        var result = await client.SubmitTxtAsync("example.com");
+
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("https://admin.enterprise.sectigo.com/api/dcv/v2/validation/submit/domain/txt", handler.LastRequest!.RequestUri!.ToString());
+        Assert.Equal(HttpMethod.Post, handler.LastRequest.Method);
+        Assert.NotNull(handler.LastRequestBody);
+        using (var doc = JsonDocument.Parse(handler.LastRequestBody!)) {
+            var root = doc.RootElement;
+            Assert.Equal("example.com", root.GetProperty("domain").GetString());
+        }
+
+        Assert.NotNull(result);
+        Assert.Equal("Validated", result!.Status);
+        Assert.Equal("Submitted", result.OrderStatus);
+        Assert.Equal("_acme-challenge.example.com", result.Host);
+        Assert.Equal("value", result.Point);
+    }
 }

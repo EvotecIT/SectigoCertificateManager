@@ -159,7 +159,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         response.EnsureSuccessStatusCode();
 
         return await response.Content
-            .ReadFromJsonAsyncSafe<AzureDelegatedOrgsResponse>(s_jsonFactory.Options, cancellationToken)
+            .ReadFromJsonAsyncSafe<AzureDelegatedOrgsResponse>(s_json, cancellationToken)
             .ConfigureAwait(false);
     }
 
