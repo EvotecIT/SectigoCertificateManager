@@ -304,8 +304,9 @@ public sealed class CertificateService : IDisposable {
                 .ListWithTotalAsync(pageSize, position, status, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
                 .ConfigureAwait(false);
             var identities = listResult.Items;
-            if (total is null && listResult.TotalCount.HasValue) {
+            if (total is null && listResult.TotalCount.HasValue && listResult.TotalCount.Value > 0) {
                 total = listResult.TotalCount;
+                progress?.Report(-total.Value);
             }
 
             if (identities.Count == 0) {
@@ -326,14 +327,7 @@ public sealed class CertificateService : IDisposable {
 
                 var certificate = details is not null ? MapDetails(details) : MapIdentity(identity);
                 processed++;
-                if (progress is not null) {
-                    if (total is not null && total.Value > 0) {
-                        var percent = (int)Math.Min(100, (processed * 100.0 / total.Value));
-                        progress.Report(percent);
-                    } else {
-                        progress.Report(-1);
-                    }
-                }
+                progress?.Report(processed);
 
                 if (!ShouldIncludeByExpiry(certificate.Expires, cutoff, now)) {
                     continue;
