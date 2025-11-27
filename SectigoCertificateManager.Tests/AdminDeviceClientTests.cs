@@ -110,13 +110,13 @@ public sealed class AdminDeviceClientTests {
             Content = JsonContent.Create(token)
         };
 
-        var details = new AdminSslCertificateDetails {
-            Id = 2,
-            CommonName = "device.example.com",
-            OrgId = 5,
-            Status = "Issued",
-            BackendCertId = "dev-2",
-            Term = 365
+        var details = new AdminDeviceCertificateDetails {
+            Issuer = "CN=CA",
+            Subject = "CN=device.example.com",
+            SubjectAltNames = "device.example.com",
+            Md5Hash = "md5",
+            Sha1Hash = "sha1",
+            Sha256Hash = "sha256"
         };
         var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(details)
@@ -136,8 +136,7 @@ public sealed class AdminDeviceClientTests {
         Assert.NotNull(handler.LastRequest);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/device/v1/2", handler.LastRequest!.RequestUri!.ToString());
         Assert.NotNull(result);
-        Assert.Equal(2, result!.Id);
-        Assert.Equal("device.example.com", result.CommonName);
+        Assert.Equal("CN=device.example.com", result!.Subject);
     }
 
     [Fact]

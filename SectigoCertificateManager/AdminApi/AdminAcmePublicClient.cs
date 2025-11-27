@@ -1,5 +1,6 @@
 namespace SectigoCertificateManager.AdminApi;
 
+using SectigoCertificateManager;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Utilities;
 using System;
@@ -47,7 +48,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminPublicAcmeAccount>>(s_json, cancellationToken)
@@ -72,7 +73,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var account = await response.Content
             .ReadFromJsonAsyncSafe<AdminPublicAcmeAccount>(s_json, cancellationToken)
@@ -100,7 +101,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
     }
@@ -133,7 +134,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminPublicAcmeDomain>>(s_json, cancellationToken)
@@ -170,7 +171,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
             .ReadFromJsonAsyncSafe<NotAddedDomainsResponse>(s_json, cancellationToken)
@@ -207,7 +208,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
             .ReadFromJsonAsyncSafe<NotRemovedDomainsResponse>(s_json, cancellationToken)
@@ -246,7 +247,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminPublicAcmeClient>>(s_json, cancellationToken)
@@ -276,7 +277,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     private sealed class PublicAcmeDomainListWrapper {

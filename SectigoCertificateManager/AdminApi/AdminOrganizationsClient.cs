@@ -1,5 +1,6 @@
 namespace SectigoCertificateManager.AdminApi;
 
+using SectigoCertificateManager;
 using SectigoCertificateManager.Utilities;
 using System;
 using System.Collections.Generic;
@@ -40,7 +41,7 @@ public sealed class AdminOrganizationsClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminOrganizationBasic>>(s_json, cancellationToken)
@@ -67,7 +68,7 @@ public sealed class AdminOrganizationsClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var details = await response.Content
             .ReadFromJsonAsyncSafe<AdminOrganizationDetails>(s_json, cancellationToken)
@@ -94,7 +95,7 @@ public sealed class AdminOrganizationsClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminOrganizationBasic>>(s_json, cancellationToken)
@@ -123,7 +124,7 @@ public sealed class AdminOrganizationsClient : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminOrganizationBasic>>(s_json, cancellationToken)
