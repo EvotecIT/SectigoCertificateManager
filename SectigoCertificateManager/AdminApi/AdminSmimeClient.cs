@@ -97,6 +97,9 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
     /// Supported values are documented in the Admin API.
     /// </param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <remarks>
+    /// The caller is responsible for disposing the returned <see cref="Stream"/>.
+    /// </remarks>
     public async Task<Stream> CollectAsync(
         string backendCertId,
         string? format = null,

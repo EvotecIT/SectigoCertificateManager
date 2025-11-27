@@ -47,6 +47,19 @@ internal static class QueryStringBuilder {
             return this;
         }
 
+        public QueryBuilder AddBool(string name, bool? value, bool emitFalse = false) {
+            if (!value.HasValue) {
+                return this;
+            }
+
+            if (!emitFalse && !value.Value) {
+                return this;
+            }
+
+            Append(name, value.Value ? "true" : "false");
+            return this;
+        }
+
         private void Append(string name, string value) {
             _ = _hasQuery ? _builder.Append('&') : _builder.Append('?');
             _builder.Append(name).Append('=').Append(value);
@@ -56,4 +69,3 @@ internal static class QueryStringBuilder {
         public override string ToString() => _builder.ToString();
     }
 }
-
