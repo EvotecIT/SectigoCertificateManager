@@ -124,14 +124,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
             .ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
-        var buffer = new MemoryStream();
-#if NETSTANDARD2_0 || NET472
-        await response.Content.CopyToAsync(buffer).ConfigureAwait(false);
-#else
-        await response.Content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
-#endif
-        buffer.Position = 0;
-        return buffer;
+        return await response.Content.CopyToMemoryStreamAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
