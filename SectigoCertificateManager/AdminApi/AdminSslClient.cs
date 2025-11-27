@@ -38,14 +38,30 @@ public sealed class AdminSslClient : AdminApiClientBase {
     /// </summary>
     /// <param name="size">Number of entries to request.</param>
     /// <param name="position">The first position to return from the result set.</param>
+    /// <param name="status">Optional certificate status filter (for example, Issued or Expired).</param>
+    /// <param name="orgId">Optional organization identifier filter.</param>
+    /// <param name="requester">Optional requester filter.</param>
+    /// <param name="expiresBefore">
+    /// Optional upper bound for the certificate expiration date. When specified, only certificates
+    /// expiring on or before this date (inclusive) are returned.
+    /// </param>
+    /// <param name="expiresAfter">
+    /// Optional lower bound for the certificate expiration date. When specified, only certificates
+    /// expiring on or after this date (inclusive) are returned.
+    /// </param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<IReadOnlyList<AdminSslIdentity>> ListAsync(
         int? size = null,
         int? position = null,
+        string? status = null,
+        int? orgId = null,
+        string? requester = null,
+        DateTimeOffset? expiresBefore = null,
+        DateTimeOffset? expiresAfter = null,
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, BuildListUri(size, position));
+        using var request = new HttpRequestMessage(HttpMethod.Get, BuildListUri(size, position, status, orgId, requester, expiresBefore, expiresAfter));
         SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -831,10 +847,22 @@ public sealed class AdminSslClient : AdminApiClientBase {
         return fields ?? Array.Empty<CustomField>();
     }
 
-    private string BuildListUri(int? size, int? position) {
+    private string BuildListUri(
+        int? size,
+        int? position,
+        string? status,
+        int? orgId,
+        string? requester,
+        DateTimeOffset? expiresBefore,
+        DateTimeOffset? expiresAfter) {
         return QueryStringBuilder.Build("api/ssl/v2", q => q
             .AddInt("size", size)
-            .AddInt("position", position));
+            .AddInt("position", position)
+            .AddString("status", status)
+            .AddInt("orgId", orgId)
+            .AddString("requester", requester)
+            .AddString("expiresBefore", expiresBefore?.UtcDateTime.ToString("o"))
+            .AddString("expiresAfter", expiresAfter?.UtcDateTime.ToString("o")));
     }
 
     private sealed class RenewInfo {
