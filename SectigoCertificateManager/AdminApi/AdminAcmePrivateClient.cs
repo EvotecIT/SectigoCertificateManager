@@ -15,29 +15,11 @@ using System.Threading.Tasks;
 /// <summary>
 /// Minimal client for universal (private) ACME accounts.
 /// </summary>
-public sealed class AdminAcmePrivateClient : IDisposable {
-    private readonly AdminApiConfig _config;
-    private readonly HttpClient _httpClient;
-    private readonly bool _ownsHttpClient;
-    private string _cachedToken = string.Empty;
-    private DateTimeOffset _tokenExpiresAt;
+public sealed class AdminAcmePrivateClient : AdminApiClientBase {
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
-    public AdminAcmePrivateClient(AdminApiConfig config, HttpClient? httpClient = null) {
-        _config = Guard.AgainstNull(config, nameof(config));
-        if (httpClient is null) {
-            _httpClient = new HttpClient();
-            _ownsHttpClient = true;
-        } else {
-            _httpClient = httpClient;
-            _ownsHttpClient = false;
-        }
-
-        if (!_config.BaseUrl.EndsWith("/", StringComparison.Ordinal)) {
-            _httpClient.BaseAddress = new Uri(_config.BaseUrl + "/");
-        } else {
-            _httpClient.BaseAddress = new Uri(_config.BaseUrl);
-        }
+    public AdminAcmePrivateClient(AdminApiConfig config, HttpClient? httpClient = null)
+        : base(config, httpClient) {
     }
 
     /// <summary>
@@ -116,60 +98,18 @@ public sealed class AdminAcmePrivateClient : IDisposable {
         response.EnsureSuccessStatusCode();
 
         var location = response.Headers.Location;
-        if (location is not null) {
-            var url = location.ToString().Trim().TrimEnd('/');
-            var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length > 0 && int.TryParse(segments[^1], out var id)) {
-                return id;
-            }
+        if (location is null) {
+            return 0;
         }
 
-        return 0;
-    }
-
-    public void Dispose() {
-        if (_ownsHttpClient) {
-            _httpClient.Dispose();
-        }
-    }
-
-    private async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) {
-        if (!string.IsNullOrEmpty(_cachedToken) && DateTimeOffset.UtcNow < _tokenExpiresAt) {
-            return _cachedToken;
+        var url = location.ToString().Trim().TrimEnd('/');
+        var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 0) {
+            return 0;
         }
 
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string> {
-            ["grant_type"] = "client_credentials",
-            ["client_id"] = _config.ClientId,
-            ["client_secret"] = _config.ClientSecret
-        });
-
-        using var response = await _httpClient
-            .PostAsync(_config.TokenUrl, content, cancellationToken)
-            .ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-
-        var model = await response.Content
-            .ReadFromJsonAsyncSafe<TokenResponse>(s_json, cancellationToken)
-            .ConfigureAwait(false);
-        if (model is null || string.IsNullOrWhiteSpace(model.AccessToken)) {
-            throw new InvalidOperationException("Access token was not present in the Admin API token response.");
-        }
-
-        _cachedToken = model.AccessToken;
-        var lifetimeSeconds = model.ExpiresIn > 0 ? model.ExpiresIn : 300;
-        var expiry = DateTimeOffset.UtcNow.AddSeconds(lifetimeSeconds);
-        _tokenExpiresAt = expiry.AddMinutes(-1);
-
-        return _cachedToken;
+        var lastSegment = segments[segments.Length - 1];
+        return int.TryParse(lastSegment, out var id) ? id : 0;
     }
 
-    private sealed class TokenResponse {
-        [JsonPropertyName("access_token")]
-        public string AccessToken { get; set; } = string.Empty;
-
-        [JsonPropertyName("expires_in")]
-        public int ExpiresIn { get; set; }
-    }
 }
-

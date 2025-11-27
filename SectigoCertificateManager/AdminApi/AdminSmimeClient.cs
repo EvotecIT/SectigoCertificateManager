@@ -16,12 +16,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// Minimal client for the Sectigo Admin Operations API S/MIME (client certificate) endpoints.
 /// </summary>
-public sealed class AdminSmimeClient : IDisposable {
-    private readonly AdminApiConfig _config;
-    private readonly HttpClient _httpClient;
-    private readonly bool _ownsHttpClient;
-    private string _cachedToken = string.Empty;
-    private DateTimeOffset _tokenExpiresAt;
+public sealed class AdminSmimeClient : AdminApiClientBase {
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
     /// <summary>
@@ -32,21 +27,8 @@ public sealed class AdminSmimeClient : IDisposable {
     /// Optional <see cref="HttpClient"/> instance. When not provided, a new instance is created
     /// and disposed with this client.
     /// </param>
-    public AdminSmimeClient(AdminApiConfig config, HttpClient? httpClient = null) {
-        _config = Guard.AgainstNull(config, nameof(config));
-        if (httpClient is null) {
-            _httpClient = new HttpClient();
-            _ownsHttpClient = true;
-        } else {
-            _httpClient = httpClient;
-            _ownsHttpClient = false;
-        }
-
-        if (!_config.BaseUrl.EndsWith("/", StringComparison.Ordinal)) {
-            _httpClient.BaseAddress = new Uri(_config.BaseUrl + "/");
-        } else {
-            _httpClient.BaseAddress = new Uri(_config.BaseUrl);
-        }
+    public AdminSmimeClient(AdminApiConfig config, HttpClient? httpClient = null)
+        : base(config, httpClient) {
     }
 
     /// <summary>
@@ -215,14 +197,7 @@ public sealed class AdminSmimeClient : IDisposable {
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var buffer = new MemoryStream();
-#if NETSTANDARD2_0 || NET472
-        await response.Content.CopyToAsync(buffer).ConfigureAwait(false);
-#else
-        await response.Content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
-#endif
-        buffer.Position = 0;
-        return buffer;
+        return await response.Content.CopyToMemoryStreamAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -578,49 +553,4 @@ public sealed class AdminSmimeClient : IDisposable {
         response.EnsureSuccessStatusCode();
     }
 
-    /// <inheritdoc />
-    public void Dispose() {
-        if (_ownsHttpClient) {
-            _httpClient.Dispose();
-        }
-    }
-
-    private async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) {
-        if (!string.IsNullOrEmpty(_cachedToken) && DateTimeOffset.UtcNow < _tokenExpiresAt) {
-            return _cachedToken;
-        }
-
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string> {
-            ["grant_type"] = "client_credentials",
-            ["client_id"] = _config.ClientId,
-            ["client_secret"] = _config.ClientSecret
-        });
-
-        using var response = await _httpClient
-            .PostAsync(_config.TokenUrl, content, cancellationToken)
-            .ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-
-        var model = await response.Content
-            .ReadFromJsonAsyncSafe<TokenResponse>(s_json, cancellationToken)
-            .ConfigureAwait(false);
-        if (model is null || string.IsNullOrWhiteSpace(model.AccessToken)) {
-            throw new InvalidOperationException("Access token was not present in the Admin API token response.");
-        }
-
-        _cachedToken = model.AccessToken;
-        var lifetimeSeconds = model.ExpiresIn > 0 ? model.ExpiresIn : 300;
-        var expiry = DateTimeOffset.UtcNow.AddSeconds(lifetimeSeconds);
-        _tokenExpiresAt = expiry.AddMinutes(-1);
-
-        return _cachedToken;
-    }
-
-    private sealed class TokenResponse {
-        [JsonPropertyName("access_token")]
-        public string AccessToken { get; set; } = string.Empty;
-
-        [JsonPropertyName("expires_in")]
-        public int ExpiresIn { get; set; }
-    }
 }
