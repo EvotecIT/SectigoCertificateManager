@@ -66,7 +66,7 @@ public sealed class AdminDcvClient : AdminApiClientBase {
             .AddInt("position", position));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -97,7 +97,7 @@ public sealed class AdminDcvClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/status") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -128,7 +128,7 @@ public sealed class AdminDcvClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/clear") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -153,7 +153,7 @@ public sealed class AdminDcvClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/dcv/v2/validation/delete") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);

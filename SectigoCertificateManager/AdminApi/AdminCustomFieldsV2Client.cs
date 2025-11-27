@@ -48,7 +48,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -75,7 +75,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/customField/v2/{id}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -101,7 +101,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/customField/v2") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -127,7 +127,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Put, "api/customField/v2") {
             Content = JsonContent.Create(field, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);

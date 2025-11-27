@@ -45,6 +45,19 @@ public abstract class AdminApiClientBase : IDisposable {
     protected Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) =>
         _tokenManager.GetTokenAsync(cancellationToken);
 
+    /// <summary>
+    /// Adds a Bearer token Authorization header to the specified request.
+    /// </summary>
+    /// <param name="request">The HTTP request message.</param>
+    /// <param name="token">The OAuth2 access token.</param>
+    protected static void SetBearer(HttpRequestMessage request, string token) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+    }
+
     /// <inheritdoc />
     public void Dispose() {
         _tokenManager.Dispose();

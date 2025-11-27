@@ -50,7 +50,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
             .AddInt("position", position));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -77,7 +77,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/device/v1/{deviceCertId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -117,7 +117,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient
             .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -152,7 +152,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/device/v1/enroll") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -179,7 +179,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/device/v1/renew/order/{deviceCertId}");
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -206,7 +206,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(
             HttpMethod.Post,
             $"api/device/v1/renew/serial/{Uri.EscapeDataString(serialNumber)}");
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -248,7 +248,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/device/v1/replace/order/{deviceCertId}") {
             Content = JsonContent.Create(body, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -280,7 +280,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
             $"api/device/v1/revoke/serial/{Uri.EscapeDataString(serialNumber)}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -304,7 +304,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/device/v1/import") {
             Content = JsonContent.Create(requests, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -342,7 +342,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/device/v1/revoke/order/{deviceCertId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -381,7 +381,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/device/v1/revoke/manual") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -410,7 +410,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"api/device/v1/approve/{deviceCertId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -439,7 +439,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"api/device/v1/decline/{deviceCertId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -465,7 +465,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -486,7 +486,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "api/device/v1/customFields");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -513,7 +513,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/device/v1/{certId}/location");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -546,7 +546,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/device/v1/{certId}/location/{locationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -580,7 +580,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/device/v1/{certId}/location") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -615,7 +615,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Put, $"api/device/v1/{certId}/location/{locationId}") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -642,7 +642,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/device/v1/{certId}/location/{locationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);

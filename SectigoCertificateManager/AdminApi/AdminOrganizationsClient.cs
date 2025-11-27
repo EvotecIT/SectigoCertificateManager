@@ -38,7 +38,7 @@ public sealed class AdminOrganizationsClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "api/organization/v1");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -65,7 +65,7 @@ public sealed class AdminOrganizationsClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/organization/v1/{organizationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -92,7 +92,7 @@ public sealed class AdminOrganizationsClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
             $"api/organization/v1/report-type/{Uri.EscapeDataString(reportType)}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -121,7 +121,7 @@ public sealed class AdminOrganizationsClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
             $"api/organization/v1/managed-by/{Uri.EscapeDataString(role)}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);

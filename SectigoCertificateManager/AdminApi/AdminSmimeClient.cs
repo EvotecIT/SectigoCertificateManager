@@ -49,7 +49,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
             .AddInt("position", position));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -76,7 +76,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/smime/v2/{certId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -114,7 +114,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient
             .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -133,6 +133,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         AdminSmimeEnrollRequest request,
         CancellationToken cancellationToken = default) {
         Guard.AgainstNull(request, nameof(request));
+        AdminSmimeRequestValidator.ValidateEnrollRequest(request);
         if (request.OrgId <= 0) {
             throw new ArgumentOutOfRangeException(nameof(request.OrgId));
         }
@@ -142,7 +143,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/smime/v2/enroll") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -172,13 +173,14 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         }
 
         Guard.AgainstNull(request, nameof(request));
+        AdminSmimeRequestValidator.ValidateP12DownloadRequest(request);
 
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/smime/v2/keystore/{certId}") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient
             .SendAsync(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -204,7 +206,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/smime/v2/revoke") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -223,7 +225,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/smime/v2/renew/order/{Uri.EscapeDataString(backendCertId)}");
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -248,7 +250,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/smime/v2/renew/serial/{Uri.EscapeDataString(serialNumber)}");
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -278,7 +280,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/smime/v2/revoke/order/{Uri.EscapeDataString(backendCertId)}") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -302,7 +304,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/smime/v2/revoke/serial/{Uri.EscapeDataString(serialNumber)}") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -326,7 +328,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/smime/v2/revoke/manual") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -350,7 +352,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
             .AddInt("organizationId", organizationId));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -371,7 +373,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "api/smime/v2/customFields");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -398,7 +400,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/smime/v2/{certId}/location");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -430,7 +432,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/smime/v2/{certId}/location/{locationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -464,7 +466,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/smime/v2/{certId}/location") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -498,7 +500,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Put, $"api/smime/v2/{certId}/location/{locationId}") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -524,7 +526,7 @@ public sealed class AdminSmimeClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/smime/v2/{certId}/location/{locationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);

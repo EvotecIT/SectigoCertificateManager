@@ -59,7 +59,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
             .AddInt("orgId", orgId));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -88,7 +88,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/domain/v1") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -117,7 +117,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/domain/v1/{domainId}/delegation") {
             Content = JsonContent.Create(delegation, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -144,7 +144,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Delete, $"api/domain/v1/{domainId}/delegation") {
             Content = JsonContent.Create(delegation, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -165,7 +165,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Put, $"api/domain/v1/{domainId}/suspend");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -186,7 +186,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Put, $"api/domain/v1/{domainId}/activate");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -213,7 +213,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Put, $"api/domain/v1/{domainId}/monitoring") {
             Content = JsonContent.Create(settings, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -246,7 +246,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/domain/v1/{domainId}/delegation/approve") {
             Content = JsonContent.Create(body, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -279,7 +279,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/domain/v1/{domainId}/delegation/reject") {
             Content = JsonContent.Create(body, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -300,7 +300,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/domain/v1/delegation") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);

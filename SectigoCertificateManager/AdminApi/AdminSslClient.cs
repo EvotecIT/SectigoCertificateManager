@@ -46,7 +46,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, BuildListUri(size, position));
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -73,7 +73,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -114,7 +114,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/revoke/{sslId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -150,7 +150,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/revoke/serial/{encodedSerial}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -181,7 +181,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/approve/{sslId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -212,7 +212,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/decline/{sslId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -255,7 +255,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/revoke/manual") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -289,7 +289,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient
             .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -326,7 +326,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/renewById/{sslId}") {
             Content = JsonContent.Create(body, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -361,7 +361,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/renew/{renewId}") {
             Content = JsonContent.Create(body, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -385,7 +385,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/enroll") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -413,7 +413,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/enroll-keygen") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -453,7 +453,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, path) {
             Content = content
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -491,7 +491,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/renew/manual/{sslId}") {
             Content = JsonContent.Create(body, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -527,7 +527,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/replace/{sslId}") {
             Content = JsonContent.Create(body, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -565,7 +565,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, path) {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -592,7 +592,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/dcv");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -619,7 +619,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/{sslId}/dcv/recheck");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -646,7 +646,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/location");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -678,7 +678,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/location/{locationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -712,7 +712,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/{sslId}/location") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -746,7 +746,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var message = new HttpRequestMessage(HttpMethod.Put, $"api/ssl/v2/{sslId}/location/{locationId}") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -772,7 +772,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/ssl/v2/{sslId}/location/{locationId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -798,7 +798,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
@@ -819,7 +819,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "api/ssl/v2/customFields");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
