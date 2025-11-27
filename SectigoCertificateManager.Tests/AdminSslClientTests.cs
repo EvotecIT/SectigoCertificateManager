@@ -1,3 +1,4 @@
+using SectigoCertificateManager;
 using SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
@@ -784,6 +785,54 @@ public sealed class AdminSslClientTests {
 
         await Task.WhenAll(tasks);
 
+        Assert.Equal(1, handler.TokenRequestCount);
+    }
+
+    [Fact]
+    public async Task ListAsync_WhenTokenEndpointUnauthorized_ThrowsHttpRequestException() {
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.Unauthorized) {
+            Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json")
+        };
+
+        var identities = Array.Empty<AdminSslIdentity>();
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(identities)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => client.ListAsync(5, 0));
+        Assert.Equal(1, handler.TokenRequestCount);
+    }
+
+    [Fact]
+    public async Task ListAsync_WhenTokenResponseMalformed_ThrowsApiException() {
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("{invalid", System.Text.Encoding.UTF8, "application/json")
+        };
+
+        var identities = Array.Empty<AdminSslIdentity>();
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(identities)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        await Assert.ThrowsAsync<ApiException>(() => client.ListAsync(5, 0));
         Assert.Equal(1, handler.TokenRequestCount);
     }
 }
