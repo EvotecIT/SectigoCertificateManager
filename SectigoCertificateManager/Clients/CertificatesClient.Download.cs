@@ -58,6 +58,9 @@ public sealed partial class CertificatesClient : BaseClient {
     /// </summary>
     /// <param name="certificateId">Identifier of the certificate to download.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <remarks>
+    /// The caller is responsible for disposing the returned <see cref="Stream"/> when finished.
+    /// </remarks>
     public async Task<Stream> DownloadStreamAsync(
         int certificateId,
         CancellationToken cancellationToken = default) {

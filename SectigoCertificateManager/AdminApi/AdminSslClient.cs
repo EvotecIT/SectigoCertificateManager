@@ -1,10 +1,12 @@
 namespace SectigoCertificateManager.AdminApi;
 
+using SectigoCertificateManager;
+using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using SectigoCertificateManager.Utilities;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -16,12 +18,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// Minimal client for the Sectigo Admin Operations API SSL endpoints.
 /// </summary>
-public sealed class AdminSslClient : IDisposable {
-    private readonly AdminApiConfig _config;
-    private readonly HttpClient _httpClient;
-    private readonly bool _ownsHttpClient;
-    private string _cachedToken = string.Empty;
-    private DateTimeOffset _tokenExpiresAt;
+public sealed class AdminSslClient : AdminApiClientBase {
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
     /// <summary>
@@ -32,20 +29,8 @@ public sealed class AdminSslClient : IDisposable {
     /// Optional <see cref="HttpClient"/> instance. When not provided, a new instance is created
     /// and disposed with this client.
     /// </param>
-    public AdminSslClient(AdminApiConfig config, HttpClient? httpClient = null) {
-        _config = Guard.AgainstNull(config, nameof(config));
-        if (httpClient is null) {
-            _httpClient = new HttpClient();
-            _ownsHttpClient = true;
-        } else {
-            _httpClient = httpClient;
-            _ownsHttpClient = false;
-        }
-        if (!_config.BaseUrl.EndsWith("/", StringComparison.Ordinal)) {
-            _httpClient.BaseAddress = new Uri(_config.BaseUrl + "/");
-        } else {
-            _httpClient.BaseAddress = new Uri(_config.BaseUrl);
-        }
+    public AdminSslClient(AdminApiConfig config, HttpClient? httpClient = null)
+        : base(config, httpClient) {
     }
 
     /// <summary>
@@ -61,10 +46,10 @@ public sealed class AdminSslClient : IDisposable {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, BuildListUri(size, position));
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var identities = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminSslIdentity>>(s_json, cancellationToken)
@@ -88,10 +73,10 @@ public sealed class AdminSslClient : IDisposable {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var details = await response.Content
             .ReadFromJsonAsyncSafe<AdminSslCertificateDetails>(s_json, cancellationToken)
@@ -129,10 +114,10 @@ public sealed class AdminSslClient : IDisposable {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/revoke/{sslId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -165,10 +150,10 @@ public sealed class AdminSslClient : IDisposable {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/revoke/serial/{encodedSerial}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -196,10 +181,10 @@ public sealed class AdminSslClient : IDisposable {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/approve/{sslId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -227,10 +212,10 @@ public sealed class AdminSslClient : IDisposable {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/decline/{sslId}") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -270,10 +255,10 @@ public sealed class AdminSslClient : IDisposable {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/revoke/manual") {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -285,6 +270,9 @@ public sealed class AdminSslClient : IDisposable {
     /// Supported values are documented in the Admin API (for example, <c>base64</c>, <c>x509</c>, <c>pem</c>).
     /// </param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <remarks>
+    /// The caller is responsible for disposing the returned <see cref="Stream"/>.
+    /// </remarks>
     public async Task<Stream> CollectAsync(
         int sslId,
         string? format = null,
@@ -301,21 +289,14 @@ public sealed class AdminSslClient : IDisposable {
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(request, token);
 
         using var response = await _httpClient
             .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
-        var buffer = new MemoryStream();
-#if NETSTANDARD2_0 || NET472
-        await response.Content.CopyToAsync(buffer).ConfigureAwait(false);
-#else
-        await response.Content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
-#endif
-        buffer.Position = 0;
-        return buffer;
+        return await response.Content.CopyToMemoryStreamAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -345,15 +326,45 @@ public sealed class AdminSslClient : IDisposable {
         using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/renewById/{sslId}") {
             Content = JsonContent.Create(body, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
             .ReadFromJsonAsyncSafe<RenewCertificateResponse>(s_json, cancellationToken)
             .ConfigureAwait(false);
         return result?.SslId ?? 0;
+    }
+
+    /// <summary>
+    /// Renews an SSL certificate by renew identifier.
+    /// </summary>
+    /// <param name="renewId">Renew identifier associated with the certificate.</param>
+    /// <param name="request">Renewal request payload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task RenewByRenewIdAsync(
+        string renewId,
+        RenewCertificateRequest request,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNullOrWhiteSpace(renewId, nameof(renewId));
+        Guard.AgainstNull(request, nameof(request));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var body = new RenewInfo {
+            Csr = request.Csr,
+            DcvMode = request.DcvMode,
+            DcvEmail = request.DcvEmail
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/renew/{renewId}") {
+            Content = JsonContent.Create(body, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -374,10 +385,10 @@ public sealed class AdminSslClient : IDisposable {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/enroll") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return await response.Content
             .ReadFromJsonAsyncSafe<AdminSslEnrollResponse>(s_json, cancellationToken)
@@ -402,10 +413,10 @@ public sealed class AdminSslClient : IDisposable {
         using var message = new HttpRequestMessage(HttpMethod.Post, "api/ssl/v2/enroll-keygen") {
             Content = JsonContent.Create(request, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return await response.Content
             .ReadFromJsonAsyncSafe<AdminSslEnrollResponse>(s_json, cancellationToken)
@@ -442,14 +453,84 @@ public sealed class AdminSslClient : IDisposable {
         using var message = new HttpRequestMessage(HttpMethod.Post, path) {
             Content = content
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return await response.Content
             .ReadFromJsonAsyncSafe<ImportCertificateResponse>(s_json, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Submits a manual renewal request for an SSL certificate.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="request">Manual renewal request payload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task RenewManualAsync(
+        int sslId,
+        AdminSslManualRenewRequest request,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        Guard.AgainstNull(request, nameof(request));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var body = new RenewManualBody {
+            Id = request.Id > 0 ? request.Id : sslId,
+            OrderNumber = request.OrderNumber,
+            DcvMode = request.DcvMode,
+            DcvEmail = request.DcvEmail
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/renew/manual/{sslId}") {
+            Content = JsonContent.Create(body, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Replaces an SSL certificate by identifier.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="request">Replace request payload.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task ReplaceAsync(
+        int sslId,
+        AdminSslReplaceRequest request,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        Guard.AgainstNull(request, nameof(request));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var body = new ReplaceBody {
+            Csr = request.Csr,
+            Reason = request.Reason,
+            CommonName = request.CommonName,
+            SubjectAlternativeNames = request.SubjectAlternativeNames ?? Array.Empty<string>(),
+            DcvMode = request.DcvMode,
+            DcvEmail = request.DcvEmail
+        };
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/replace/{sslId}") {
+            Content = JsonContent.Create(body, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -484,10 +565,10 @@ public sealed class AdminSslClient : IDisposable {
         using var message = new HttpRequestMessage(HttpMethod.Post, path) {
             Content = JsonContent.Create(payload, options: s_json)
         };
-        message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        SetBearer(message, token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
             .ReadFromJsonAsyncSafe<DownloadFromPkResponse>(s_json, cancellationToken)
@@ -496,77 +577,303 @@ public sealed class AdminSslClient : IDisposable {
         return result?.Link ?? string.Empty;
     }
 
+    /// <summary>
+    /// Retrieves DCV information for the specified certificate.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<AdminSslDcvInfo>> GetDcvInfoAsync(
+        int sslId,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/dcv");
+        SetBearer(request, token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var items = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<AdminSslDcvInfo>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return items ?? Array.Empty<AdminSslDcvInfo>();
+    }
+
+    /// <summary>
+    /// Initiates DCV revalidation for the specified certificate and returns the updated DCV info.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<AdminSslDcvInfo?> RecheckDcvAsync(
+        int sslId,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/{sslId}/dcv/recheck");
+        SetBearer(request, token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var info = await response.Content
+            .ReadFromJsonAsyncSafe<AdminSslDcvInfo>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return info;
+    }
+
+    /// <summary>
+    /// Lists locations for the specified certificate.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<AdminSslLocation>> ListLocationsAsync(
+        int sslId,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/location");
+        SetBearer(request, token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var list = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<AdminSslLocation>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return list ?? Array.Empty<AdminSslLocation>();
+    }
+
+    /// <summary>
+    /// Retrieves details for a specific certificate location.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="locationId">Location identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<AdminSslLocation?> GetLocationAsync(
+        int sslId,
+        int locationId,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+        if (locationId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(locationId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/location/{locationId}");
+        SetBearer(request, token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var location = await response.Content
+            .ReadFromJsonAsyncSafe<AdminSslLocation>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return location;
+    }
+
+    /// <summary>
+    /// Creates a custom location for the specified certificate.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="request">Location details.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The identifier of the created location, or 0 when not available.</returns>
+    public async Task<int> CreateLocationAsync(
+        int sslId,
+        AdminSslLocationRequest request,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+
+        Guard.AgainstNull(request, nameof(request));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var message = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/{sslId}/location") {
+            Content = JsonContent.Create(request, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return LocationHeaderParser.ParseId(response);
+    }
+
+    /// <summary>
+    /// Updates a custom certificate location.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="locationId">Location identifier.</param>
+    /// <param name="request">Updated location details.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task UpdateLocationAsync(
+        int sslId,
+        int locationId,
+        AdminSslLocationRequest request,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+        if (locationId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(locationId));
+        }
+
+        Guard.AgainstNull(request, nameof(request));
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var message = new HttpRequestMessage(HttpMethod.Put, $"api/ssl/v2/{sslId}/location/{locationId}") {
+            Content = JsonContent.Create(request, options: s_json)
+        };
+        SetBearer(message, token);
+
+        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Deletes a custom certificate location.
+    /// </summary>
+    /// <param name="sslId">Certificate identifier.</param>
+    /// <param name="locationId">Location identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task DeleteLocationAsync(
+        int sslId,
+        int locationId,
+        CancellationToken cancellationToken = default) {
+        if (sslId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(sslId));
+        }
+        if (locationId <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(locationId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/ssl/v2/{sslId}/location/{locationId}");
+        SetBearer(request, token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Lists SSL certificate profiles (types) using the Admin API.
+    /// </summary>
+    /// <param name="organizationId">Optional organization identifier filter.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<CertificateType>> ListCertificateTypesAsync(
+        int? organizationId = null,
+        CancellationToken cancellationToken = default) {
+        if (organizationId.HasValue && organizationId.Value <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(organizationId));
+        }
+
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var path = new StringBuilder("api/ssl/v2/types");
+        if (organizationId.HasValue) {
+            path.Append("?organizationId=").Append(organizationId.Value);
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
+        SetBearer(request, token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var types = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<CertificateType>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return types ?? Array.Empty<CertificateType>();
+    }
+
+    /// <summary>
+    /// Lists SSL certificate custom fields using the Admin API.
+    /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public async Task<IReadOnlyList<CustomField>> ListCustomFieldsAsync(
+        CancellationToken cancellationToken = default) {
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "api/ssl/v2/customFields");
+        SetBearer(request, token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var fields = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<CustomField>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return fields ?? Array.Empty<CustomField>();
+    }
+
     private string BuildListUri(int? size, int? position) {
-        var builder = new StringBuilder("api/ssl/v2");
-        var hasQuery = false;
-
-        void AppendInt(string name, int value) {
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(name).Append('=').Append(value);
-            hasQuery = true;
-        }
-
-        if (size is { } s) {
-            AppendInt("size", s);
-        }
-
-        if (position is { } p) {
-            AppendInt("position", p);
-        }
-
-        return builder.ToString();
-    }
-
-    private async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) {
-        if (!string.IsNullOrEmpty(_cachedToken) && DateTimeOffset.UtcNow < _tokenExpiresAt) {
-            return _cachedToken;
-        }
-
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string> {
-            ["grant_type"] = "client_credentials",
-            ["client_id"] = _config.ClientId,
-            ["client_secret"] = _config.ClientSecret
-        });
-
-        using var response = await _httpClient
-            .PostAsync(_config.TokenUrl, content, cancellationToken)
-            .ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-
-        var model = await response.Content
-            .ReadFromJsonAsyncSafe<TokenResponse>(s_json, cancellationToken)
-            .ConfigureAwait(false);
-        if (model is null || string.IsNullOrWhiteSpace(model.AccessToken)) {
-            throw new InvalidOperationException("Access token was not present in the Admin API token response.");
-        }
-
-        _cachedToken = model.AccessToken;
-        var lifetimeSeconds = model.ExpiresIn > 0 ? model.ExpiresIn : 300;
-        var expiry = DateTimeOffset.UtcNow.AddSeconds(lifetimeSeconds);
-        // Refresh one minute before actual expiry to avoid edge conditions.
-        _tokenExpiresAt = expiry.AddMinutes(-1);
-
-        return _cachedToken;
-    }
-
-    /// <inheritdoc />
-    public void Dispose() {
-        if (_ownsHttpClient) {
-            _httpClient.Dispose();
-        }
-    }
-
-    private sealed class TokenResponse {
-        [JsonPropertyName("access_token")]
-        public string AccessToken { get; set; } = string.Empty;
-
-        [JsonPropertyName("expires_in")]
-        public int ExpiresIn { get; set; }
+        return QueryStringBuilder.Build("api/ssl/v2", q => q
+            .AddInt("size", size)
+            .AddInt("position", position));
     }
 
     private sealed class RenewInfo {
         [JsonPropertyName("csr")]
         public string? Csr { get; set; }
+
+        [JsonPropertyName("dcvMode")]
+        public string? DcvMode { get; set; }
+
+        [JsonPropertyName("dcvEmail")]
+        public string? DcvEmail { get; set; }
+    }
+
+    private sealed class RenewManualBody {
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
+
+        [JsonPropertyName("orderNumber")]
+        public string? OrderNumber { get; set; }
+
+        [JsonPropertyName("dcvMode")]
+        public string? DcvMode { get; set; }
+
+        [JsonPropertyName("dcvEmail")]
+        public string? DcvEmail { get; set; }
+    }
+
+    private sealed class ReplaceBody {
+        [JsonPropertyName("csr")]
+        public string Csr { get; set; } = string.Empty;
+
+        [JsonPropertyName("reason")]
+        public string Reason { get; set; } = string.Empty;
+
+        [JsonPropertyName("commonName")]
+        public string? CommonName { get; set; }
+
+        [JsonPropertyName("subjectAlternativeNames")]
+        public IReadOnlyList<string> SubjectAlternativeNames { get; set; } = Array.Empty<string>();
 
         [JsonPropertyName("dcvMode")]
         public string? DcvMode { get; set; }

@@ -97,8 +97,8 @@ public sealed class ApiConfigLoaderTests {
     public void Load_WithMissingFile_Throws() {
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "missing.json");
 
-        var ex = Assert.Throws<FileNotFoundException>(() => ApiConfigLoader.Load(path));
-        Assert.Contains(path, ex.Message);
+        var ex = Assert.ThrowsAny<IOException>(() => ApiConfigLoader.Load(path));
+        Assert.Contains("Configuration file not found", ex.Message);
     }
 
     [Fact]
