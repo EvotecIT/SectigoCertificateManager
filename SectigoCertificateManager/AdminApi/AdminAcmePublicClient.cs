@@ -19,6 +19,14 @@ using System.Threading.Tasks;
 public sealed class AdminAcmePublicClient : AdminApiClientBase {
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
+    /// <summary>
+    /// Creates a new instance of the public ACME client using the specified Admin API configuration.
+    /// </summary>
+    /// <param name="config">Admin API configuration including base URL and OAuth2 client credentials.</param>
+    /// <param name="httpClient">
+    /// Optional <see cref="HttpClient"/> to use for outbound requests. When omitted, a new instance is created and
+    /// disposed with the client.
+    /// </param>
     public AdminAcmePublicClient(AdminApiConfig config, HttpClient? httpClient = null)
         : base(config, httpClient) {
     }
