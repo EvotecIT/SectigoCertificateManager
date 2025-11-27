@@ -299,6 +299,9 @@ public sealed class CertificateService : IDisposable {
         var processed = 0;
         int? total = null;
 
+        // modest parallelism to keep API load reasonable
+        const int maxConcurrency = 4;
+
         while (true) {
             var listResult = await _adminClient
                 .ListWithTotalAsync(pageSize, position, status, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
@@ -313,27 +316,48 @@ public sealed class CertificateService : IDisposable {
                 break;
             }
 
+            using var semaphore = new SemaphoreSlim(maxConcurrency);
+            var tasks = new List<Task<Certificate?>>(identities.Count);
+
             foreach (var identity in identities) {
-                AdminSslCertificateDetails? details = null;
-                try {
-                    details = await _adminClient
-                        .GetAsync(identity.SslId, cancellationToken)
-                        .ConfigureAwait(false);
-                } catch (ApiException ex) when ((int)ex.ErrorCode == -1032) {
-                    // Web API operations are not enabled for this organization;
-                    // fall back to summary identity mapping for this entry.
-                    details = null;
+                await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                var idCopy = identity;
+                var task = Task.Run(async () => {
+                    try {
+                        AdminSslCertificateDetails? details = null;
+                        try {
+                            details = await _adminClient
+                                .GetAsync(idCopy.SslId, cancellationToken)
+                                .ConfigureAwait(false);
+                        } catch (ApiException ex) when ((int)ex.ErrorCode == -1032) {
+                            // Web API operations are not enabled for this organization;
+                            // fall back to summary identity mapping for this entry.
+                            details = null;
+                        }
+
+                        var certificate = details is not null ? MapDetails(details) : MapIdentity(idCopy);
+                        var current = Interlocked.Increment(ref processed);
+                        progress?.Report(current);
+
+                        if (!ShouldIncludeByExpiry(certificate.Expires, cutoff, now)) {
+                            return null;
+                        }
+
+                        return (Certificate?)certificate;
+                    } finally {
+                        semaphore.Release();
+                    }
+                }, cancellationToken);
+
+                tasks.Add(task);
+            }
+
+            var pageResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+            foreach (var certificate in pageResults) {
+                if (certificate is not null) {
+                    result.Add(certificate);
                 }
-
-                var certificate = details is not null ? MapDetails(details) : MapIdentity(identity);
-                processed++;
-                progress?.Report(processed);
-
-                if (!ShouldIncludeByExpiry(certificate.Expires, cutoff, now)) {
-                    continue;
-                }
-
-                result.Add(certificate);
             }
 
             if (identities.Count < pageSize) {
