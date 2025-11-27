@@ -1,3 +1,4 @@
+using SectigoCertificateManager;
 using SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Requests;
 using System.Net;
@@ -240,5 +241,52 @@ public sealed class AdminDcvClientTests {
 
         Assert.Equal(1, handler.TokenRequestCount);
     }
-}
 
+    [Fact]
+    public async Task ListAsync_WhenTokenEndpointUnauthorized_ThrowsHttpRequestException() {
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.Unauthorized) {
+            Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json")
+        };
+
+        var items = Array.Empty<AdminDcvValidationSummary>();
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(items)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminDcvClient(config, http);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => client.ListAsync(domain: "example.com"));
+        Assert.Equal(1, handler.TokenRequestCount);
+    }
+
+    [Fact]
+    public async Task ListAsync_WhenTokenResponseMalformed_ThrowsApiException() {
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent("{invalid", System.Text.Encoding.UTF8, "application/json")
+        };
+
+        var items = Array.Empty<AdminDcvValidationSummary>();
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(items)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminDcvClient(config, http);
+
+        await Assert.ThrowsAsync<ApiException>(() => client.ListAsync(domain: "example.com"));
+        Assert.Equal(1, handler.TokenRequestCount);
+    }
+}
