@@ -59,6 +59,8 @@ public abstract class AdminApiClientBase : IDisposable {
 /// </summary>
 internal sealed class AdminTokenManager : IDisposable {
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
+    private const int DefaultTokenLifetimeSeconds = 300;
+    private static readonly TimeSpan TokenExpirySkew = TimeSpan.FromMinutes(1);
 
     private readonly HttpClient _httpClient;
     private readonly AdminApiConfig _config;
@@ -102,10 +104,10 @@ internal sealed class AdminTokenManager : IDisposable {
             }
 
             _cachedToken = model.AccessToken;
-            var lifetimeSeconds = model.ExpiresIn > 0 ? model.ExpiresIn : 300;
+            var lifetimeSeconds = model.ExpiresIn > 0 ? model.ExpiresIn : DefaultTokenLifetimeSeconds;
             var expiry = DateTimeOffset.UtcNow.AddSeconds(lifetimeSeconds);
-            // Refresh one minute before actual expiry to avoid edge conditions.
-            _tokenExpiresAt = expiry.AddMinutes(-1);
+            // Refresh slightly before actual expiry to avoid edge conditions.
+            _tokenExpiresAt = expiry - TokenExpirySkew;
 
             return _cachedToken;
         } finally {
