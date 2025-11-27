@@ -138,6 +138,7 @@ Get-SectigoCertificate -Size 30 -Detailed
 # Filter by status / requester / expiration (Admin only)
 Get-SectigoCertificate -Size 50 -Status Issued -Requester 'user@example.com'
 Get-SectigoCertificate -Size 50 -ExpiresBefore (Get-Date).AddDays(30)
+Get-SectigoCertificate -Status Issued -ExpiresWithinDays 30
 
 # Inventory and most order/organization-related cmdlets currently remain
 # legacy-only and will throw if used with an Admin connection.

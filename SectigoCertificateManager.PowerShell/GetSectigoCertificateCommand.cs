@@ -1,7 +1,9 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
 using SectigoCertificateManager.Responses;
+using System;
 using System.Management.Automation;
+using System.Net.Http;
 using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
@@ -82,6 +84,16 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
     public string Requester { get; set; } = string.Empty;
 
     /// <summary>
+    /// Optional filter for certificates that expire within the specified number of days from now.
+    /// When specified, this filter is only applied for Admin (OAuth2) connections and uses detailed
+    /// certificate information. Ignored for legacy API connections, which do not expose an Admin-style
+    /// expiry filter.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    [ValidateRange(1, int.MaxValue)]
+    public int? ExpiresWithinDays { get; set; }
+
+    /// <summary>
     /// Optional upper bound for the certificate expiration date. When specified, only certificates
     /// expiring on or before this date (inclusive) are returned when using the Admin API.
     /// Ignored for the legacy API.
@@ -115,19 +127,27 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
         var effectiveToken = linked.Token;
 
         CertificateService? service = null;
+        var usingAdmin = false;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
                 service = new CertificateService(adminConfig);
+                usingAdmin = true;
             } else {
                 var config = ConnectionHelper.GetLegacyConfig(SessionState);
                 service = new CertificateService(config);
             }
 
             if (ParameterSetName == ByIdParameterSet) {
-                var certificate = await service
-                    .GetAsync(CertificateId, effectiveToken)
-                    .ConfigureAwait(false);
-                WriteObject(certificate);
+                try {
+                    var certificate = await service
+                        .GetAsync(CertificateId, effectiveToken)
+                        .ConfigureAwait(false);
+                    WriteObject(certificate);
+                } catch (ApiException ex) {
+                    HandlePipelineException(ex);
+                } catch (HttpRequestException ex) {
+                    HandlePipelineException(ex);
+                }
                 return;
             }
 
@@ -137,19 +157,73 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
             var requesterFilter = string.IsNullOrWhiteSpace(Requester) ? null : Requester;
             DateTimeOffset? expiresBeforeFilter = ExpiresBefore is null ? null : new DateTimeOffset(ExpiresBefore.Value);
             DateTimeOffset? expiresAfterFilter = ExpiresAfter is null ? null : new DateTimeOffset(ExpiresAfter.Value);
-            if (Detailed.IsPresent) {
-                certificates = await service
-                    .ListDetailedAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
-                    .ConfigureAwait(false);
-            } else {
-                certificates = await service
-                    .ListAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
-                    .ConfigureAwait(false);
-            }
+            try {
+                if (ExpiresWithinDays.HasValue) {
+                    if (!usingAdmin) {
+                        throw new PSInvalidOperationException("The ExpiresWithinDays parameter is only supported with an Admin (OAuth2) connection. Connect-Sectigo with -ClientId/-ClientSecret to use this filter.");
+                    }
 
-            WriteObject(certificates, enumerateCollection: true);
+                    var expiresWithin = ExpiresWithinDays.Value;
+                    IProgress<int>? progress = null;
+                    if (MyInvocation.BoundParameters.ContainsKey("Verbose")) {
+                        var activityId = 1;
+                        var activity = $"Finding certificates expiring within {expiresWithin} days";
+                        progress = new Progress<int>(count => {
+                            var record = new ProgressRecord(activityId, activity, $"Processed {count} certificates...");
+                            record.PercentComplete = -1;
+                            WriteProgress(record);
+                            WriteVerbose($"Processed {count} certificates while searching for expiring certificates.");
+                        });
+                    }
+
+                    certificates = await service
+                        .ListExpiringAsync(expiresWithin, statusFilter, orgIdFilter, requesterFilter, effectiveToken, progress)
+                        .ConfigureAwait(false);
+                } else if (Detailed.IsPresent) {
+                    certificates = await service
+                        .ListDetailedAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
+                        .ConfigureAwait(false);
+                } else {
+                    certificates = await service
+                        .ListAsync(Size, Position, statusFilter, orgIdFilter, requesterFilter, expiresBeforeFilter, expiresAfterFilter, effectiveToken)
+                        .ConfigureAwait(false);
+                }
+
+                WriteObject(certificates, enumerateCollection: true);
+            } catch (ApiException ex) {
+                HandlePipelineException(ex);
+            } catch (HttpRequestException ex) {
+                HandlePipelineException(ex);
+            }
         } finally {
             service?.Dispose();
         }
+    }
+
+    private void HandlePipelineException(Exception exception) {
+        if (ShouldTreatAsTerminating()) {
+            var record = new ErrorRecord(
+                exception,
+                "SectigoCertificateManagerError",
+                ErrorCategory.InvalidOperation,
+                null);
+            ThrowTerminatingError(record);
+        } else {
+            WriteWarning(exception.Message);
+        }
+    }
+
+    private bool ShouldTreatAsTerminating() {
+        if (MyInvocation.BoundParameters.TryGetValue("ErrorAction", out var value)) {
+            if (value is ActionPreference pref) {
+                return pref == ActionPreference.Stop;
+            }
+
+            if (value is string text && Enum.TryParse<ActionPreference>(text, ignoreCase: true, out var parsed)) {
+                return parsed == ActionPreference.Stop;
+            }
+        }
+
+        return false;
     }
 }

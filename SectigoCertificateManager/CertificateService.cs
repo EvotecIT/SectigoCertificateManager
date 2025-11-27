@@ -237,6 +237,108 @@ public sealed class CertificateService : IDisposable {
         throw new InvalidOperationException("No underlying client is configured for CertificateService.");
     }
 
+    /// <summary>
+    /// Lists certificates that expire within the specified number of days using the Admin API.
+    /// </summary>
+    /// <param name="expiresWithinDays">Number of days from now within which certificates must expire.</param>
+    /// <param name="status">Optional Admin status filter (for example, Issued or Expired).</param>
+    /// <param name="orgId">Optional Admin organization identifier filter.</param>
+    /// <param name="requester">Optional Admin requester filter.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <remarks>
+    /// This method is only supported when the service is configured with an Admin API connection.
+    /// </remarks>
+    public Task<IReadOnlyList<Certificate>> ListExpiringAsync(
+        int expiresWithinDays,
+        string? status = null,
+        int? orgId = null,
+        string? requester = null,
+        CancellationToken cancellationToken = default) {
+        return ListExpiringAsync(expiresWithinDays, status, orgId, requester, cancellationToken, progress: null);
+    }
+
+    /// <summary>
+    /// Lists certificates that expire within the specified number of days using the Admin API.
+    /// </summary>
+    /// <param name="expiresWithinDays">Number of days from now within which certificates must expire.</param>
+    /// <param name="status">Optional Admin status filter (for example, Issued or Expired).</param>
+    /// <param name="orgId">Optional Admin organization identifier filter.</param>
+    /// <param name="requester">Optional Admin requester filter.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <param name="progress">
+    /// Optional progress reporter that receives the total number of certificates processed so far.
+    /// </param>
+    /// <remarks>
+    /// This method is only supported when the service is configured with an Admin API connection.
+    /// </remarks>
+    public async Task<IReadOnlyList<Certificate>> ListExpiringAsync(
+        int expiresWithinDays,
+        string? status = null,
+        int? orgId = null,
+        string? requester = null,
+        CancellationToken cancellationToken = default,
+        IProgress<int>? progress = null) {
+        if (expiresWithinDays <= 0) {
+            throw new ArgumentOutOfRangeException(nameof(expiresWithinDays));
+        }
+
+        if (_adminClient is null) {
+            if (_legacyClient is not null) {
+                throw new InvalidOperationException("Listing expiring certificates is only supported for Admin API connections.");
+            }
+
+            throw new InvalidOperationException("No underlying client is configured for CertificateService.");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var cutoff = now.AddDays(expiresWithinDays);
+
+        var result = new List<Certificate>();
+        var position = 0;
+        const int pageSize = 200;
+        var processed = 0;
+
+        while (true) {
+            var identities = await _adminClient
+                .ListAsync(pageSize, position, status, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (identities.Count == 0) {
+                break;
+            }
+
+            foreach (var identity in identities) {
+                AdminSslCertificateDetails? details = null;
+                try {
+                    details = await _adminClient
+                        .GetAsync(identity.SslId, cancellationToken)
+                        .ConfigureAwait(false);
+                } catch (ApiException ex) when ((int)ex.ErrorCode == -1032) {
+                    // Web API operations are not enabled for this organization;
+                    // fall back to summary identity mapping for this entry.
+                    details = null;
+                }
+
+                var certificate = details is not null ? MapDetails(details) : MapIdentity(identity);
+                if (!ShouldIncludeByExpiry(certificate.Expires, cutoff, now)) {
+                    continue;
+                }
+
+                result.Add(certificate);
+                processed++;
+                progress?.Report(processed);
+            }
+
+            if (identities.Count < pageSize) {
+                break;
+            }
+
+            position += pageSize;
+        }
+
+        return result;
+    }
+
     private static bool ShouldIncludeByExpiry(
         string? expiresText,
         DateTimeOffset? expiresBefore,
