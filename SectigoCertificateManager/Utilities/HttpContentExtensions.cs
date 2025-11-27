@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager.Utilities;
 
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -24,6 +25,28 @@ public static class HttpContentExtensions {
                 Code = ApiErrorCode.UnknownError,
                 Description = $"Failed to parse {typeof(T).Name} from response: {ex.Message}"
             });
+        }
+    }
+
+    /// <summary>
+    /// Copies the HTTP content to a new <see cref="MemoryStream"/> and returns it,
+    /// ensuring the buffer is disposed if the copy fails.
+    /// </summary>
+    public static async Task<MemoryStream> CopyToMemoryStreamAsync(
+        this HttpContent content,
+        CancellationToken cancellationToken = default) {
+        var buffer = new MemoryStream();
+        try {
+#if NETSTANDARD2_0 || NET472
+            await content.CopyToAsync(buffer).ConfigureAwait(false);
+#else
+            await content.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
+#endif
+            buffer.Position = 0;
+            return buffer;
+        } catch {
+            buffer.Dispose();
+            throw;
         }
     }
 }
