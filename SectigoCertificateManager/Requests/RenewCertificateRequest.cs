@@ -84,19 +84,19 @@ public sealed class RenewCertificateRequest {
         };
     }
 
-    private static DcvMode ParseDcvMode(string? value) {
-        if (string.IsNullOrWhiteSpace(value)) {
-            return DcvMode.None;
-        }
+        private static DcvMode ParseDcvMode(string? value) {
+            if (string.IsNullOrWhiteSpace(value)) {
+                return DcvMode.None;
+            }
 
-        var upper = value.Trim().ToUpperInvariant();
-        return upper switch {
-            "EMAIL" => DcvMode.Email,
-            "CNAME" => DcvMode.Cname,
-            "HTTP" => DcvMode.Http,
-            "HTTPS" => DcvMode.Https,
-            "TXT" => DcvMode.Txt,
-            _ => DcvMode.None
-        };
-    }
+            var upper = value!.Trim().ToUpperInvariant();
+            return upper switch {
+                "EMAIL" => DcvMode.Email,
+                "CNAME" => DcvMode.Cname,
+                "HTTP" => DcvMode.Http,
+                "HTTPS" => DcvMode.Https,
+                "TXT" => DcvMode.Txt,
+                _ => DcvMode.None
+            };
+        }
 }

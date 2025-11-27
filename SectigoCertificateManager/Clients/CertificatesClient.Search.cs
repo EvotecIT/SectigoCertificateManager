@@ -41,7 +41,7 @@ public sealed partial class CertificatesClient : BaseClient {
     /// <summary>
     /// Streams issued certificates and returns them in the specified format.
     /// </summary>
-    /// <typeparam name="T">Output type: <see cref="X509Certificate2"/>, <see cref="byte[]"/>, or <see cref="Stream"/>.</typeparam>
+    /// <typeparam name="T">Output type: <see cref="X509Certificate2"/>, byte[] or <see cref="Stream"/>.</typeparam>
     /// <param name="pageSize">Number of certificates to request per page.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public IAsyncEnumerable<T> StreamCertificatesAsync<T>(
@@ -54,7 +54,7 @@ public sealed partial class CertificatesClient : BaseClient {
     /// <summary>
     /// Streams issued certificates matching the provided filter in the specified format.
     /// </summary>
-    /// <typeparam name="T">Output type: <see cref="X509Certificate2"/>, <see cref="byte[]"/>, or <see cref="Stream"/>.</typeparam>
+    /// <typeparam name="T">Output type: <see cref="X509Certificate2"/>, byte[] or <see cref="Stream"/>.</typeparam>
     /// <param name="request">Filter describing certificates to retrieve.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async IAsyncEnumerable<T> StreamCertificatesAsync<T>(
