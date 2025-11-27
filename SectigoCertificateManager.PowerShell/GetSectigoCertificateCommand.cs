@@ -168,11 +168,32 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                     var activity = $"Finding certificates expiring within {expiresWithin} days";
                     WriteVerbose(
                         $"Searching for certificates with Status='{statusFilter ?? "<any>"}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}' that expire within the next {expiresWithin} days using the Admin API.");
-                    IProgress<int>? progress = new Progress<int>(count => {
-                        var record = new ProgressRecord(activityId, activity, $"Processed {count} certificates...");
-                        record.PercentComplete = -1;
-                        WriteProgress(record);
-                        WriteVerbose($"Processed {count} certificates while searching for expiring certificates.");
+                    int? total = null;
+                    IProgress<int>? progress = new Progress<int>(value => {
+                        if (value < 0) {
+                            var absoluteTotal = -value;
+                            total = absoluteTotal;
+                            WriteVerbose(
+                                $"Total matching certificates (Status='{statusFilter ?? "<any>"}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}'): {absoluteTotal}.");
+                            var initial = new ProgressRecord(activityId, activity, $"Processed 0 of {absoluteTotal} certificates...");
+                            initial.PercentComplete = 0;
+                            WriteProgress(initial);
+                            return;
+                        }
+
+                        var processed = value;
+                        if (total is int t && t > 0) {
+                            var percent = (int)Math.Min(100, processed * 100.0 / t);
+                            var record = new ProgressRecord(activityId, activity, $"Processed {processed} of {t} certificates...");
+                            record.PercentComplete = percent;
+                            WriteProgress(record);
+                            WriteVerbose($"Processed {processed} of {t} certificates (~{percent}%).");
+                        } else {
+                            var record = new ProgressRecord(activityId, activity, $"Processed {processed} certificates...");
+                            record.PercentComplete = -1;
+                            WriteProgress(record);
+                            WriteVerbose($"Processed {processed} certificates while searching for expiring certificates.");
+                        }
                     });
 
                     certificates = await service
