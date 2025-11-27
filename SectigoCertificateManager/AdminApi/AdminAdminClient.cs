@@ -112,13 +112,13 @@ public sealed class AdminAdminClient : AdminApiClientBase {
 
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        using var httpContent = JsonContent.Create(request, options: s_json);
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "api/admin/v1") {
-            Content = httpContent
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "api/admin/v1") {
+            Content = JsonContent.Create(request, options: s_json)
         };
         SetBearer(httpRequest, token);
 
         using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        httpRequest.Dispose();
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
@@ -139,13 +139,13 @@ public sealed class AdminAdminClient : AdminApiClientBase {
 
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        using var httpContent = JsonContent.Create(request, options: s_json);
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Put, $"api/admin/v1/{id}") {
-            Content = httpContent
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, $"api/admin/v1/{id}") {
+            Content = JsonContent.Create(request, options: s_json)
         };
         SetBearer(httpRequest, token);
 
         using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        httpRequest.Dispose();
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -204,17 +204,16 @@ public sealed class AdminAdminClient : AdminApiClientBase {
 
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        using var content = JsonContent.Create(
-            new AdminChangePasswordRequest { NewPassword = newPassword },
-            options: s_json);
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, "api/admin/v1/changepassword") {
-            Content = content
+        var request = new HttpRequestMessage(HttpMethod.Post, "api/admin/v1/changepassword") {
+            Content = JsonContent.Create(
+                new AdminChangePasswordRequest { NewPassword = newPassword },
+                options: s_json)
         };
         SetBearer(request, token);
         request.Headers.Add("password", currentPassword);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        request.Dispose();
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -333,4 +332,3 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         };
     }
 }
-

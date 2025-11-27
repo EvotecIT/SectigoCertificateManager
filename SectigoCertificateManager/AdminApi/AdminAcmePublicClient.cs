@@ -293,13 +293,18 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var path = QueryStringBuilder.Build("api/acme/v1/server", q => q
+        var basePath = QueryStringBuilder.Build("api/acme/v1/server", q => q
             .AddInt("size", size)
             .AddInt("position", position)
             .AddInt("caId", caId)
             .AddString("certValidationType", certValidationType)
-            .AddString("url", url)
             .AddString("name", name));
+
+        var path = basePath;
+        if (!string.IsNullOrWhiteSpace(url)) {
+            var encodedUrl = Uri.EscapeDataString(url);
+            path += (path.Contains("?", StringComparison.Ordinal) ? "&" : "?") + "url=" + encodedUrl;
+        }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
