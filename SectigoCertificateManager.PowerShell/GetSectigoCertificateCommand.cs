@@ -169,6 +169,8 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                     WriteVerbose(
                         $"Searching for certificates with Status='{statusFilter ?? "<any>"}', OrgId='{(orgIdFilter?.ToString() ?? "<any>")}', Requester='{requesterFilter ?? "<any>"}' that expire within the next {expiresWithin} days using the Admin API.");
                     int? total = null;
+                    var lastReportedPercent = -1;
+                    var lastReportedProcessed = 0;
                     IProgress<int>? progress = new Progress<int>(value => {
                         if (value < 0) {
                             var absoluteTotal = -value;
@@ -178,17 +180,33 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
                             var initial = new ProgressRecord(activityId, activity, $"Processed 0 of {absoluteTotal} certificates...");
                             initial.PercentComplete = 0;
                             WriteProgress(initial);
+                            lastReportedPercent = 0;
+                            lastReportedProcessed = 0;
                             return;
                         }
 
                         var processed = value;
+                        if (processed <= lastReportedProcessed) {
+                            return;
+                        }
+                        lastReportedProcessed = processed;
+
                         if (total is int t && t > 0) {
                             var percent = (int)Math.Min(100, processed * 100.0 / t);
+                            if (percent == lastReportedPercent) {
+                                return;
+                            }
+                            lastReportedPercent = percent;
+
                             var record = new ProgressRecord(activityId, activity, $"Processed {processed} of {t} certificates...");
                             record.PercentComplete = percent;
                             WriteProgress(record);
                             WriteVerbose($"Processed {processed} of {t} certificates (~{percent}%).");
                         } else {
+                            if (processed % 100 != 0) {
+                                return;
+                            }
+
                             var record = new ProgressRecord(activityId, activity, $"Processed {processed} certificates...");
                             record.PercentComplete = -1;
                             WriteProgress(record);
