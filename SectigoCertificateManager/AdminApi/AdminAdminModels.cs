@@ -29,8 +29,13 @@ public enum AdminActiveState {
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AdminPasswordState {
+    /// <summary>Password is valid and not expired.</summary>
     ALIVE,
+
+    /// <summary>Password has expired.</summary>
     EXPIRED,
+
+    /// <summary>Password is configured to never expire.</summary>
     NEVER_EXPIRE
 }
 
@@ -39,14 +44,31 @@ public enum AdminPasswordState {
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AdminRole {
+    /// <summary>Master Registration Authority Officer.</summary>
     MRAO,
+
+    /// <summary>Registration Authority Officer for SSL.</summary>
     RAO_SSL,
+
+    /// <summary>Delegated Registration Authority Officer for S/MIME.</summary>
     RAO_SMIME,
+
+    /// <summary>Registration Authority Officer for code-signing.</summary>
     RAO_CS,
+
+    /// <summary>Registration Authority Officer for device certificates.</summary>
     RAO_DEVICE,
+
+    /// <summary>Delegated Registration Authority Officer for SSL.</summary>
     DRAO_SSL,
+
+    /// <summary>Delegated Registration Authority Officer for S/MIME.</summary>
     DRAO_SMIME,
+
+    /// <summary>Delegated Registration Authority Officer for code-signing.</summary>
     DRAO_CS,
+
+    /// <summary>Delegated Registration Authority Officer for device certificates.</summary>
     DRAO_DEVICE
 }
 

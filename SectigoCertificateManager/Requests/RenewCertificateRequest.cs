@@ -1,9 +1,12 @@
 namespace SectigoCertificateManager.Requests;
 
+using SectigoCertificateManager;
+using SectigoCertificateManager.Utilities;
+using System;
+using System.Buffers;
 using System.IO;
 using System.Text;
-using System.Buffers;
-using SectigoCertificateManager.Utilities;
+using System.Text.Json.Serialization;
 
 /// <summary>
 /// Request payload used to renew a certificate.
@@ -12,8 +15,20 @@ public sealed class RenewCertificateRequest {
     /// <summary>Gets or sets the certificate signing request.</summary>
     public string? Csr { get; set; }
 
-    /// <summary>Gets or sets the DCV mode.</summary>
+    /// <summary>
+    /// Gets or sets the DCV mode as a strongly-typed value.
+    /// </summary>
+    [JsonIgnore]
     public DcvMode DcvMode { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DCV mode as a wire value used by the Sectigo API.
+    /// </summary>
+    [JsonPropertyName("dcvMode")]
+    public string? DcvModeText {
+        get => MapDcvMode(DcvMode);
+        set => DcvMode = ParseDcvMode(value);
+    }
 
     /// <summary>Gets or sets the DCV email.</summary>
     public string? DcvEmail { get; set; }
@@ -55,5 +70,33 @@ public sealed class RenewCertificateRequest {
         Csr = vsb.ToString();
         vsb.Dispose();
         ArrayPool<char>.Shared.Return(rented);
+    }
+
+    private static string? MapDcvMode(DcvMode mode) {
+        return mode switch {
+            DcvMode.None => null,
+            DcvMode.Email => "EMAIL",
+            DcvMode.Cname => "CNAME",
+            DcvMode.Http => "HTTP",
+            DcvMode.Https => "HTTPS",
+            DcvMode.Txt => "TXT",
+            _ => null
+        };
+    }
+
+    private static DcvMode ParseDcvMode(string? value) {
+        if (string.IsNullOrWhiteSpace(value)) {
+            return DcvMode.None;
+        }
+
+        var upper = value.Trim().ToUpperInvariant();
+        return upper switch {
+            "EMAIL" => DcvMode.Email,
+            "CNAME" => DcvMode.Cname,
+            "HTTP" => DcvMode.Http,
+            "HTTPS" => DcvMode.Https,
+            "TXT" => DcvMode.Txt,
+            _ => DcvMode.None
+        };
     }
 }

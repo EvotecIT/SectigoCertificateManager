@@ -286,7 +286,7 @@ Concretely:
 - [ ] Persons (`/api/person/v2/*`):
   - [ ] Client to manage persons, invitations, and endpoint account associations.
 - [ ] Notifications (`/api/notification/v1/*`):
-  - [ ] Client to list/get notification definitions and types.
+  - [x] Client to list/get notification definitions and types.
 - [ ] Reports (`/api/report/v1/*`):
   - [ ] Client to fetch activity, SSL, device, domain reports (likely as streaming/download APIs).
 - [x] Template administrators (`/api/admin-template/v1/*`):
