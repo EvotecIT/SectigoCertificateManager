@@ -23,7 +23,7 @@ public static class RenewCertificateByOrderNumberExample {
         Console.WriteLine("Renewing certificate by order number...");
         var request = new RenewCertificateRequest {
             Csr = "<csr>",
-            DcvMode = "EMAIL",
+            DcvMode = DcvMode.Email,
             DcvEmail = "admin@example.com"
         };
         var newId = await certificates.RenewByOrderNumberAsync(12345, request);

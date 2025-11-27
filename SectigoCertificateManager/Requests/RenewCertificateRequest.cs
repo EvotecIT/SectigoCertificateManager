@@ -13,7 +13,7 @@ public sealed class RenewCertificateRequest {
     public string? Csr { get; set; }
 
     /// <summary>Gets or sets the DCV mode.</summary>
-    public string? DcvMode { get; set; }
+    public DcvMode DcvMode { get; set; }
 
     /// <summary>Gets or sets the DCV email.</summary>
     public string? DcvEmail { get; set; }

@@ -43,6 +43,7 @@ public sealed class GetSectigoOrganizationsCommand : AsyncPSCmdlet {
             var config = ConnectionHelper.GetLegacyConfig(SessionState);
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose($"Listing organizations using the legacy API at '{config.BaseUrl}'.");
             var organizations = new OrganizationsClient(client);
             var list = await organizations.ListOrganizationsAsync(effectiveToken)
                 .ConfigureAwait(false);

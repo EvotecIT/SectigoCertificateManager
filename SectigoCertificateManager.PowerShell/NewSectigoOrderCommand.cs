@@ -76,6 +76,8 @@ public sealed class NewSectigoOrderCommand : AsyncPSCmdlet {
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose(
+                $"Creating a new certificate order for CommonName='{CommonName}', ProfileId={ProfileId}, Term={Term} using the legacy API at '{config.BaseUrl}'.");
             var certificates = new CertificatesClient(client);
             var request = new IssueCertificateRequest {
                 CommonName = CommonName,

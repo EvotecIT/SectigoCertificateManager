@@ -140,6 +140,10 @@ Get-SectigoCertificate -Size 50 -Status Issued -Requester 'user@example.com'
 Get-SectigoCertificate -Size 50 -ExpiresBefore (Get-Date).AddDays(30)
 Get-SectigoCertificate -Status Issued -ExpiresWithinDays 30
 
+# Renew and revoke with typed enums
+Invoke-SectigoCertificateRenewal -OrderNumber 10 -Csr 'CSR' -DcvMode Email
+Remove-SectigoCertificate -CertificateId 17331734 -ReasonCode KeyCompromise -Reason 'Key compromised'
+
 # Inventory and most order/organization-related cmdlets currently remain
 # legacy-only and will throw if used with an Admin connection.
 ```

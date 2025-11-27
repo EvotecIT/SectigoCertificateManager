@@ -74,6 +74,7 @@ public sealed class ConnectSectigoCommand : PSCmdlet {
     protected override void ProcessRecord() {
         if (ParameterSetName == AdminParameterSet) {
             var trimmedAdminBase = AdminBaseUrl.TrimEnd('/');
+            WriteVerbose($"Connecting to Sectigo Admin API at '{trimmedAdminBase}' for instance '{Instance}' using client id '{ClientId}'.");
             var config = new AdminApiConfig(trimmedAdminBase, TokenUrl, ClientId, ClientSecret);
             SessionState.PSVariable.Set("SectigoAdminApiConfig", config);
             WriteObject(new {
@@ -85,6 +86,7 @@ public sealed class ConnectSectigoCommand : PSCmdlet {
             });
         } else {
             var trimmedBaseUrl = BaseUrl.TrimEnd('/');
+            WriteVerbose($"Connecting to legacy Sectigo API at '{trimmedBaseUrl}' for customer '{CustomerUri}' with ApiVersion '{ApiVersion}'.");
             var config = new ApiConfig(trimmedBaseUrl, Username, Password, CustomerUri, ApiVersion);
             SessionState.PSVariable.Set("SectigoApiConfig", config);
             DefaultParameterHelper.SetDefaults(SessionState, trimmedBaseUrl, Username, Password, CustomerUri, ApiVersion);

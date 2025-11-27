@@ -62,6 +62,8 @@ public sealed class GetSectigoOrdersPageCommand : AsyncPSCmdlet {
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose(
+                $"Requesting orders page from legacy API at '{config.BaseUrl}' with Position={Position?.ToString() ?? "<none>"} and Size={Size?.ToString() ?? "<none>"}.");
             var orders = new OrdersClient(client);
             var request = new OrderSearchRequest { Size = Size, Position = Position };
 

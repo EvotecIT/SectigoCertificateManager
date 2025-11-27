@@ -69,14 +69,14 @@ public sealed class CertificateService : IDisposable {
     /// </summary>
     /// <param name="size">Number of certificates to retrieve.</param>
     /// <param name="position">Position offset for paging.</param>
-    /// <param name="status">Optional Admin status filter (for example, Issued or Expired). Ignored for legacy API.</param>
+    /// <param name="status">Optional certificate status filter. For legacy API, <see cref="CertificateStatus.Any"/> means no status filter.</param>
     /// <param name="orgId">Optional Admin organization identifier filter. Ignored for legacy API.</param>
     /// <param name="requester">Optional Admin requester filter. Ignored for legacy API.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public Task<IReadOnlyList<Certificate>> ListAsync(
         int size,
         int position = 0,
-        string? status = null,
+        CertificateStatus status = CertificateStatus.Any,
         int? orgId = null,
         string? requester = null,
         CancellationToken cancellationToken = default) {
@@ -105,15 +105,20 @@ public sealed class CertificateService : IDisposable {
     public async Task<IReadOnlyList<Certificate>> ListAsync(
         int size,
         int position,
-        string? status,
+        CertificateStatus status,
         int? orgId,
         string? requester,
         DateTimeOffset? expiresBefore,
         DateTimeOffset? expiresAfter,
         CancellationToken cancellationToken = default) {
         if (_adminClient is not null) {
+            string? statusText = null;
+            if (status != CertificateStatus.Any) {
+                statusText = status.ToString();
+            }
+
             var identities = await _adminClient
-                .ListAsync(size, position, status, orgId, requester, expiresBefore, expiresAfter, cancellationToken)
+                .ListAsync(size, position, statusText, orgId, requester, expiresBefore, expiresAfter, cancellationToken)
                 .ConfigureAwait(false);
             var list = new List<Certificate>(identities.Count);
             foreach (var identity in identities) {
@@ -124,6 +129,9 @@ public sealed class CertificateService : IDisposable {
 
         if (_legacyClient is not null) {
             var request = new CertificateSearchRequest { Size = size, Position = position };
+            if (status != CertificateStatus.Any) {
+                request.Status = status;
+            }
             var response = await _legacyClient
                 .SearchAsync(request, cancellationToken)
                 .ConfigureAwait(false);
@@ -144,13 +152,13 @@ public sealed class CertificateService : IDisposable {
     /// <param name="requester">Optional Admin requester filter. Ignored for legacy API.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <remarks>
-    /// When configured with the legacy API this method behaves the same as <see cref="ListAsync(int,int,string,int?,string?,System.Threading.CancellationToken)"/>,
+    /// When configured with the legacy API this method behaves the same as <see cref="ListAsync(int,int,CertificateStatus,int?,string?,System.Threading.CancellationToken)"/>,
     /// because the legacy search endpoint already returns detailed certificate objects.
     /// </remarks>
     public Task<IReadOnlyList<Certificate>> ListDetailedAsync(
         int size,
         int position = 0,
-        string? status = null,
+        CertificateStatus status = CertificateStatus.Any,
         int? orgId = null,
         string? requester = null,
         CancellationToken cancellationToken = default) {
@@ -163,7 +171,7 @@ public sealed class CertificateService : IDisposable {
     /// </summary>
     /// <param name="size">Number of certificates to retrieve.</param>
     /// <param name="position">Position offset for paging.</param>
-    /// <param name="status">Optional Admin status filter (for example, Issued or Expired). Ignored for legacy API.</param>
+    /// <param name="status">Optional certificate status filter. For legacy API, <see cref="CertificateStatus.Any"/> means no status filter.</param>
     /// <param name="orgId">Optional Admin organization identifier filter. Ignored for legacy API.</param>
     /// <param name="requester">Optional Admin requester filter. Ignored for legacy API.</param>
     /// <param name="expiresBefore">
@@ -178,21 +186,26 @@ public sealed class CertificateService : IDisposable {
     /// </param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <remarks>
-    /// When configured with the legacy API this method behaves the same as <see cref="ListAsync(int,int,string,int?,string?,DateTimeOffset?,DateTimeOffset?,System.Threading.CancellationToken)"/>,
+    /// When configured with the legacy API this method behaves the same as <see cref="ListAsync(int,int,CertificateStatus,int?,string?,DateTimeOffset?,DateTimeOffset?,System.Threading.CancellationToken)"/>,
     /// because the legacy search endpoint already returns detailed certificate objects.
     /// </remarks>
     public async Task<IReadOnlyList<Certificate>> ListDetailedAsync(
         int size,
         int position,
-        string? status,
+        CertificateStatus status,
         int? orgId,
         string? requester,
         DateTimeOffset? expiresBefore,
         DateTimeOffset? expiresAfter,
         CancellationToken cancellationToken = default) {
         if (_adminClient is not null) {
+            string? statusText = null;
+            if (status != CertificateStatus.Any) {
+                statusText = status.ToString();
+            }
+
             var identities = await _adminClient
-                .ListAsync(size, position, status, orgId, requester, expiresBefore, expiresAfter, cancellationToken)
+                .ListAsync(size, position, statusText, orgId, requester, expiresBefore, expiresAfter, cancellationToken)
                 .ConfigureAwait(false);
             if (identities.Count == 0) {
                 return Array.Empty<Certificate>();
@@ -201,17 +214,24 @@ public sealed class CertificateService : IDisposable {
             var list = new List<Certificate>(identities.Count);
             foreach (var identity in identities) {
                 AdminSslCertificateDetails? details = null;
+                string? detailError = null;
                 try {
                     details = await _adminClient
                         .GetAsync(identity.SslId, cancellationToken)
                         .ConfigureAwait(false);
-                } catch (ApiException ex) when ((int)ex.ErrorCode == -1032) {
-                    // Web API operations are not enabled for this organization;
-                    // fall back to summary identity mapping for this entry.
-                    details = null;
+                } catch (ApiException ex) {
+                    detailError = ex.Message;
+                } catch (HttpRequestException ex) {
+                    detailError = ex.Message;
                 }
 
-                list.Add(details is not null ? MapDetails(details) : MapIdentity(identity));
+                var certificate = details is not null ? MapDetails(details) : MapIdentity(identity);
+                if (detailError is not null) {
+                    certificate.IsAdminDetailFallback = true;
+                    certificate.AdminDetailError = detailError;
+                }
+
+                list.Add(certificate);
             }
 
             if (expiresBefore is null && expiresAfter is null) {
@@ -241,7 +261,7 @@ public sealed class CertificateService : IDisposable {
     /// Lists certificates that expire within the specified number of days using the Admin API.
     /// </summary>
     /// <param name="expiresWithinDays">Number of days from now within which certificates must expire.</param>
-    /// <param name="status">Optional Admin status filter (for example, Issued or Expired).</param>
+    /// <param name="status">Optional certificate status filter.</param>
     /// <param name="orgId">Optional Admin organization identifier filter.</param>
     /// <param name="requester">Optional Admin requester filter.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
@@ -250,34 +270,39 @@ public sealed class CertificateService : IDisposable {
     /// </remarks>
     public Task<IReadOnlyList<Certificate>> ListExpiringAsync(
         int expiresWithinDays,
-        string? status = null,
+        CertificateStatus status = CertificateStatus.Any,
         int? orgId = null,
         string? requester = null,
         CancellationToken cancellationToken = default) {
-        return ListExpiringAsync(expiresWithinDays, status, orgId, requester, cancellationToken, progress: null);
+        return ListExpiringAsync(expiresWithinDays, status, orgId, requester, cancellationToken, progress: null, maxCertificatesToScan: null);
     }
 
     /// <summary>
     /// Lists certificates that expire within the specified number of days using the Admin API.
     /// </summary>
     /// <param name="expiresWithinDays">Number of days from now within which certificates must expire.</param>
-    /// <param name="status">Optional Admin status filter (for example, Issued or Expired).</param>
+    /// <param name="status">Optional certificate status filter.</param>
     /// <param name="orgId">Optional Admin organization identifier filter.</param>
     /// <param name="requester">Optional Admin requester filter.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <param name="progress">
     /// Optional progress reporter that receives the total number of certificates processed so far.
     /// </param>
+    /// <param name="maxCertificatesToScan">
+    /// Optional maximum number of certificates to scan. When specified, the method stops scanning
+    /// after approximately this many certificates have been processed. Intended primarily for testing.
+    /// </param>
     /// <remarks>
     /// This method is only supported when the service is configured with an Admin API connection.
     /// </remarks>
     public async Task<IReadOnlyList<Certificate>> ListExpiringAsync(
         int expiresWithinDays,
-        string? status = null,
+        CertificateStatus status = CertificateStatus.Any,
         int? orgId = null,
         string? requester = null,
         CancellationToken cancellationToken = default,
-        IProgress<int>? progress = null) {
+        IProgress<int>? progress = null,
+        int? maxCertificatesToScan = null) {
         if (expiresWithinDays <= 0) {
             throw new ArgumentOutOfRangeException(nameof(expiresWithinDays));
         }
@@ -303,8 +328,13 @@ public sealed class CertificateService : IDisposable {
         const int maxConcurrency = 4;
 
         while (true) {
+            string? statusText = null;
+            if (status != CertificateStatus.Any) {
+                statusText = status.ToString();
+            }
+
             var listResult = await _adminClient
-                .ListWithTotalAsync(pageSize, position, status, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
+                .ListWithTotalAsync(pageSize, position, statusText, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
                 .ConfigureAwait(false);
             var identities = listResult.Items;
             if (total is null && listResult.TotalCount.HasValue && listResult.TotalCount.Value > 0) {
@@ -326,19 +356,24 @@ public sealed class CertificateService : IDisposable {
                 var task = Task.Run(async () => {
                     try {
                         AdminSslCertificateDetails? details = null;
+                        string? detailError = null;
                         try {
                             details = await _adminClient
                                 .GetAsync(idCopy.SslId, cancellationToken)
                                 .ConfigureAwait(false);
-                        } catch (ApiException ex) when ((int)ex.ErrorCode == -1032) {
-                            // Web API operations are not enabled for this organization;
-                            // fall back to summary identity mapping for this entry.
-                            details = null;
+                        } catch (ApiException ex) {
+                            detailError = ex.Message;
+                        } catch (HttpRequestException ex) {
+                            detailError = ex.Message;
                         }
 
                         var certificate = details is not null ? MapDetails(details) : MapIdentity(idCopy);
-                        var current = Interlocked.Increment(ref processed);
-                        progress?.Report(current);
+                        if (detailError is not null) {
+                            certificate.IsAdminDetailFallback = true;
+                            certificate.AdminDetailError = detailError;
+                        }
+                var current = Interlocked.Increment(ref processed);
+                progress?.Report(current);
 
                         if (!ShouldIncludeByExpiry(certificate.Expires, cutoff, now)) {
                             return null;
@@ -357,10 +392,13 @@ public sealed class CertificateService : IDisposable {
             foreach (var certificate in pageResults) {
                 if (certificate is not null) {
                     result.Add(certificate);
+                    if (maxCertificatesToScan is int limit && result.Count >= limit) {
+                        break;
+                    }
                 }
             }
 
-            if (identities.Count < pageSize) {
+            if ((identities.Count < pageSize) || (maxCertificatesToScan is int outerLimit && result.Count >= outerLimit)) {
                 break;
             }
 
@@ -682,6 +720,21 @@ public sealed class CertificateService : IDisposable {
         throw new InvalidOperationException("No underlying client is configured for CertificateService.");
     }
 
+    /// <summary>
+    /// Creates a keystore download link for a certificate using the Admin API.
+    /// </summary>
+    /// <param name="certificateId">Identifier of the certificate.</param>
+    /// <param name="formatType">Keystore format type.</param>
+    /// <param name="passphrase">Optional passphrase used to protect the keystore.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    public Task<string> CreateKeystoreDownloadLinkAsync(
+        int certificateId,
+        KeystoreFormatType formatType,
+        string? passphrase = null,
+        CancellationToken cancellationToken = default) {
+        return CreateKeystoreDownloadLinkAsync(certificateId, MapKeystoreFormat(formatType), passphrase, cancellationToken);
+    }
+
     private static DateTimeOffset? ParseDate(string? value) {
         if (string.IsNullOrWhiteSpace(value)) {
             return null;
@@ -707,6 +760,17 @@ public sealed class CertificateService : IDisposable {
             "4" => RevocationReason.Superseded,
             "5" => RevocationReason.CessationOfOperation,
             _ => RevocationReason.Unspecified
+        };
+    }
+
+    private static string MapKeystoreFormat(KeystoreFormatType formatType) {
+        return formatType switch {
+            KeystoreFormatType.Key => "key",
+            KeystoreFormatType.P12 => "p12",
+            KeystoreFormatType.P12Aes => "p12aes",
+            KeystoreFormatType.Jks => "jks",
+            KeystoreFormatType.Pem => "pem",
+            _ => "p12"
         };
     }
 

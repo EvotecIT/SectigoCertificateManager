@@ -368,11 +368,11 @@ public sealed class CertificateServiceTests {
 
         using var service = new CertificateService(adminConfig, http);
 
-        var within30 = await service.ListExpiringAsync(30, status: "Issued", orgId: null, requester: null, cancellationToken: default);
+        var within30 = await service.ListExpiringAsync(30, status: CertificateStatus.Issued, orgId: null, requester: null, cancellationToken: default);
         Assert.Single(within30);
         Assert.Equal(1, within30[0].Id);
 
-        var within5 = await service.ListExpiringAsync(5, status: "Issued", orgId: null, requester: null, cancellationToken: default);
+        var within5 = await service.ListExpiringAsync(5, status: CertificateStatus.Issued, orgId: null, requester: null, cancellationToken: default);
         Assert.Empty(within5);
     }
 }

@@ -234,7 +234,7 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
             Reason = request.Reason,
             CommonName = request.CommonName,
             SubjectAlternativeNames = request.SubjectAlternativeNames ?? Array.Empty<string>(),
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -689,5 +689,17 @@ public sealed class AdminDeviceClient : AdminApiClientBase {
 
         [JsonPropertyName("dcvEmail")]
         public string? DcvEmail { get; set; }
+    }
+
+    private static string? MapDcvMode(DcvMode mode) {
+        return mode switch {
+            DcvMode.None => null,
+            DcvMode.Email => "EMAIL",
+            DcvMode.Cname => "CNAME",
+            DcvMode.Http => "HTTP",
+            DcvMode.Https => "HTTPS",
+            DcvMode.Txt => "TXT",
+            _ => null
+        };
     }
 }
