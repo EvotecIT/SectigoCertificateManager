@@ -2,10 +2,12 @@ namespace SectigoCertificateManager.AdminApi;
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 /// <summary>
 /// Azure account delegation mode.
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AzureDelegationMode {
     GlobalForCustomer,
     Customized
@@ -14,6 +16,7 @@ public enum AzureDelegationMode {
 /// <summary>
 /// Azure environment supported by the Admin API.
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AzureEnvironment {
     Azure,
     AzureUsGovernment,
@@ -131,4 +134,3 @@ public sealed class AzureDelegateRequest {
 public sealed class AzureDelegatedOrgsResponse {
     public IReadOnlyList<int> OrgDelegations { get; set; } = Array.Empty<int>();
 }
-

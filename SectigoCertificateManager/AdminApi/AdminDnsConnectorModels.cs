@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.AdminApi;
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 /// <summary>
 /// Minimal id/name pair used across Admin API responses.
@@ -15,6 +16,7 @@ public sealed class IdName {
 /// <summary>
 /// DNS connector status as reported by the Admin API.
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum DnsConnectorStatus {
     NotAvailable,
     NotConnected,
@@ -24,6 +26,7 @@ public enum DnsConnectorStatus {
 /// <summary>
 /// DNS connector delegation mode.
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum DnsConnectorDelegationMode {
     GlobalForCustomer,
     Customized
