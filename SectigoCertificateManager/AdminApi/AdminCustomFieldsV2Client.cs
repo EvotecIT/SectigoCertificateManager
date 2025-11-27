@@ -1,5 +1,6 @@
 namespace SectigoCertificateManager.AdminApi;
 
+using SectigoCertificateManager;
 using SectigoCertificateManager.Utilities;
 using SectigoCertificateManager.Requests;
 using System.Collections.Generic;
@@ -50,7 +51,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var fields = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminCustomFieldV2>>(s_json, cancellationToken)
@@ -77,7 +78,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return await response.Content
             .ReadFromJsonAsyncSafe<AdminCustomFieldV2>(s_json, cancellationToken)
@@ -103,7 +104,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
     }
@@ -129,7 +130,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var updated = await response.Content
             .ReadFromJsonAsyncSafe<AdminCustomFieldV2>(s_json, cancellationToken)
