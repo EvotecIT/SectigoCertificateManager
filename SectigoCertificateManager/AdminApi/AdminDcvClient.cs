@@ -54,39 +54,17 @@ public sealed class AdminDcvClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder("api/dcv/v2/validation");
-        var hasQuery = false;
+        var path = QueryStringBuilder.Build("api/dcv/v2/validation", q => q
+            .AddString("domain", domain)
+            .AddInt("expiresIn", expiresInDays)
+            .AddInt("org", organizationId)
+            .AddInt("department", departmentId)
+            .AddString("dcvStatus", dcvStatus)
+            .AddString("orderStatus", orderStatus)
+            .AddInt("size", size)
+            .AddInt("position", position));
 
-        void Append(string name, string? value) {
-            if (string.IsNullOrWhiteSpace(value)) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(name).Append('=').Append(Uri.EscapeDataString(value));
-            hasQuery = true;
-        }
-
-        void AppendInt(string name, int? value) {
-            if (!value.HasValue) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(name).Append('=').Append(value.Value);
-            hasQuery = true;
-        }
-
-        Append("domain", domain);
-        AppendInt("expiresIn", expiresInDays);
-        AppendInt("org", organizationId);
-        AppendInt("department", departmentId);
-        Append("dcvStatus", dcvStatus);
-        Append("orderStatus", orderStatus);
-        AppendInt("size", size);
-        AppendInt("position", position);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, builder.ToString());
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);

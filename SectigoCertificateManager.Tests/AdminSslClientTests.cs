@@ -5,6 +5,7 @@ using SectigoCertificateManager.Responses;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.Json;
@@ -750,6 +751,38 @@ public sealed class AdminSslClientTests {
         // Two separate API calls should share the same cached token.
         _ = await client.ListAsync(5, 0);
         _ = await client.ListAsync(10, 5);
+
+        Assert.Equal(1, handler.TokenRequestCount);
+    }
+
+    [Fact]
+    public async Task ConcurrentRequests_OnlyRefreshesTokenOnce() {
+        var token = new { access_token = "tok", expires_in = 3600 };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var identities = new[] {
+            new AdminSslIdentity { SslId = 1, CommonName = "example.com", SerialNumber = "123" }
+        };
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(identities)
+        };
+
+        var handler = new TestHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+        var client = new AdminSslClient(config, http);
+
+        var tasks = Enumerable.Range(0, 10)
+            .Select(_ => client.ListAsync(5, 0))
+            .ToArray();
+
+        await Task.WhenAll(tasks);
 
         Assert.Equal(1, handler.TokenRequestCount);
     }

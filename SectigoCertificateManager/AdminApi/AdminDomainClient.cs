@@ -49,37 +49,15 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder("api/domain/v1");
-        var hasQuery = false;
+        var path = QueryStringBuilder.Build("api/domain/v1", q => q
+            .AddInt("size", size)
+            .AddInt("position", position)
+            .AddString("name", name)
+            .AddString("state", state)
+            .AddString("status", status)
+            .AddInt("orgId", orgId));
 
-        void AppendInt(string key, int? value) {
-            if (!value.HasValue) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(value.Value);
-            hasQuery = true;
-        }
-
-        void AppendString(string key, string? value) {
-            if (string.IsNullOrWhiteSpace(value)) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
-            hasQuery = true;
-        }
-
-        AppendInt("size", size);
-        AppendInt("position", position);
-        AppendString("name", name);
-        AppendString("state", state);
-        AppendString("status", status);
-        AppendInt("orgId", orgId);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, builder.ToString());
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -114,16 +92,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var location = response.Headers.Location;
-        if (location is not null) {
-            var url = location.ToString().Trim().TrimEnd('/');
-            var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length > 0 && int.TryParse(segments[segments.Length - 1], out var id)) {
-                return id;
-            }
-        }
-
-        return 0;
+        return LocationHeaderParser.ParseId(response);
     }
 
     /// <summary>

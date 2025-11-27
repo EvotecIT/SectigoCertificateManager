@@ -34,36 +34,14 @@ public sealed class AdminAcmePrivateClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder("api/acme/v1/pca/account");
-        var hasQuery = false;
+        var path = QueryStringBuilder.Build("api/acme/v1/pca/account", q => q
+            .AddInt("size", size)
+            .AddInt("position", position)
+            .AddInt("organizationId", organizationId)
+            .AddString("name", name)
+            .AddString("acmeServer", acmeServer));
 
-        void Append(string key, string? value) {
-            if (string.IsNullOrWhiteSpace(value)) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
-            hasQuery = true;
-        }
-
-        void AppendInt(string key, int? value) {
-            if (!value.HasValue) {
-                return;
-            }
-
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(value.Value);
-            hasQuery = true;
-        }
-
-        AppendInt("size", size);
-        AppendInt("position", position);
-        AppendInt("organizationId", organizationId);
-        Append("name", name);
-        Append("acmeServer", acmeServer);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, builder.ToString());
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -97,19 +75,7 @@ public sealed class AdminAcmePrivateClient : AdminApiClientBase {
         using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var location = response.Headers.Location;
-        if (location is null) {
-            return 0;
-        }
-
-        var url = location.ToString().Trim().TrimEnd('/');
-        var segments = url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length == 0) {
-            return 0;
-        }
-
-        var lastSegment = segments[segments.Length - 1];
-        return int.TryParse(lastSegment, out var id) ? id : 0;
+        return LocationHeaderParser.ParseId(response);
     }
 
 }
