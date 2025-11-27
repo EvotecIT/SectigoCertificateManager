@@ -16,6 +16,7 @@ public sealed class AdminAcmePublicClientTests {
         private readonly HttpStatusCode _tokenStatus;
         private readonly string _apiJson;
         private readonly HttpStatusCode _apiStatus;
+        private readonly Uri? _apiLocation;
 
         public HttpRequestMessage? LastRequest { get; private set; }
         public string? LastRequestBody { get; private set; }
@@ -27,6 +28,7 @@ public sealed class AdminAcmePublicClientTests {
                 ? string.Empty
                 : tokenResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             _apiStatus = apiResponse.StatusCode;
+            _apiLocation = apiResponse.Headers.Location;
             _apiJson = apiResponse.Content is null
                 ? string.Empty
                 : apiResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -49,9 +51,13 @@ public sealed class AdminAcmePublicClientTests {
                 return tokenResponse;
             }
 
-            var apiResponse = new HttpResponseMessage(_apiStatus) {
-                Content = new StringContent(_apiJson, System.Text.Encoding.UTF8, "application/json")
-            };
+            var apiResponse = new HttpResponseMessage(_apiStatus);
+            if (!string.IsNullOrEmpty(_apiJson)) {
+                apiResponse.Content = new StringContent(_apiJson, System.Text.Encoding.UTF8, "application/json");
+            }
+            if (_apiLocation is not null) {
+                apiResponse.Headers.Location = _apiLocation;
+            }
             return apiResponse;
         }
     }
@@ -352,4 +358,3 @@ public sealed class AdminAcmePublicClientTests {
         Assert.Equal(1, handler.TokenRequestCount);
     }
 }
-
