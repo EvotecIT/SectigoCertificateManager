@@ -175,6 +175,9 @@ export SECTIGO_ADMIN_BASE_URL="https://admin.enterprise.sectigo.com"
 export SECTIGO_TOKEN_URL="https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token"
 
 dotnet run --project SectigoCertificateManager.CLI get-ca-chain 17331734 ./chain.pem
+
+# List certificates expiring in the next 30 days (Admin only, using CertificateStatus enum)
+dotnet run --project SectigoCertificateManager.CLI list-expiring 30 Issued
 ```
 
 The `search-orders` CLI command currently remains legacy-only and uses the
