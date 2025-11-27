@@ -1,2 +1,3 @@
 # Demonstrates creating an organization.
-New-SectigoOrganization -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -Name "My Org" -ApiVersion V25_6
+Connect-Sectigo -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ApiVersion V25_6 | Out-Null
+New-SectigoOrganization -Name "My Org"

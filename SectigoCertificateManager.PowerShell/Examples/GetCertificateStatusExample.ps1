@@ -1,2 +1,3 @@
 # Demonstrates retrieving certificate status.
-Get-SectigoCertificateStatus -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -CertificateId 10 -ApiVersion V25_6
+Connect-Sectigo -BaseUrl "https://example.com" -Username "user" -Password "pass" -CustomerUri "cst1" -ApiVersion V25_6 | Out-Null
+Get-SectigoCertificateStatus -CertificateId 10
