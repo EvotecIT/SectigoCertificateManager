@@ -328,4 +328,51 @@ public sealed class CertificateServiceTests {
         Assert.Equal("example.com", results[0].CommonName);
         Assert.Equal("example.org", results[1].CommonName);
     }
+
+    [Fact]
+    public async Task ListExpiringAsync_Admin_FiltersByExpiryWindow() {
+        var token = new { access_token = "tok" };
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(token)
+        };
+
+        var identities = new[] {
+            new AdminSslIdentity { SslId = 1, CommonName = "expiring.example.com", SerialNumber = "ABC" }
+        };
+
+        var listResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create<IReadOnlyList<AdminSslIdentity>>(identities)
+        };
+
+        var expiresSoon = DateTimeOffset.UtcNow.AddDays(10).ToString("o");
+        var details = new AdminSslCertificateDetails {
+            Id = 1,
+            CommonName = "expiring.example.com",
+            OrgId = 10,
+            Status = "Issued",
+            SerialNumber = "ABC",
+            Expires = expiresSoon
+        };
+        var detailResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(details)
+        };
+
+        var handler = new AdminListThenDetailHandler(tokenResponse, listResponse, detailResponse);
+
+        using var http = new HttpClient(handler);
+        var adminConfig = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+
+        using var service = new CertificateService(adminConfig, http);
+
+        var within30 = await service.ListExpiringAsync(30, status: "Issued", orgId: null, requester: null, cancellationToken: default);
+        Assert.Single(within30);
+        Assert.Equal(1, within30[0].Id);
+
+        var within5 = await service.ListExpiringAsync(5, status: "Issued", orgId: null, requester: null, cancellationToken: default);
+        Assert.Empty(within5);
+    }
 }

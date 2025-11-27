@@ -111,6 +111,8 @@
 - [x] Legacy inventory (`Get-SectigoInventory`) uses `InventoryClient` and `inventory.csv`.
 - [x] Admin equivalent:
   - [x] Inventory is not exposed separately in the Admin Operations API; Admin users are steered to `Get-SectigoCertificate -Size/-filters`.
+  - [x] For basic “latest” views, use `Get-SectigoCertificate -Size` with Admin connection.
+  - [x] For expiring certificates, use Admin list + detail with client-side filtering in C# (see section 9a).
 - [x] Tests for selected approach.
 
 ### 5.4 Orders and organizations
@@ -170,8 +172,37 @@ Concretely:
   - [x] Consider adding streaming helpers on `CertificateService` (for example, `EnumerateCertificatesAsync`) to avoid large in-memory lists.
 - [x] PowerShell async migration:
   - [x] Convert certificate-centric cmdlets (`Get/Export/Remove/Update-SectigoCertificate`, `Get-SectigoCertificateKeystoreLink`, status/revocation) to derive from `AsyncPSCmdlet`.
-  - [x] Gradually convert remaining cmdlets (`Get-SectigoOrders*`, `Wait-SectigoOrder`, etc.) where async semantics provide clear benefit.
-  - [x] Keep synchronous behaviour for simple, quick operations where async does not materially improve UX.
+- [x] Gradually convert remaining cmdlets (`Get-SectigoOrders*`, `Wait-SectigoOrder`, etc.) where async semantics provide clear benefit.
+- [x] Keep synchronous behaviour for simple, quick operations where async does not materially improve UX.
+
+## 9a. Expiring certificates & progress (Admin API)
+
+- [x] Add Admin-side expiry filtering in C#:
+  - [x] Extend `CertificateService` with `ListExpiringAsync(int expiresWithinDays, string? status, int? orgId, string? requester, CancellationToken)` that:
+    - [x] Pages through `AdminSslClient.ListAsync` (status/orgId/requester filters).
+    - [x] Fetches details via `AdminSslClient.GetAsync` and maps to `Certificate`.
+    - [x] Filters client-side by `Certificate.Expires` within the requested window.
+  - [x] Add `ShouldIncludeByExpiry` helper to centralize date parsing/window logic.
+  - [x] Add unit tests verifying that near-term expiries are included and later expiries are excluded.
+- [x] Expose expiry filtering in PowerShell:
+  - [x] Add `-ExpiresWithinDays` parameter to `Get-SectigoCertificate` (list parameter set only).
+  - [x] Wire `-ExpiresWithinDays` to call `CertificateService.ListExpiringAsync(...)` when connected via Admin.
+  - [x] When `-ExpiresWithinDays` is used with a legacy connection, throw a clear `PSInvalidOperationException` explaining Admin-only support.
+  - [x] Keep `-Detailed` and `-ExpiresBefore`/`-ExpiresAfter` behaviour unchanged for other scenarios.
+- [ ] Add paging/progress reporting for long-running Admin list operations:
+  - [ ] Extend `CertificateService.ListExpiringAsync` with an optional `IProgress<int>` (certificates processed).
+  - [ ] In `Get-SectigoCertificate`, when `-ExpiresWithinDays` is used and `-Verbose` is set:
+    - [ ] Create a `Progress<int>` source that calls `WriteVerbose` with a running count.
+    - [ ] Optionally surface a single `ProgressRecord` via `WriteProgress` to indicate activity.
+  - [ ] Ensure progress reporting is safe with `AsyncPSCmdlet` cross-thread pipeline writes.
+- [ ] Improve error/warning semantics for Admin list/detail paths:
+  - [ ] For known non-critical conditions (for example, Web API operations disabled for an organization), prefer `WriteWarning` by default and escalate to terminating error only when `-ErrorAction Stop` is in effect.
+  - [ ] Ensure `ApiException` codes from Admin SSL/DCV clients are surfaced with clear messages in PowerShell.
+- [ ] Document expiry usage:
+  - [ ] Update README with examples:
+    - [ ] `Get-SectigoCertificate -Status Issued -ExpiresWithinDays 30`
+    - [ ] Grouping by `Requester` for email notifications.
+  - [ ] Add a `Module/Examples` script that demonstrates collecting expiring certificates and sending notifications (without hard-coding a particular mail sender).
 
 ## 10. Admin API – SSL extras (DCV, locations, metadata)
 
