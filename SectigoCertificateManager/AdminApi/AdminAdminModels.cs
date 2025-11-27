@@ -301,6 +301,7 @@ public sealed class AdminCreateOrUpdateRequest {
 /// Request payload used to change the current administrator's password.
 /// </summary>
 public sealed class AdminChangePasswordRequest {
+    /// <summary>New password that replaces the administrator's existing password.</summary>
     public string? NewPassword { get; set; }
 }
 
@@ -308,8 +309,10 @@ public sealed class AdminChangePasswordRequest {
 /// Describes available privileges in the system.
 /// </summary>
 public sealed class AdminPrivilegeDescription {
+    /// <summary>Privilege name, as returned by the API (for example, MANAGE_USERS).</summary>
     public string? Name { get; set; }
 
+    /// <summary>Human-readable description of the privilege.</summary>
     public string? Description { get; set; }
 }
 
@@ -317,8 +320,10 @@ public sealed class AdminPrivilegeDescription {
 /// Identity provider info descriptor.
 /// </summary>
 public sealed class AdminIdpInfo {
+    /// <summary>Identifier of the configured identity provider.</summary>
     public int Id { get; set; }
 
+    /// <summary>Display name of the identity provider.</summary>
     public string? Name { get; set; }
 }
 
@@ -326,7 +331,9 @@ public sealed class AdminIdpInfo {
 /// Represents the administrator password status.
 /// </summary>
 public sealed class AdminPasswordStatus {
+    /// <summary>UTC expiration date for the administrator's current password.</summary>
     public DateTime? ExpirationDate { get; set; }
 
+    /// <summary>Current password state (alive, expired, never expire).</summary>
     public AdminPasswordState? State { get; set; }
 }
