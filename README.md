@@ -128,6 +128,7 @@ Connect-Sectigo -ClientId "<client id>" `
 # The same cmdlets route through the Admin API:
 Get-SectigoCertificate -CertificateId 17331734
 Export-SectigoCertificate -CertificateId 17331734 -Path './admin-cert.pem'
+Export-SectigoCertificate -CertificateId 17331734 -Format Pfx -Path './admin-cert.pfx' -PfxPassword (Read-Host -AsSecureString "Pfx password")
 Get-SectigoCertificateStatus -CertificateId 17331734
 Get-SectigoCertificateRevocation -CertificateId 17331734
 
@@ -146,6 +147,22 @@ Get-SectigoCertificate -Status Issued -ExpiresWithinDays 30
 Invoke-SectigoCertificateRenewal -CertificateId 17331734 -Csr (Get-Content .\new.csr -Raw) -DcvMode Email -DcvEmail 'admin@example.com'
 # Legacy path:
 # Invoke-SectigoCertificateRenewal -OrderNumber 10 -Csr 'CSR' -DcvMode Email -DcvEmail 'admin@example.com'
+
+# Notes on renewals
+# - The Admin Operations API requires a CSR for renewals (Sectigo does not auto-generate keys for you).
+# - If you need a CSR at runtime, use the CsrGenerator helper (see SectigoCertificateManager.Examples) before calling Invoke-SectigoCertificateRenewal.
+# - After renewal, download the new certificate for delivery:
+#     Export-SectigoCertificate -CertificateId $newId -Path './renewed.cer'
+#     Export-SectigoCertificate -CertificateId $newId -Format Pfx -PfxPassword (Read-Host -AsSecureString 'Password') -Path './renewed.pfx'
+
+# Generate a CSR (PowerShell)
+$csr = New-SectigoCsr -CommonName 'example.com' -DnsName 'example.com','www.example.com' -Organization 'Example' -Country 'US'
+
+# Use generated CSR for Admin renew
+Invoke-SectigoCertificateRenewal -CertificateId 11552108 -Csr $csr.Csr -DcvMode Email -DcvEmail 'admin@example.com'
+
+# Use generated CSR for a legacy order
+$order = New-SectigoOrder -CertificateType 501 -Term 365 -Csr $csr.Csr -SubjectAlternativeNames 'example.com','www.example.com'
 
 Remove-SectigoCertificate -CertificateId 17331734 -ReasonCode KeyCompromise -Reason 'Key compromised'
 
