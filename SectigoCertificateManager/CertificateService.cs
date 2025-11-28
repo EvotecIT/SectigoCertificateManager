@@ -555,7 +555,8 @@ public sealed class CertificateService : IDisposable {
             Id = identity.SslId,
             CommonName = identity.CommonName,
             SerialNumber = identity.SerialNumber,
-            SubjectAlternativeNames = identity.SubjectAlternativeNames ?? Array.Empty<string>()
+            SubjectAlternativeNames = identity.SubjectAlternativeNames ?? Array.Empty<string>(),
+            ExternalRequester = identity.ExternalRequester
         };
     }
 
@@ -569,6 +570,7 @@ public sealed class CertificateService : IDisposable {
             Term = details.Term,
             Owner = details.Owner,
             Requester = details.Requester,
+            ExternalRequester = details.ExternalRequester,
             Comments = details.Comments,
             Requested = details.Requested,
             Expires = details.Expires,

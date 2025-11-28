@@ -46,6 +46,12 @@ public sealed class Certificate {
     /// <summary>Gets or sets the requester of the certificate.</summary>
     public string? Requester { get; set; }
 
+    /// <summary>
+    /// Gets or sets the external requester when the certificate was requested on behalf of
+    /// an external party (Admin API only).
+    /// </summary>
+    public string? ExternalRequester { get; set; }
+
     /// <summary>Gets or sets additional comments.</summary>
     public string? Comments { get; set; }
 
