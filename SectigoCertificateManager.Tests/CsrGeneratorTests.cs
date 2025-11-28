@@ -1,4 +1,7 @@
 using SectigoCertificateManager.Utilities;
+using SectigoCertificateManager.Requests;
+using SectigoCertificateManager.Responses;
+using SectigoCertificateManager;
 using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -49,5 +52,22 @@ public sealed class CsrGeneratorTests {
         } finally {
             key.Dispose();
         }
+    }
+
+    [Fact]
+    public void Generate_WithOptions_AddsSanAndReturnsPem() {
+        var options = new CsrOptions {
+            CommonName = "example.com",
+            DnsNames = { "example.com", "www.example.com" },
+            KeyType = CsrKeyType.Rsa,
+            KeySize = 2048
+        };
+
+        var result = CsrGenerator.Generate(options);
+
+        Assert.StartsWith("-----BEGIN CERTIFICATE REQUEST-----", result.Csr);
+        Assert.Contains("example.com", result.Csr);
+        Assert.StartsWith("-----BEGIN PRIVATE KEY-----", result.PrivateKeyPem);
+        Assert.Equal(CsrKeyType.Rsa, result.KeyType);
     }
 }
