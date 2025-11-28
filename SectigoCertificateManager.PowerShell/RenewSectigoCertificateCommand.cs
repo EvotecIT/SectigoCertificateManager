@@ -1,5 +1,6 @@
 using SectigoCertificateManager;
 using SectigoCertificateManager.Clients;
+using SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Requests;
 using System;
 using System.Management.Automation;
@@ -7,60 +8,107 @@ using System.Threading;
 
 namespace SectigoCertificateManager.PowerShell;
 
-/// <summary>Invokes renewal of a certificate using an order number.</summary>
-/// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/> identified by order number.</para>
+/// <summary>
+/// Renews a certificate (legacy by order number, Admin by certificate id).
+/// </summary>
+/// <para>
+/// Legacy mode: uses order number with the legacy API.
+/// Admin mode: uses certificate id with the Admin Operations API.
+/// </para>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
-///     <description>Contacts the Sectigo API and issues a new certificate for the order.</description>
+///     <description>Contacts the Sectigo API and issues a renewed certificate.</description>
 ///   </item>
 /// </list>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
 /// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
-[Cmdlet(VerbsLifecycle.Invoke, "SectigoCertificateRenewal", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
+[Cmdlet(VerbsLifecycle.Invoke, "SectigoCertificateRenewal", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = LegacyParameterSet)]
 [CmdletBinding()]
 [OutputType(typeof(int))]
 public sealed class RenewSectigoCertificateCommand : PSCmdlet {
-    /// <summary>The API version to use.</summary>
-    [Parameter]
+    private const string LegacyParameterSet = "Legacy";
+    private const string AdminByIdParameterSet = "AdminById";
+
+    /// <summary>The API version to use (legacy only).</summary>
+    [Parameter(ParameterSetName = LegacyParameterSet)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
-    /// <summary>The order number used to identify the certificate.</summary>
-    [Parameter(Mandatory = true, Position = 0)]
+    /// <summary>The legacy order number.</summary>
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = LegacyParameterSet)]
     public long OrderNumber { get; set; }
 
+    /// <summary>Certificate identifier (Admin API only).</summary>
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = AdminByIdParameterSet)]
+    public int CertificateId { get; set; }
+
     /// <summary>The certificate signing request.</summary>
-    [Parameter(Mandatory = true)]
+    [Parameter(Mandatory = true, ParameterSetName = LegacyParameterSet)]
+    [Parameter(Mandatory = true, ParameterSetName = AdminByIdParameterSet)]
     public string Csr { get; set; } = string.Empty;
 
     /// <summary>The domain control validation mode.</summary>
-    [Parameter(Mandatory = true)]
+    [Parameter(Mandatory = true, ParameterSetName = LegacyParameterSet)]
+    [Parameter(Mandatory = true, ParameterSetName = AdminByIdParameterSet)]
     public DcvMode DcvMode { get; set; } = DcvMode.Email;
 
-    /// <summary>The domain control validation email address.</summary>
-    [Parameter]
+    /// <summary>The domain control validation email address (required when DcvMode is Email).</summary>
+    [Parameter(ParameterSetName = LegacyParameterSet)]
+    [Parameter(ParameterSetName = AdminByIdParameterSet)]
     public string? DcvEmail { get; set; }
 
     /// <summary>Optional cancellation token.</summary>
-    [Parameter]
+    [Parameter(ParameterSetName = LegacyParameterSet)]
+    [Parameter(ParameterSetName = AdminByIdParameterSet)]
     public CancellationToken CancellationToken { get; set; }
 
-    /// <summary>Renews a certificate using provided parameters.</summary>
-    /// <para>Builds an API client and submits a <see cref="RenewCertificateRequest"/>.</para>
+    /// <summary>Renews a certificate using the active connection.</summary>
     protected override void ProcessRecord() {
-        if (OrderNumber <= 0) {
-            var ex = new ArgumentOutOfRangeException(nameof(OrderNumber));
-            var record = new ErrorRecord(ex, "InvalidOrderNumber", ErrorCategory.InvalidArgument, OrderNumber);
-            ThrowTerminatingError(record);
+        if (ParameterSetName == LegacyParameterSet && OrderNumber <= 0) {
+            ThrowTerminatingError(new ErrorRecord(
+                new ArgumentOutOfRangeException(nameof(OrderNumber)),
+                "InvalidOrderNumber",
+                ErrorCategory.InvalidArgument,
+                OrderNumber));
         }
 
-        if (!ShouldProcess($"Order {OrderNumber}", "Renew")) {
+        if (ParameterSetName == AdminByIdParameterSet && CertificateId <= 0) {
+            ThrowTerminatingError(new ErrorRecord(
+                new ArgumentOutOfRangeException(nameof(CertificateId)),
+                "InvalidCertificateId",
+                ErrorCategory.InvalidArgument,
+                CertificateId));
+        }
+
+        var target = ParameterSetName == LegacyParameterSet ? $"Order {OrderNumber}" : $"Certificate {CertificateId}";
+        if (!ShouldProcess(target, "Renew")) {
             return;
         }
 
         var adminConfigObj = SessionState.PSVariable.GetValue("SectigoAdminApiConfig");
+
+        if (ParameterSetName == AdminByIdParameterSet) {
+            if (adminConfigObj is not AdminApiConfig adminConfig) {
+                throw new PSInvalidOperationException("Renewing by certificate id requires an Admin (OAuth2) connection. Run Connect-Sectigo with -ClientId/-ClientSecret first.");
+            }
+
+            var service = new CertificateService(adminConfig);
+            WriteVerbose($"Renewing certificate Id={CertificateId} using the Admin API with DCV mode '{DcvMode}'.");
+            var request = new RenewCertificateRequest {
+                Csr = Csr,
+                DcvMode = DcvMode,
+                DcvEmail = DcvEmail
+            };
+            var newId = service.RenewByIdAsync(CertificateId, request, CancellationToken)
+                .GetAwaiter()
+                .GetResult();
+            WriteObject(newId);
+            return;
+        }
+
+        // Legacy path (order-number based)
         if (adminConfigObj is not null) {
-            throw new PSInvalidOperationException("Renew-SectigoCertificate is not yet supported with an Admin (OAuth2) connection. Connect with legacy credentials to use this cmdlet.");
+            throw new PSInvalidOperationException("You are connected with Admin (OAuth2) credentials. Use -CertificateId instead of -OrderNumber to renew via the Admin API.");
         }
 
         var config = ConnectionHelper.GetLegacyConfig(SessionState);
