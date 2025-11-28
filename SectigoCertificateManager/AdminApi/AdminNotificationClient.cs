@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,19 +55,26 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var path = QueryStringBuilder.Build("api/notification/v1", q => {
-            q.AddInt("size", size);
-            q.AddInt("position", position);
-            q.AddString("description", description);
-            q.AddInt("id", id);
-            q.AddInt("orgId", orgId);
-            if (selectedOrgType.HasValue) {
-                q.AddString("selectedOrgType", selectedOrgType.Value.ToString());
-            }
+        var builder = new StringBuilder("api/notification/v1");
+        var hasQuery = false;
 
-            q.AddString("type", type);
-            q.AddInt("certTypeId", certTypeId);
-        });
+        void Append(string key, string? value) {
+            if (string.IsNullOrWhiteSpace(value)) { return; }
+            _ = hasQuery ? builder.Append('&') : builder.Append('?');
+            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
+            hasQuery = true;
+        }
+
+        if (size.HasValue) { Append("size", size.Value.ToString()); }
+        if (position.HasValue) { Append("position", position.Value.ToString()); }
+        Append("description", description);
+        if (id.HasValue) { Append("id", id.Value.ToString()); }
+        if (orgId.HasValue) { Append("orgId", orgId.Value.ToString()); }
+        if (selectedOrgType.HasValue) { Append("selectedOrgType", selectedOrgType.Value.ToString()); }
+        Append("type", type);
+        if (certTypeId.HasValue) { Append("certTypeId", certTypeId.Value.ToString()); }
+
+        var path = builder.ToString();
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);

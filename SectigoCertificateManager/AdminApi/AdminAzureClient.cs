@@ -98,7 +98,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
 
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "api/azure/v1/accounts") {
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "api/azure/v1/accounts") {
             Content = JsonContent.Create(MapCreateRequest(request), options: s_json)
         };
         SetBearer(httpRequest, token);

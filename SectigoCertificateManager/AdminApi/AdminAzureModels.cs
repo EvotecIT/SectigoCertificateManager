@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.AdminApi;
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 /// <summary>
@@ -10,8 +11,10 @@ using System.Text.Json.Serialization;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AzureDelegationMode {
     /// <summary>The account is available to all organizations in the customer tenant.</summary>
+    [EnumMember(Value = "GLOBAL_FOR_CUSTOMER")]
     GlobalForCustomer,
     /// <summary>The account is delegated only to explicitly configured organizations.</summary>
+    [EnumMember(Value = "CUSTOMIZED")]
     Customized
 }
 
@@ -21,12 +24,16 @@ public enum AzureDelegationMode {
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AzureEnvironment {
     /// <summary>Public Azure cloud.</summary>
+    [EnumMember(Value = "AZURE")]
     Azure,
     /// <summary>Azure US Government cloud.</summary>
+    [EnumMember(Value = "AZURE_US_GOVERNMENT")]
     AzureUsGovernment,
     /// <summary>Azure Germany cloud.</summary>
+    [EnumMember(Value = "AZURE_GERMANY")]
     AzureGermany,
     /// <summary>Azure China cloud.</summary>
+    [EnumMember(Value = "AZURE_CHINA")]
     AzureChina
 }
 

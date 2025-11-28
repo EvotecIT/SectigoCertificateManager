@@ -301,18 +301,24 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var basePath = QueryStringBuilder.Build("api/acme/v1/server", q => q
-            .AddInt("size", size)
-            .AddInt("position", position)
-            .AddInt("caId", caId)
-            .AddString("certValidationType", certValidationType)
-            .AddString("name", name));
+        var builder = new StringBuilder("api/acme/v1/server");
+        var hasQuery = false;
 
-        var path = basePath;
-        if (!string.IsNullOrWhiteSpace(url)) {
-            var encodedUrl = Uri.EscapeDataString(url);
-            path += (path.Contains("?", StringComparison.Ordinal) ? "&" : "?") + "url=" + encodedUrl;
+        void Append(string key, string? value) {
+            if (string.IsNullOrWhiteSpace(value)) { return; }
+            _ = hasQuery ? builder.Append('&') : builder.Append('?');
+            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
+            hasQuery = true;
         }
+
+        if (size.HasValue) { Append("size", size.Value.ToString()); }
+        if (position.HasValue) { Append("position", position.Value.ToString()); }
+        if (caId.HasValue) { Append("caId", caId.Value.ToString()); }
+        Append("certValidationType", certValidationType);
+        Append("url", url);
+        Append("name", name);
+
+        var path = builder.ToString();
 
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
