@@ -272,7 +272,7 @@ public sealed class CertificatesClientTests {
         var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), httpClient);
         var certificates = new CertificatesClient(client);
 
-        var request = new RenewCertificateRequest { Csr = "csr", DcvMode = "EMAIL", DcvEmail = "admin@example.com" };
+        var request = new RenewCertificateRequest { Csr = "csr", DcvMode = DcvMode.Email, DcvEmail = "admin@example.com" };
         var result = await certificates.RenewAsync(7, request);
 
         Assert.NotNull(handler.Request);
@@ -294,7 +294,7 @@ public sealed class CertificatesClientTests {
         var client = new SectigoClient(new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4), new HttpClient(handler));
         var certificates = new CertificatesClient(client);
 
-        var request = new RenewCertificateRequest { Csr = "csr", DcvMode = "EMAIL", DcvEmail = "admin@example.com" };
+        var request = new RenewCertificateRequest { Csr = "csr", DcvMode = DcvMode.Email, DcvEmail = "admin@example.com" };
         var result = await certificates.RenewByOrderNumberAsync(555, request);
 
         Assert.NotNull(handler.Request);

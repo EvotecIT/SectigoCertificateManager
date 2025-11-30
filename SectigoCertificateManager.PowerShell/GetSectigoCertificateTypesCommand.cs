@@ -60,6 +60,9 @@ public sealed class GetSectigoCertificateTypesCommand : AsyncPSCmdlet {
             var config = ConnectionHelper.GetLegacyConfig(SessionState);
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            var orgPart = OrganizationId.HasValue ? $" for OrganizationId={OrganizationId.Value}" : string.Empty;
+            WriteVerbose(
+                $"Listing certificate types{orgPart} using the legacy API at '{config.BaseUrl}'.");
             var types = new CertificateTypesClient(client);
             var list = await types.ListTypesAsync(OrganizationId, effectiveToken)
                 .ConfigureAwait(false);

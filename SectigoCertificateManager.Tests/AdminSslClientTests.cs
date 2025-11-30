@@ -321,7 +321,7 @@ public sealed class AdminSslClientTests {
 
         var request = new RenewCertificateRequest {
             Csr = "CSR-DATA",
-            DcvMode = "EMAIL",
+            DcvMode = DcvMode.Email,
             DcvEmail = "admin@example.com"
         };
 

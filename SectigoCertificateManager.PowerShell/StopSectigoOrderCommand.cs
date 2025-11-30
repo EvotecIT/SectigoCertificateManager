@@ -64,6 +64,7 @@ public sealed class StopSectigoOrderCommand : AsyncPSCmdlet {
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose($"Cancelling order {OrderId} using the legacy API at '{config.BaseUrl}'.");
             var orders = new OrdersClient(client);
             await orders
                 .CancelAsync(OrderId, effectiveToken)

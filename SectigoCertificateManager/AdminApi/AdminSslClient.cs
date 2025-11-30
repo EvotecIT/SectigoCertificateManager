@@ -6,6 +6,7 @@ using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using SectigoCertificateManager.Utilities;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -38,24 +39,64 @@ public sealed class AdminSslClient : AdminApiClientBase {
     /// </summary>
     /// <param name="size">Number of entries to request.</param>
     /// <param name="position">The first position to return from the result set.</param>
+    /// <param name="status">Optional certificate status filter (for example, Issued or Expired).</param>
+    /// <param name="orgId">Optional organization identifier filter.</param>
+    /// <param name="requester">Optional requester filter.</param>
+    /// <param name="expiresBefore">
+    /// Optional upper bound for the certificate expiration date. When specified, only certificates
+    /// expiring on or before this date (inclusive) are returned.
+    /// </param>
+    /// <param name="expiresAfter">
+    /// Optional lower bound for the certificate expiration date. When specified, only certificates
+    /// expiring on or after this date (inclusive) are returned.
+    /// </param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     public async Task<IReadOnlyList<AdminSslIdentity>> ListAsync(
         int? size = null,
         int? position = null,
+        string? status = null,
+        int? orgId = null,
+        string? requester = null,
+        DateTimeOffset? expiresBefore = null,
+        DateTimeOffset? expiresAfter = null,
         CancellationToken cancellationToken = default) {
+        var result = await ListWithTotalAsync(size, position, status, orgId, requester, expiresBefore, expiresAfter, cancellationToken)
+            .ConfigureAwait(false);
+        return result.Items;
+    }
+
+    internal async Task<(IReadOnlyList<AdminSslIdentity> Items, int? TotalCount)> ListWithTotalAsync(
+        int? size,
+        int? position,
+        string? status,
+        int? orgId,
+        string? requester,
+        DateTimeOffset? expiresBefore,
+        DateTimeOffset? expiresAfter,
+        CancellationToken cancellationToken) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, BuildListUri(size, position));
+        using var request = new HttpRequestMessage(HttpMethod.Get, BuildListUri(size, position, status, orgId, requester, expiresBefore, expiresAfter));
         SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
+        int? totalCount = null;
+        if (response.Headers.TryGetValues("X-Total-Count", out var values)) {
+            foreach (var value in values) {
+                if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)) {
+                    totalCount = parsed;
+                    break;
+                }
+            }
+        }
+
         var identities = await response.Content
             .ReadFromJsonAsyncSafe<IReadOnlyList<AdminSslIdentity>>(s_json, cancellationToken)
             .ConfigureAwait(false);
 
-        return identities ?? Array.Empty<AdminSslIdentity>();
+        return (identities ?? Array.Empty<AdminSslIdentity>(), totalCount);
     }
 
     /// <summary>
@@ -319,7 +360,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
 
         var body = new RenewInfo {
             Csr = request.Csr,
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -354,7 +395,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
 
         var body = new RenewInfo {
             Csr = request.Csr,
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -484,7 +525,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         var body = new RenewManualBody {
             Id = request.Id > 0 ? request.Id : sslId,
             OrderNumber = request.OrderNumber,
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -520,7 +561,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
             Reason = request.Reason,
             CommonName = request.CommonName,
             SubjectAlternativeNames = request.SubjectAlternativeNames ?? Array.Empty<string>(),
-            DcvMode = request.DcvMode,
+            DcvMode = MapDcvMode(request.DcvMode),
             DcvEmail = request.DcvEmail
         };
 
@@ -831,10 +872,22 @@ public sealed class AdminSslClient : AdminApiClientBase {
         return fields ?? Array.Empty<CustomField>();
     }
 
-    private string BuildListUri(int? size, int? position) {
+    private string BuildListUri(
+        int? size,
+        int? position,
+        string? status,
+        int? orgId,
+        string? requester,
+        DateTimeOffset? expiresBefore,
+        DateTimeOffset? expiresAfter) {
         return QueryStringBuilder.Build("api/ssl/v2", q => q
             .AddInt("size", size)
-            .AddInt("position", position));
+            .AddInt("position", position)
+            .AddString("status", status)
+            .AddInt("orgId", orgId)
+            .AddString("requester", requester)
+            .AddString("expiresBefore", expiresBefore?.UtcDateTime.ToString("o"))
+            .AddString("expiresAfter", expiresAfter?.UtcDateTime.ToString("o")));
     }
 
     private sealed class RenewInfo {
@@ -880,6 +933,18 @@ public sealed class AdminSslClient : AdminApiClientBase {
 
         [JsonPropertyName("dcvEmail")]
         public string? DcvEmail { get; set; }
+    }
+
+    private static string? MapDcvMode(DcvMode mode) {
+        return mode switch {
+            DcvMode.None => null,
+            DcvMode.Email => "EMAIL",
+            DcvMode.Cname => "CNAME",
+            DcvMode.Http => "HTTP",
+            DcvMode.Https => "HTTPS",
+            DcvMode.Txt => "TXT",
+            _ => null
+        };
     }
 
     private sealed class RevokeRequest {

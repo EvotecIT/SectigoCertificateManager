@@ -279,7 +279,7 @@ public sealed class AdminDeviceClientTests {
             Reason = "Replace due to key compromise",
             CommonName = "device.example.com",
             SubjectAlternativeNames = new[] { "alt1.example.com", "alt2.example.com" },
-            DcvMode = "EMAIL",
+            DcvMode = DcvMode.Email,
             DcvEmail = "admin@example.com"
         };
 

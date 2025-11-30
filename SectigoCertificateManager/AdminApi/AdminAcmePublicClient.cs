@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -19,6 +18,14 @@ using System.Threading.Tasks;
 public sealed class AdminAcmePublicClient : AdminApiClientBase {
     private static readonly JsonSerializerOptions s_json = new(JsonSerializerDefaults.Web);
 
+    /// <summary>
+    /// Creates a new instance of the public ACME client using the specified Admin API configuration.
+    /// </summary>
+    /// <param name="config">Admin API configuration including base URL and OAuth2 client credentials.</param>
+    /// <param name="httpClient">
+    /// Optional <see cref="HttpClient"/> to use for outbound requests. When omitted, a new instance is created and
+    /// disposed with the client.
+    /// </param>
     public AdminAcmePublicClient(AdminApiConfig config, HttpClient? httpClient = null)
         : base(config, httpClient) {
     }
@@ -278,6 +285,42 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Lists Sectigo public ACME servers available for account configuration.
+    /// </summary>
+    public async Task<IReadOnlyList<AcmeServerInfo>> ListServersAsync(
+        int? size = null,
+        int? position = null,
+        int? caId = null,
+        string? certValidationType = null,
+        string? url = null,
+        string? name = null,
+        CancellationToken cancellationToken = default) {
+        var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+        var path = QueryStringBuilder.Build("api/acme/v1/server", q => q
+            .AddInt("size", size)
+            .AddInt("position", position)
+            .AddInt("caId", caId)
+            .AddString("certValidationType", certValidationType)
+            .AddString("url", url)
+            .AddString("name", name));
+        var baseUri = _httpClient.BaseAddress?.AbsoluteUri?.TrimEnd('/') ?? _config.BaseUrl.TrimEnd('/');
+        var absolute = $"{baseUri}/{path}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, absolute);
+        SetBearer(request, token);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
+
+        var servers = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<AcmeServerInfo>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return servers ?? Array.Empty<AcmeServerInfo>();
     }
 
     private sealed class PublicAcmeDomainListWrapper {

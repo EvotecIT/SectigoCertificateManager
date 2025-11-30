@@ -47,6 +47,7 @@ public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose($"Enumerating all orders using the legacy API at '{config.BaseUrl}'.");
             var orders = new OrdersClient(client);
 
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);

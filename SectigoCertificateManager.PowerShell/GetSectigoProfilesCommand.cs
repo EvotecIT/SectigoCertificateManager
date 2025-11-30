@@ -50,6 +50,7 @@ public sealed class GetSectigoProfilesCommand : AsyncPSCmdlet {
             var config = ConnectionHelper.GetLegacyConfig(SessionState);
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose($"Listing profiles using the legacy API at '{config.BaseUrl}'.");
             var profilesClient = new ProfilesClient(client);
             var list = await profilesClient.ListProfilesAsync(effectiveToken)
                 .ConfigureAwait(false);

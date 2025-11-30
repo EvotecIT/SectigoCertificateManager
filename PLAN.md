@@ -111,6 +111,8 @@
 - [x] Legacy inventory (`Get-SectigoInventory`) uses `InventoryClient` and `inventory.csv`.
 - [x] Admin equivalent:
   - [x] Inventory is not exposed separately in the Admin Operations API; Admin users are steered to `Get-SectigoCertificate -Size/-filters`.
+  - [x] For basic “latest” views, use `Get-SectigoCertificate -Size` with Admin connection.
+  - [x] For expiring certificates, use Admin list + detail with client-side filtering in C# (see section 9a).
 - [x] Tests for selected approach.
 
 ### 5.4 Orders and organizations
@@ -170,8 +172,41 @@ Concretely:
   - [x] Consider adding streaming helpers on `CertificateService` (for example, `EnumerateCertificatesAsync`) to avoid large in-memory lists.
 - [x] PowerShell async migration:
   - [x] Convert certificate-centric cmdlets (`Get/Export/Remove/Update-SectigoCertificate`, `Get-SectigoCertificateKeystoreLink`, status/revocation) to derive from `AsyncPSCmdlet`.
-  - [x] Gradually convert remaining cmdlets (`Get-SectigoOrders*`, `Wait-SectigoOrder`, etc.) where async semantics provide clear benefit.
-  - [x] Keep synchronous behaviour for simple, quick operations where async does not materially improve UX.
+- [x] Gradually convert remaining cmdlets (`Get-SectigoOrders*`, `Wait-SectigoOrder`, etc.) where async semantics provide clear benefit.
+- [x] Keep synchronous behaviour for simple, quick operations where async does not materially improve UX.
+- [x] Introduce typed enums for core certificate operations and surface them through facades and cmdlets:
+  - [x] Use `CertificateStatus` for all service-level status filters (`CertificateService.ListAsync`, `ListDetailedAsync`, `ListExpiringAsync`) and for the `Status` parameter on `Get-SectigoCertificate`.
+  - [x] Introduce `DcvMode` enum for domain-control validation and use it in `RenewCertificateRequest`, `AdminSslManualRenewRequest`, `AdminSslReplaceRequest`, and related Admin device models.
+  - [x] Map `DcvMode` consistently to legacy/Admin string values in low-level clients (`CertificatesClient`, `AdminSslClient`, `AdminDeviceClient`) while keeping PowerShell/CLI surfaces strongly typed.
+
+## 9a. Expiring certificates & progress (Admin API)
+
+- [x] Add Admin-side expiry filtering in C#:
+  - [x] Extend `CertificateService` with `ListExpiringAsync(int expiresWithinDays, string? status, int? orgId, string? requester, CancellationToken)` that:
+    - [x] Pages through `AdminSslClient.ListAsync` (status/orgId/requester filters).
+    - [x] Fetches details via `AdminSslClient.GetAsync` and maps to `Certificate`.
+    - [x] Filters client-side by `Certificate.Expires` within the requested window.
+  - [x] Add `ShouldIncludeByExpiry` helper to centralize date parsing/window logic.
+  - [x] Add unit tests verifying that near-term expiries are included and later expiries are excluded.
+- [x] Expose expiry filtering in PowerShell:
+  - [x] Add `-ExpiresWithinDays` parameter to `Get-SectigoCertificate` (list parameter set only).
+  - [x] Wire `-ExpiresWithinDays` to call `CertificateService.ListExpiringAsync(...)` when connected via Admin.
+  - [x] When `-ExpiresWithinDays` is used with a legacy connection, throw a clear `PSInvalidOperationException` explaining Admin-only support.
+  - [x] Keep `-Detailed` and `-ExpiresBefore`/`-ExpiresAfter` behaviour unchanged for other scenarios.
+- [x] Add paging/progress reporting for long-running Admin list operations:
+  - [x] Extend `CertificateService.ListExpiringAsync` with an optional `IProgress<int>` (certificates processed).
+  - [x] In `Get-SectigoCertificate`, when `-ExpiresWithinDays` is used and `-Verbose` is set:
+    - [x] Create a `Progress<int>` source that calls `WriteVerbose` with a running count.
+    - [x] Surface a `ProgressRecord` via `WriteProgress` to indicate activity.
+  - [x] Ensure progress reporting is safe with `AsyncPSCmdlet` cross-thread pipeline writes.
+- [x] Improve error/warning semantics for Admin list/detail paths:
+  - [x] For known non-critical conditions (for example, Web API operations disabled for an organization), prefer `WriteWarning` by default and escalate to terminating error only when `-ErrorAction Stop` is in effect.
+  - [x] Ensure `ApiException` codes from Admin SSL/DCV clients are surfaced with clear messages in PowerShell.
+- [x] Document expiry usage:
+  - [x] Update README with examples:
+    - [x] `Get-SectigoCertificate -Status Issued -ExpiresWithinDays 30`
+    - [x] Grouping by `Requester` for email notifications.
+  - [x] Add a `Module/Examples` script that demonstrates collecting expiring certificates and sending notifications (without hard-coding a particular mail sender).
 
 ## 10. Admin API – SSL extras (DCV, locations, metadata)
 
@@ -234,12 +269,12 @@ Concretely:
   - [-] Client for organization validations:
     - [x] List/get/delete validations and synchronize with CA backend (`/api/organization/v2/{orgId}/validations*`).
     - [ ] Submit/revalidate/validator assignment endpoints (modeled requests and helpers) – deferred.
-- [ ] DCV operations (`/api/dcv/v2/*`):
-  - [-] Client for starting DCV via CNAME/HTTP/HTTPS/TXT/email (start/submit flows).
+- [x] DCV operations (`/api/dcv/v2/*`):
+  - [x] Client for starting DCV via CNAME/HTTP/HTTPS/TXT/email (start/submit flows).
   - [x] List and status queries, plus clear/delete endpoints, via a dedicated Admin DCV client.
 - [ ] ACME accounts and servers:
-  - [ ] Client for `/api/acme/v1/*`, `/api/acme/v2/*` (account/client/domain management).
-  - [ ] Client for `/api/acme/v1/server` and `/api/acme/v1/evdetails/validation` as needed.
+  - [x] Client for `/api/acme/v1/*`, `/api/acme/v2/*` (account/client/domain management).
+  - [x] Client for `/api/acme/v1/server` (public ACME servers).
 - [x] Global custom fields (`/api/customField/v2`):
   - [x] Client for listing custom fields across SSL/S/MIME/Device using the `certType` filter, plus get/create/update operations.
 - [ ] Add tests for the above clients (URI building, minimal happy-path parsing) for domains, organizations, DCV, and ACME clients.
@@ -251,7 +286,7 @@ Concretely:
 - [ ] Persons (`/api/person/v2/*`):
   - [ ] Client to manage persons, invitations, and endpoint account associations.
 - [ ] Notifications (`/api/notification/v1/*`):
-  - [ ] Client to list/get notification definitions and types.
+  - [x] Client to list/get notification definitions and types.
 - [ ] Reports (`/api/report/v1/*`):
   - [ ] Client to fetch activity, SSL, device, domain reports (likely as streaming/download APIs).
 - [x] Template administrators (`/api/admin-template/v1/*`):
@@ -261,22 +296,22 @@ Concretely:
 
 ## 15. Admin API – Admin accounts, connectors, discovery, Azure, and code signing
 
-- [ ] Admin users and roles (`/api/admin/v1/*`):
-  - [ ] Client to list/get admin users, manage passwords (`changepassword`, `password`), and unlink accounts.
-  - [ ] Client to list roles, privileges, and IdP configurations (`/api/admin/v1/roles`, `/privileges`, `/idp`).
-  - [ ] Tests to validate URI construction and basic parsing for admin account operations.
+- [x] Admin users and roles (`/api/admin/v1/*`):
+  - [x] Client to list/get admin users, manage passwords (`changepassword`, `password`), and unlink accounts.
+  - [x] Client to list roles, privileges, and IdP configurations (`/api/admin/v1/roles`, `/privileges`, `/idp`).
+  - [x] Tests to validate URI construction and basic parsing for admin account operations.
 - [ ] Agents and network connectors (`/api/agent/v1/*`):
   - [ ] Client to manage MS and network agents, servers, and nodes (`/ms`, `/network`, `/server`, `/node`).
   - [ ] Tests to ensure correct URIs for agent, server, and node operations.
 - [ ] Azure Key Vault accounts (`/api/azure/v1/*`):
-  - [ ] Client to manage Azure accounts, checks, delegations, and to list resource groups and vaults.
-  - [ ] Tests for URI construction and basic response parsing for Azure-related operations.
+  - [x] Client to manage Azure accounts, checks, delegations, and to list resource groups and vaults.
+  - [x] Tests for URI construction and basic response parsing for Azure-related operations.
 - [ ] DNS connectors (`/api/connector/v1/dns*`):
-  - [ ] Client to manage DNS connector instances and providers.
-  - [ ] Tests for connector create/update/delete and provider configuration endpoints.
+  - [x] Client to list DNS connector instances and providers.
+  - [x] Tests for connector list/details/provider endpoints.
 - [ ] Code-signing certificates (`/api/cscert/v1/*`):
-  - [ ] Client to support import and manual revocation of code-signing certificates.
-  - [ ] Tests for request payloads and error handling for code-signing operations.
+  - [x] Client to support import and manual revocation of code-signing certificates.
+  - [x] Tests for request payloads and basic success-path handling for code-signing operations.
 - [ ] Discovery tasks and buckets (`/api/discovery/v1/*`, `/api/discovery/v4/*`):
   - [ ] Client to manage discovery tasks (Azure/AD/network), including start/stop and operations (`/operation`, `/result`).
   - [ ] Client to manage discovery buckets, assignments, delegations, and rule execution.
@@ -288,11 +323,11 @@ Concretely:
   - [ ] Clients for `/api/discovery/v1/*` and `/api/discovery/v4/*` (tasks, operations, buckets, assignment rules).
   - [ ] Clients for `/api/agent/v1/ms*` and `/api/agent/v1/network*` (agent lifecycle, server/node operations).
 - [ ] Azure accounts (`/api/azure/v1/*`):
-  - [ ] Client for Azure account registration, validation, delegations, resource-group/vault enumeration.
+  - [x] Client for Azure account registration, validation, delegations, resource-group/vault enumeration.
 - [ ] DNS connectors (`/api/connector/v1/dns*`):
   - [ ] Client for DNS connector registration and provider management.
 - [ ] Code-signing certificates (`/api/cscert/v1/*`):
-  - [ ] Client for code-signing import/revoke/manual operations.
-- [ ] Admins and roles (`/api/admin/v1/*`):
-  - [ ] Client for administrator users, roles, privileges, and password/IdP operations.
+  - [x] Client for code-signing import/revoke/manual operations.
+- [x] Admins and roles (`/api/admin/v1/*`):
+  - [x] Client for administrator users, roles, privileges, and password/IdP operations.
 - [ ] Decide which of these higher-level admin/infra features should be in scope for this library vs. left to future iterations.

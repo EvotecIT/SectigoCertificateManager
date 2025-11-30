@@ -14,11 +14,19 @@ using System.Threading.Tasks;
 /// Shared infrastructure for Admin Operations API clients (HTTP client + token management).
 /// </summary>
 public abstract class AdminApiClientBase : IDisposable {
+    /// <summary>Resolved Admin API configuration (base URL and OAuth2 client credentials).</summary>
     protected readonly AdminApiConfig _config;
+
+    /// <summary>HTTP client used for all Admin Operations API requests.</summary>
     protected readonly HttpClient _httpClient;
     private readonly bool _ownsHttpClient;
     private readonly AdminTokenManager _tokenManager;
 
+    /// <summary>
+    /// Initializes a new Admin Operations API client base with the specified configuration and HTTP client.
+    /// </summary>
+    /// <param name="config">Admin API configuration (base URL and OAuth2 client credentials).</param>
+    /// <param name="httpClient">Optional HTTP client instance; when omitted a new one is created and disposed with the client.</param>
     protected AdminApiClientBase(AdminApiConfig config, HttpClient? httpClient = null) {
         _config = Guard.AgainstNull(config, nameof(config));
 

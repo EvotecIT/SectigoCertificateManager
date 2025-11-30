@@ -46,6 +46,12 @@ public sealed class Certificate {
     /// <summary>Gets or sets the requester of the certificate.</summary>
     public string? Requester { get; set; }
 
+    /// <summary>
+    /// Gets or sets the external requester when the certificate was requested on behalf of
+    /// an external party (Admin API only).
+    /// </summary>
+    public string? ExternalRequester { get; set; }
+
     /// <summary>Gets or sets additional comments.</summary>
     public string? Comments { get; set; }
 
@@ -54,6 +60,18 @@ public sealed class Certificate {
 
     /// <summary>Gets or sets the expiry date.</summary>
     public string? Expires { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this certificate was populated using a fallback path
+    /// (for example, when Admin detail operations are not available and only summary list data is used).
+    /// </summary>
+    public bool IsAdminDetailFallback { get; set; }
+
+    /// <summary>
+    /// Gets or sets the error message associated with a failed Admin detail retrieval, when
+    /// <see cref="IsAdminDetailFallback"/> is <c>true</c>.
+    /// </summary>
+    public string? AdminDetailError { get; set; }
 
     /// <summary>Gets or sets the serial number.</summary>
     public string? SerialNumber { get; set; }

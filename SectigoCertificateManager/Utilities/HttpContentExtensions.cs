@@ -12,6 +12,15 @@ using System.Threading.Tasks;
 /// Extension methods for <see cref="HttpContent"/>.
 /// </summary>
 public static class HttpContentExtensions {
+    /// <summary>
+    /// Deserializes JSON content using the provided options and wraps parse failures
+    /// in a consistent <see cref="ApiException"/> for easier handling.
+    /// </summary>
+    /// <typeparam name="T">Target type to deserialize.</typeparam>
+    /// <param name="content">HTTP content to read.</param>
+    /// <param name="options">JSON serializer options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Deserialized instance of <typeparamref name="T"/> or <c>null</c> when the payload is empty.</returns>
     public static async Task<T?> ReadFromJsonAsyncSafe<T>(
         this HttpContent content,
         JsonSerializerOptions options,

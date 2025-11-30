@@ -46,6 +46,11 @@ public static class ApiConfigLoader {
         return Path.Combine(home, ".sectigo", "token.json");
     }
 
+    /// <summary>
+    /// Reads a cached token from the default token cache path or a custom path.
+    /// Returns <c>null</c> when no cache file exists.
+    /// </summary>
+    /// <param name="path">Optional custom token cache path; defaults to <c>~/.sectigo/token.json</c> or the <c>SECTIGO_TOKEN_CACHE_PATH</c> environment variable.</param>
     public static TokenInfo? ReadToken(string? path = null) {
         var tokenPath = GetTokenPath(path);
         if (!File.Exists(tokenPath)) {
@@ -59,6 +64,11 @@ public static class ApiConfigLoader {
         return model is null ? null : new TokenInfo(model.Token, model.ExpiresAt);
     }
 
+    /// <summary>
+    /// Writes a token to the default token cache path or to the specified path.
+    /// </summary>
+    /// <param name="info">Token information to persist.</param>
+    /// <param name="path">Optional custom token cache path; defaults to <c>~/.sectigo/token.json</c> or the <c>SECTIGO_TOKEN_CACHE_PATH</c> environment variable.</param>
     public static void WriteToken(TokenInfo info, string? path = null) {
         if (info is null) {
             throw new ArgumentNullException(nameof(info));

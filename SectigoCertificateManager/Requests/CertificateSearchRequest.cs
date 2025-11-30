@@ -22,8 +22,8 @@ public sealed class CertificateSearchRequest {
     /// <summary>Gets or sets the SSL type identifier filter.</summary>
     public int? SslTypeId { get; set; }
 
-    /// <summary>Gets or sets the discovery status filter.</summary>
-    public string? DiscoveryStatus { get; set; }
+    /// <summary>Gets or sets the discovery status filter (deprecated in favour of RequestedVia).</summary>
+    public DiscoveryStatus? DiscoveryStatus { get; set; }
 
     /// <summary>Gets or sets the certificate vendor filter.</summary>
     public string? Vendor { get; set; }
@@ -32,10 +32,10 @@ public sealed class CertificateSearchRequest {
     public int? OrgId { get; set; }
 
     /// <summary>Gets or sets the installation status filter.</summary>
-    public string? InstallStatus { get; set; }
+    public InstallStatus? InstallStatus { get; set; }
 
     /// <summary>Gets or sets the renewal status filter.</summary>
-    public string? RenewalStatus { get; set; }
+    public RenewalStatus? RenewalStatus { get; set; }
 
     /// <summary>Gets or sets the issuer name filter.</summary>
     public string? Issuer { get; set; }
