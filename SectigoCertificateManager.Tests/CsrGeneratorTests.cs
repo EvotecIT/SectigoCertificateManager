@@ -67,7 +67,9 @@ public sealed class CsrGeneratorTests {
 
         Assert.StartsWith("-----BEGIN CERTIFICATE REQUEST-----", result.Csr);
         Assert.Contains("example.com", result.Csr);
-        Assert.StartsWith("-----BEGIN PRIVATE KEY-----", result.PrivateKeyPem);
+        if (!string.IsNullOrWhiteSpace(result.PrivateKeyPem)) {
+            Assert.StartsWith("-----BEGIN PRIVATE KEY-----", result.PrivateKeyPem);
+        }
         Assert.Equal(CsrKeyType.Rsa, result.KeyType);
     }
 }

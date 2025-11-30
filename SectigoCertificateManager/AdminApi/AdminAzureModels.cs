@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Controls how an Azure Key Vault account is delegated across organizations.

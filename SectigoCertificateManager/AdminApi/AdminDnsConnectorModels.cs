@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using SectigoCertificateManager.Utilities;
 
 /// <summary>
 /// Minimal id/name pair used across Admin API responses.
