@@ -19,7 +19,7 @@ public sealed class IdName {
 /// <summary>
 /// DNS connector status as reported by the Admin API.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(UpperSnakeEnumConverter<DnsConnectorStatus>))]
 public enum DnsConnectorStatus {
     /// <summary>The connector is not available (for example, never connected).</summary>
     [EnumMember(Value = "NOT_AVAILABLE")]
@@ -35,7 +35,7 @@ public enum DnsConnectorStatus {
 /// <summary>
 /// DNS connector delegation mode.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(UpperSnakeEnumConverter<DnsConnectorDelegationMode>))]
 public enum DnsConnectorDelegationMode {
     /// <summary>The connector is available to all organizations in the customer tenant.</summary>
     [EnumMember(Value = "GLOBAL_FOR_CUSTOMER")]

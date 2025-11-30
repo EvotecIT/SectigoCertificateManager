@@ -61,7 +61,7 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         void Append(string key, string? value) {
             if (string.IsNullOrWhiteSpace(value)) { return; }
             _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(System.Net.WebUtility.UrlEncode(value));
+            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
             hasQuery = true;
         }
 
@@ -144,7 +144,6 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         SetBearer(httpRequest, token);
 
         using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
-        httpRequest.Dispose();
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
