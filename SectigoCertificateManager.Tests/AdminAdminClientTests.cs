@@ -146,8 +146,7 @@ public sealed class AdminAdminClientTests {
         Assert.Equal(HttpMethod.Post, handler.ApiRequest!.Method);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/admin/v1", handler.ApiRequest.RequestUri!.ToString());
 
-        var body = await handler.ApiRequest.Content!.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(body);
+        using var doc = JsonDocument.Parse(handler.Body!);
         var root = doc.RootElement;
         Assert.Equal("API", root.GetProperty("type").GetString());
         Assert.Equal("api-admin", root.GetProperty("login").GetString());
@@ -181,8 +180,7 @@ public sealed class AdminAdminClientTests {
         Assert.Equal(HttpMethod.Put, handler.ApiRequest!.Method);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/admin/v1/99", handler.ApiRequest.RequestUri!.ToString());
 
-        var body = await handler.ApiRequest.Content!.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(body);
+        using var doc = JsonDocument.Parse(handler.Body!);
         var root = doc.RootElement;
         Assert.Equal("Alice", root.GetProperty("forename").GetString());
         Assert.Equal("Updated", root.GetProperty("surname").GetString());
@@ -256,8 +254,7 @@ public sealed class AdminAdminClientTests {
         Assert.True(handler.ApiRequest.Headers.TryGetValues("password", out var values));
         Assert.Contains("old-pass", values);
 
-        var body = await handler.ApiRequest.Content!.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(body);
+        using var doc = JsonDocument.Parse(handler.Body!);
         var root = doc.RootElement;
         Assert.Equal("new-pass", root.GetProperty("newPassword").GetString());
     }
@@ -389,20 +386,24 @@ public sealed class AdminAdminClientTests {
         public HttpRequestMessage? TokenRequest { get; private set; }
 
         public HttpRequestMessage? ApiRequest { get; private set; }
+        public string? Body { get; private set; }
 
         public TestHandler(HttpResponseMessage tokenResponse, HttpResponseMessage apiResponse) {
             _tokenResponse = tokenResponse ?? throw new ArgumentNullException(nameof(tokenResponse));
             _apiResponse = apiResponse ?? throw new ArgumentNullException(nameof(apiResponse));
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             if (request.RequestUri!.AbsoluteUri.IndexOf("protocol/openid-connect/token", StringComparison.OrdinalIgnoreCase) >= 0) {
                 TokenRequest = request;
-                return Task.FromResult(_tokenResponse);
+                return _tokenResponse;
             }
 
             ApiRequest = request;
-            return Task.FromResult(_apiResponse);
+            if (request.Content is not null) {
+                Body = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
+            }
+            return _apiResponse;
         }
     }
 }

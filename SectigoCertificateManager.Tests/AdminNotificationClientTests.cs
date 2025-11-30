@@ -171,8 +171,7 @@ public sealed class AdminNotificationClientTests {
         Assert.Equal(HttpMethod.Put, handler.ApiRequest!.Method);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/notification/v1/5", handler.ApiRequest.RequestUri!.ToString());
 
-        var body = await handler.ApiRequest.Content!.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(body);
+        using var doc = JsonDocument.Parse(handler.Body!);
         var root = doc.RootElement;
         Assert.Equal("SSL Certificate Expiration", root.GetProperty("description").GetString());
         Assert.True(root.GetProperty("active").GetBoolean());
@@ -210,6 +209,7 @@ public sealed class AdminNotificationClientTests {
         public HttpRequestMessage? TokenRequest { get; private set; }
 
         public HttpRequestMessage? ApiRequest { get; private set; }
+        public string? Body { get; private set; }
 
         public TestHandler(HttpResponseMessage tokenResponse, HttpResponseMessage apiResponse) {
             _tokenResponse = tokenResponse ?? throw new ArgumentNullException(nameof(tokenResponse));
@@ -223,6 +223,9 @@ public sealed class AdminNotificationClientTests {
             }
 
             ApiRequest = request;
+            if (request.Content is not null) {
+                Body = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            }
             return Task.FromResult(_apiResponse);
         }
     }
