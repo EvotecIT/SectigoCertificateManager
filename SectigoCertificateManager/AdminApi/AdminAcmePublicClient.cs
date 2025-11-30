@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -301,35 +300,13 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder("api/acme/v1/server");
-        var hasQuery = false;
-
-        static string Encode(string? value) {
-            var encoded = System.Net.WebUtility.UrlEncode(value ?? string.Empty) ?? string.Empty;
-            encoded = encoded
-                .Replace(":", "%3A")
-                .Replace("+", "%20")
-                .Replace("%3a", "%3A")
-                .Replace("%2f", "%2F");
-            return encoded;
-        }
-
-        void Append(string key, string? value) {
-            if (string.IsNullOrWhiteSpace(value)) { return; }
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            var encoded = Encode(value);
-            builder.Append(key).Append('=').Append(encoded);
-            hasQuery = true;
-        }
-
-        if (size.HasValue) { Append("size", size.Value.ToString()); }
-        if (position.HasValue) { Append("position", position.Value.ToString()); }
-        if (caId.HasValue) { Append("caId", caId.Value.ToString()); }
-        Append("certValidationType", certValidationType);
-        Append("url", url);
-        Append("name", name);
-
-        var path = builder.ToString();
+        var path = QueryStringBuilder.Build("api/acme/v1/server", q => q
+            .AddInt("size", size)
+            .AddInt("position", position)
+            .AddInt("caId", caId)
+            .AddString("certValidationType", certValidationType)
+            .AddString("url", url)
+            .AddString("name", name));
         var baseUri = _httpClient.BaseAddress?.AbsoluteUri?.TrimEnd('/') ?? _config.BaseUrl.TrimEnd('/');
         var absolute = $"{baseUri}/{path}";
 
