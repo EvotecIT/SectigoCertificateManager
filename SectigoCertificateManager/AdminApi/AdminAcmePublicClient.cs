@@ -307,6 +307,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         static string Encode(string? value) {
             var encoded = System.Net.WebUtility.UrlEncode(value ?? string.Empty) ?? string.Empty;
             encoded = encoded
+                .Replace(":", "%3A")
                 .Replace("+", "%20")
                 .Replace("%3a", "%3A")
                 .Replace("%2f", "%2F");
@@ -330,7 +331,8 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
 
         var path = builder.ToString();
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        var fullUri = $"{_httpClient.BaseAddress?.AbsoluteUri?.TrimEnd('/')}/{path}";
+        using var request = new HttpRequestMessage(HttpMethod.Get, fullUri);
         SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
