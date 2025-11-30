@@ -27,7 +27,7 @@ public class AdminCodeSigningClientTests {
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             if (request.RequestUri is not null &&
-                request.RequestUri.AbsoluteUri.Contains("/protocol/openid-connect/token", StringComparison.OrdinalIgnoreCase)) {
+                request.RequestUri.AbsoluteUri.IndexOf("/protocol/openid-connect/token", StringComparison.OrdinalIgnoreCase) >= 0) {
                 return _tokenResponse;
             }
 

@@ -110,7 +110,7 @@ public sealed class AdminAzureClientTests {
         }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
-            if (request.RequestUri!.AbsoluteUri.Contains("protocol/openid-connect/token", StringComparison.OrdinalIgnoreCase)) {
+            if (request.RequestUri!.AbsoluteUri.IndexOf("protocol/openid-connect/token", StringComparison.OrdinalIgnoreCase) >= 0) {
                 TokenRequest = request;
                 return Task.FromResult(_tokenResponse);
             }

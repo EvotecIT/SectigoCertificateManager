@@ -83,9 +83,9 @@ public sealed class CsrGeneratorTests {
 
         var san = req.CertificateExtensions.FirstOrDefault(e => e.Oid?.Value == "2.5.29.17");
         Assert.NotNull(san);
-        var sanText = System.Text.Encoding.ASCII.GetString(san!.RawData);
-        Assert.Contains("example.com", sanText);
-        Assert.Contains("www.example.com", sanText);
+        var formatted = new System.Security.Cryptography.AsnEncodedData(san!.Oid, san.RawData).Format(false);
+        Assert.Contains("example.com", formatted);
+        Assert.Contains("www.example.com", formatted);
 #endif
     }
 
