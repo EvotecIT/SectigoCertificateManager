@@ -304,11 +304,11 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         var builder = new StringBuilder("api/acme/v1/server");
         var hasQuery = false;
 
-        static string Encode(string value) =>
-            Uri.EscapeDataString(value)
-                .Replace("%3a", "%3A", StringComparison.Ordinal)
-                .Replace("%2f", "%2F", StringComparison.Ordinal)
-                .Replace("+", "%20", StringComparison.Ordinal);
+        static string Encode(string? value) {
+            var encoded = Uri.EscapeDataString(value ?? string.Empty);
+            encoded = encoded.Replace("%3a", "%3A").Replace("%2f", "%2F").Replace("+", "%20");
+            return encoded;
+        }
 
         void Append(string key, string? value) {
             if (string.IsNullOrWhiteSpace(value)) { return; }
