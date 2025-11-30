@@ -37,13 +37,19 @@ public sealed class GetSectigoCertificateStatusCommand : AsyncPSCmdlet {
         var effectiveToken = linked.Token;
 
         CertificateService? service = null;
+        var usingAdmin = false;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
                 service = new CertificateService(adminConfig);
+                usingAdmin = true;
             } else {
                 var config = ConnectionHelper.GetLegacyConfig(SessionState);
                 service = new CertificateService(config);
             }
+
+            WriteVerbose(usingAdmin
+                ? $"Retrieving certificate status for Id={CertificateId} using the Admin API."
+                : $"Retrieving certificate status for Id={CertificateId} using the legacy API.");
 
             var status = await service
                 .GetStatusAsync(CertificateId, effectiveToken)

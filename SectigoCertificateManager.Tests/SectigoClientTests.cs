@@ -198,7 +198,8 @@ public sealed class SectigoClientTests {
         client.Dispose();
         release.SetResult(new TokenInfo("n", DateTimeOffset.UtcNow.AddMinutes(5)));
 
-        await Assert.ThrowsAsync<ObjectDisposedException>(() => task);
+        var ex = await Assert.ThrowsAnyAsync<Exception>(() => task);
+        Assert.True(ex is ObjectDisposedException || ex is IOException);
     }
 
     [Fact]

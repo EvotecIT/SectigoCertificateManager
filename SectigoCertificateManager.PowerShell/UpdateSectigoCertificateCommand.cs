@@ -34,7 +34,7 @@ public sealed class UpdateSectigoCertificateCommand : AsyncPSCmdlet {
 
     /// <summary>The domain control validation mode.</summary>
     [Parameter(Mandatory = true)]
-    public string DcvMode { get; set; } = string.Empty;
+    public DcvMode DcvMode { get; set; } = DcvMode.Email;
 
     /// <summary>The domain control validation email address.</summary>
     [Parameter]
@@ -55,13 +55,19 @@ public sealed class UpdateSectigoCertificateCommand : AsyncPSCmdlet {
         var effectiveToken = linked.Token;
 
         CertificateService? service = null;
+        var usingAdmin = false;
         try {
             if (ConnectionHelper.TryGetAdminConfig(SessionState, out var adminConfig) && adminConfig is not null) {
                 service = new CertificateService(adminConfig);
+                usingAdmin = true;
             } else {
                 var config = ConnectionHelper.GetLegacyConfig(SessionState);
                 service = new CertificateService(config);
             }
+
+            WriteVerbose(usingAdmin
+                ? $"Renewing certificate {CertificateId} using the Admin API with DCV mode '{DcvMode}'."
+                : $"Renewing certificate {CertificateId} using the legacy API with DCV mode '{DcvMode}'.");
 
             var request = new RenewCertificateRequest {
                 Csr = Csr,

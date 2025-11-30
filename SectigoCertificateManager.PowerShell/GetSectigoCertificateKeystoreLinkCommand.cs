@@ -34,8 +34,7 @@ public sealed class GetSectigoCertificateKeystoreLinkCommand : AsyncPSCmdlet {
 
     /// <summary>Keystore format type.</summary>
     [Parameter(Mandatory = true)]
-    [ValidateSet("key", "p12", "p12aes", "jks", "pem")]
-    public string FormatType { get; set; } = "p12";
+    public KeystoreFormatType FormatType { get; set; } = KeystoreFormatType.P12;
 
     /// <summary>Optional passphrase used to protect the keystore.</summary>
     [Parameter]
@@ -63,6 +62,7 @@ public sealed class GetSectigoCertificateKeystoreLinkCommand : AsyncPSCmdlet {
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(CancelToken, CancellationToken);
         var effectiveToken = linked.Token;
 
+        WriteVerbose($"Requesting keystore download link for certificate Id={CertificateId} with format '{FormatType}' using the Admin API.");
         var service = new CertificateService(adminConfig!);
         var link = await service
             .CreateKeystoreDownloadLinkAsync(CertificateId, FormatType, Passphrase, effectiveToken)

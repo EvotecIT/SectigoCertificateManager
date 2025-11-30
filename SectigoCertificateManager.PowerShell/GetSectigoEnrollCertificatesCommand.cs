@@ -43,7 +43,10 @@ public sealed class GetSectigoEnrollCertificatesCommand : AsyncPSCmdlet {
     /// <summary>Calls the Enroll list endpoint and writes JSON results.</summary>
     protected override async Task ProcessRecordAsync() {
         using var client = new HttpClient();
-        var url = $"{BaseUrl.TrimEnd('/')}/api/v1/certificates?size={Size}&position={Position}";
+        var trimmedBase = BaseUrl.TrimEnd('/');
+        var url = $"{trimmedBase}/api/v1/certificates?size={Size}&position={Position}";
+        WriteVerbose(
+            $"Requesting Enroll certificates from '{trimmedBase}' with Size={Size}, Position={Position}.");
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Add("login", Username);
         request.Headers.Add("password", Password);

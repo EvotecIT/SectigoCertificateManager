@@ -64,6 +64,8 @@ public sealed class WaitSectigoOrderCommand : AsyncPSCmdlet {
         try {
             client = TestHooks.ClientFactory?.Invoke(config) ?? new SectigoClient(config);
             TestHooks.CreatedClient = client;
+            WriteVerbose(
+                $"Waiting for order {OrderId} to reach a terminal status using the legacy API at '{config.BaseUrl}' with poll interval {PollInterval}.");
             var statuses = new OrderStatusClient(client);
             var status = await statuses
                 .WatchAsync(OrderId, PollInterval, effectiveToken)

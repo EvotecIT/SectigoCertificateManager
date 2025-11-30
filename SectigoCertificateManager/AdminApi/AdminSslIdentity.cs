@@ -15,5 +15,7 @@ public sealed class AdminSslIdentity {
 
     /// <summary>Gets or sets the subject alternative names.</summary>
     public IReadOnlyList<string>? SubjectAlternativeNames { get; set; }
-}
 
+    /// <summary>Gets or sets external requester information, when provided.</summary>
+    public string? ExternalRequester { get; set; }
+}

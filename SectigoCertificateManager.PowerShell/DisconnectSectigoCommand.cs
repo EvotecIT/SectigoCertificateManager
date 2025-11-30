@@ -15,6 +15,7 @@ using System.Management.Automation;
 public sealed class DisconnectSectigoCommand : PSCmdlet {
     /// <summary>Clears default parameter values.</summary>
     protected override void ProcessRecord() {
+        WriteVerbose("Clearing Sectigo connection defaults and configuration variables.");
         DefaultParameterHelper.ClearDefaults(SessionState);
         SessionState.PSVariable.Remove("SectigoApiConfig");
         SessionState.PSVariable.Remove("SectigoAdminApiConfig");

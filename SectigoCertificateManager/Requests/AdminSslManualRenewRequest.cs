@@ -18,11 +18,10 @@ public sealed class AdminSslManualRenewRequest {
     /// <summary>
     /// Gets or sets the DCV mode for domain validation.
     /// </summary>
-    public string? DcvMode { get; set; }
+    public DcvMode DcvMode { get; set; }
 
     /// <summary>
     /// Gets or sets the DCV email address, when email validation is used.
     /// </summary>
     public string? DcvEmail { get; set; }
 }
-
