@@ -330,9 +330,10 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         Append("name", name);
 
         var path = builder.ToString();
+        var baseUri = _httpClient.BaseAddress?.AbsoluteUri?.TrimEnd('/') ?? _config.BaseUrl.TrimEnd('/');
+        var absolute = $"{baseUri}/{path}";
 
-        var fullUri = $"{_httpClient.BaseAddress?.AbsoluteUri?.TrimEnd('/')}/{path}";
-        using var request = new HttpRequestMessage(HttpMethod.Get, fullUri);
+        using var request = new HttpRequestMessage(HttpMethod.Get, absolute);
         SetBearer(request, token);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
