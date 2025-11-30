@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,37 +54,15 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         CancellationToken cancellationToken = default) {
         var token = await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
-        var builder = new StringBuilder("api/notification/v1");
-        var hasQuery = false;
-
-        static string Encode(string? value) {
-            var encoded = System.Net.WebUtility.UrlEncode(value ?? string.Empty) ?? string.Empty;
-            encoded = encoded
-                .Replace(":", "%3A")
-                .Replace("+", "%20")
-                .Replace("%3a", "%3A")
-                .Replace("%2f", "%2F");
-            return encoded;
-        }
-
-        void Append(string key, string? value) {
-            if (string.IsNullOrWhiteSpace(value)) { return; }
-            _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            var encoded = Encode(value);
-            builder.Append(key).Append('=').Append(encoded);
-            hasQuery = true;
-        }
-
-        if (size.HasValue) { Append("size", size.Value.ToString()); }
-        if (position.HasValue) { Append("position", position.Value.ToString()); }
-        Append("description", description);
-        if (id.HasValue) { Append("id", id.Value.ToString()); }
-        if (orgId.HasValue) { Append("orgId", orgId.Value.ToString()); }
-        if (selectedOrgType.HasValue) { Append("selectedOrgType", selectedOrgType.Value.ToString()); }
-        Append("type", type);
-        if (certTypeId.HasValue) { Append("certTypeId", certTypeId.Value.ToString()); }
-
-        var path = builder.ToString();
+        var path = QueryStringBuilder.Build("api/notification/v1", q => q
+            .AddInt("size", size)
+            .AddInt("position", position)
+            .AddString("description", description)
+            .AddInt("id", id)
+            .AddInt("orgId", orgId)
+            .AddString("selectedOrgType", selectedOrgType?.ToString())
+            .AddString("type", type)
+            .AddInt("certTypeId", certTypeId));
         var baseUri = _httpClient.BaseAddress?.AbsoluteUri?.TrimEnd('/') ?? _config.BaseUrl.TrimEnd('/');
         var absolute = $"{baseUri}/{path}";
 

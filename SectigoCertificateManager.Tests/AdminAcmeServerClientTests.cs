@@ -92,9 +92,10 @@ public sealed class AdminAcmeServerClientTests {
             cancellationToken: CancellationToken.None);
 
         Assert.NotNull(handler.LastRequest);
+        var actualUri = handler.LastRequest!.RequestUri!.AbsoluteUri;
         Assert.Equal(
             "https://admin.enterprise.sectigo.com/api/acme/v1/server?size=10&position=0&caId=40485&certValidationType=OV&url=https%3A%2F%2Facme.example.com&name=OV%20ACME%20Server",
-            handler.LastRequest!.RequestUri!.ToString());
+            actualUri);
         Assert.Single(result);
         Assert.Equal("https://acme.example.com", result[0].Url);
         Assert.Equal(40485, result[0].CaId);
@@ -102,4 +103,3 @@ public sealed class AdminAcmeServerClientTests {
         Assert.Equal("OV", result[0].CertValidationType);
     }
 }
-

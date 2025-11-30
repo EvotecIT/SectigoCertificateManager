@@ -80,9 +80,10 @@ public sealed class AdminNotificationClientTests {
 
         Assert.NotNull(handler.ApiRequest);
         Assert.Equal(HttpMethod.Get, handler.ApiRequest!.Method);
+        var actualUri = handler.ApiRequest.RequestUri!.AbsoluteUri;
         Assert.Equal(
             "https://admin.enterprise.sectigo.com/api/notification/v1?size=10&position=5&description=Expiration&id=5&orgId=1234&selectedOrgType=ANY&type=SSL%20Certificate%20Expiration&certTypeId=123",
-            handler.ApiRequest.RequestUri!.ToString());
+            actualUri);
 
         Assert.Equal(42, total);
         Assert.Single(items);
