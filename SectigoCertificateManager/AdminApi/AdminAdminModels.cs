@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 /// <summary>
 /// Administrator account type.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(UpperSnakeEnumConverter<AdminAccountType>))]
 public enum AdminAccountType {
     /// <summary>Standard interactive administrator account.</summary>
     [EnumMember(Value = "STANDARD")]

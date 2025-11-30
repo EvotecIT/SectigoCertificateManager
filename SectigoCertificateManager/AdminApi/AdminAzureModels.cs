@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 /// <summary>
 /// Controls how an Azure Key Vault account is delegated across organizations.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(UpperSnakeEnumConverter<AzureDelegationMode>))]
 public enum AzureDelegationMode {
     /// <summary>The account is available to all organizations in the customer tenant.</summary>
     [EnumMember(Value = "GLOBAL_FOR_CUSTOMER")]
@@ -21,7 +21,7 @@ public enum AzureDelegationMode {
 /// <summary>
 /// Azure cloud environment in which the account is registered.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(UpperSnakeEnumConverter<AzureEnvironment>))]
 public enum AzureEnvironment {
     /// <summary>Public Azure cloud.</summary>
     [EnumMember(Value = "AZURE")]
