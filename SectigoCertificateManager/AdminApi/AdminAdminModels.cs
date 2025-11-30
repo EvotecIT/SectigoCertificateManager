@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.AdminApi;
 
 using System;
 using System.Collections.Generic;
+using SectigoCertificateManager.Utilities;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
