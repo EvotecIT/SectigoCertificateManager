@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.AdminApi;
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 /// <summary>
@@ -10,15 +11,19 @@ using System.Text.Json.Serialization;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AdminAccountType {
     /// <summary>Standard interactive administrator account.</summary>
+    [EnumMember(Value = "STANDARD")]
     Standard,
 
     /// <summary>API-only administrator account used for scripted integrations.</summary>
+    [EnumMember(Value = "API")]
     Api,
 
     /// <summary>Administrator account managed via Sectigo SaaS integrations.</summary>
+    [EnumMember(Value = "SAS")]
     Sas,
 
     /// <summary>Administrator account federated through an external identity provider (IdP).</summary>
+    [EnumMember(Value = "IDP")]
     Idp
 }
 

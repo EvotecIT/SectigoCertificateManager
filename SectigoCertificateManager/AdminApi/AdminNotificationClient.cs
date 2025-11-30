@@ -61,7 +61,7 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         void Append(string key, string? value) {
             if (string.IsNullOrWhiteSpace(value)) { return; }
             _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            builder.Append(key).Append('=').Append(Uri.EscapeDataString(value));
+            builder.Append(key).Append('=').Append(System.Net.WebUtility.UrlEncode(value));
             hasQuery = true;
         }
 
