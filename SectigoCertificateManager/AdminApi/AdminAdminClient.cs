@@ -118,7 +118,6 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         SetBearer(httpRequest, token);
 
         using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
-        httpRequest.Dispose();
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
@@ -145,7 +144,6 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         SetBearer(httpRequest, token);
 
         using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
-        httpRequest.Dispose();
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -213,7 +211,6 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         request.Headers.Add("password", currentPassword);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        request.Dispose();
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
