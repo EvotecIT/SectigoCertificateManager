@@ -58,10 +58,16 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         var builder = new StringBuilder("api/notification/v1");
         var hasQuery = false;
 
+        static string Encode(string value) =>
+            Uri.EscapeDataString(value)
+                .Replace("%3a", "%3A", StringComparison.Ordinal)
+                .Replace("%2f", "%2F", StringComparison.Ordinal)
+                .Replace("+", "%20", StringComparison.Ordinal);
+
         void Append(string key, string? value) {
             if (string.IsNullOrWhiteSpace(value)) { return; }
             _ = hasQuery ? builder.Append('&') : builder.Append('?');
-            var encoded = Uri.EscapeDataString(value);
+            var encoded = Encode(value);
             builder.Append(key).Append('=').Append(encoded);
             hasQuery = true;
         }

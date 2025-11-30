@@ -3,6 +3,7 @@ using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Responses;
 using SectigoCertificateManager;
 using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Xunit;
@@ -66,10 +67,36 @@ public sealed class CsrGeneratorTests {
         var result = CsrGenerator.Generate(options);
 
         Assert.StartsWith("-----BEGIN CERTIFICATE REQUEST-----", result.Csr);
-        Assert.Contains("example.com", result.Csr);
         if (!string.IsNullOrWhiteSpace(result.PrivateKeyPem)) {
             Assert.StartsWith("-----BEGIN PRIVATE KEY-----", result.PrivateKeyPem);
         }
         Assert.Equal(CsrKeyType.Rsa, result.KeyType);
+
+#if NET8_0_OR_GREATER
+        // Parse the CSR to verify subject and SANs are present.
+        var der = DecodePem(result.Csr, "CERTIFICATE REQUEST");
+        var req = CertificateRequest.LoadSigningRequest(
+            der,
+            HashAlgorithmName.SHA256,
+            CertificateRequestLoadOptions.SkipSignatureValidation);
+        Assert.Equal("CN=example.com", req.SubjectName.Name);
+
+        var san = req.CertificateExtensions.FirstOrDefault(e => e.Oid?.Value == "2.5.29.17");
+        Assert.NotNull(san);
+        var sanText = System.Text.Encoding.ASCII.GetString(san!.RawData);
+        Assert.Contains("example.com", sanText);
+        Assert.Contains("www.example.com", sanText);
+#endif
     }
+
+#if NET8_0_OR_GREATER
+    private static byte[] DecodePem(string pem, string label) {
+        var lines = pem.Split('\n')
+            .Where(l => !l.StartsWith("-----", StringComparison.Ordinal))
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0);
+        var base64 = string.Concat(lines);
+        return Convert.FromBase64String(base64);
+    }
+#endif
 }
