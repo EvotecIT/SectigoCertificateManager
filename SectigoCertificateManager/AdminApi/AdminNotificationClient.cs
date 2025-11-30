@@ -60,7 +60,12 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
 
         static string Encode(string? value) {
             var encoded = Uri.EscapeDataString(value ?? string.Empty);
-            encoded = encoded.Replace("%3a", "%3A").Replace("%2f", "%2F").Replace("+", "%20");
+            encoded = encoded
+                .Replace(":", "%3A")
+                .Replace("/", "%2F")
+                .Replace("%3a", "%3A")
+                .Replace("%2f", "%2F")
+                .Replace("+", "%20");
             return encoded;
         }
 
