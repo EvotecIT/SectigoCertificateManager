@@ -2,6 +2,7 @@ namespace SectigoCertificateManager.AdminApi;
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 /// <summary>
@@ -21,10 +22,13 @@ public sealed class IdName {
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum DnsConnectorStatus {
     /// <summary>The connector is not available (for example, never connected).</summary>
+    [EnumMember(Value = "NOT_AVAILABLE")]
     NotAvailable,
     /// <summary>The connector is registered but not currently connected.</summary>
+    [EnumMember(Value = "NOT_CONNECTED")]
     NotConnected,
     /// <summary>The connector is online and connected.</summary>
+    [EnumMember(Value = "CONNECTED")]
     Connected
 }
 
@@ -34,8 +38,10 @@ public enum DnsConnectorStatus {
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum DnsConnectorDelegationMode {
     /// <summary>The connector is available to all organizations in the customer tenant.</summary>
+    [EnumMember(Value = "GLOBAL_FOR_CUSTOMER")]
     GlobalForCustomer,
     /// <summary>The connector is delegated only to explicitly configured organizations.</summary>
+    [EnumMember(Value = "CUSTOMIZED")]
     Customized
 }
 
