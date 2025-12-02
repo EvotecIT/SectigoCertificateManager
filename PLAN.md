@@ -111,7 +111,7 @@
 - [x] Legacy inventory (`Get-SectigoInventory`) uses `InventoryClient` and `inventory.csv`.
 - [x] Admin equivalent:
   - [x] Inventory is not exposed separately in the Admin Operations API; Admin users are steered to `Get-SectigoCertificate -Size/-filters`.
-  - [x] For basic “latest” views, use `Get-SectigoCertificate -Size` with Admin connection.
+  - [x] For basic "latest" views, use `Get-SectigoCertificate -Size` with Admin connection.
   - [x] For expiring certificates, use Admin list + detail with client-side filtering in C# (see section 9a).
 - [x] Tests for selected approach.
 
@@ -143,7 +143,7 @@
 - [x] Update `README.md` PowerShell examples to:
   - [x] Use `Connect-Sectigo` (legacy) instead of per-cmdlet auth parameters.
   - [x] Add examples for Admin mode (`ClientId`/`ClientSecret`) with `Get-SectigoCertificate`.
-- [x] Add a short “Choosing legacy vs Admin API” section.
+- [x] Add a short "Choosing legacy vs Admin API" section.
 - [x] Update examples in `SectigoCertificateManager.Examples` to include Admin API usage.
 
 ## 8. Testing and verification
@@ -153,7 +153,7 @@
   - [x] Ensure Admin paths are covered for list/get (and related service mapping). Legacy paths are already covered by existing tests.
 - [x] PowerShell tests (Pester):
   - [x] Update existing tests to use `Connect-Sectigo` instead of per-cmdlet auth where applicable.
-  - [x] Add tests for Admin-mode behaviour (including “not yet supported” paths until wired).
+  - [x] Add tests for Admin-mode behaviour (including "not yet supported" paths until wired).
 - [x] CI: ensure `dotnet test` and Pester suites pass locally and in CI for all target frameworks.
 
 ## 9. Async friendliness and PowerShell migration

@@ -17,7 +17,7 @@ Export-SectigoCertificate -CertificateId 17331734 `
     -PfxPassword (Read-Host -AsSecureString "Pfx password") `
     -Path "cert.pfx"
 
-# Legacy (username/password) — uncomment if needed
+# Legacy (username/password) - uncomment if needed
 # Connect-Sectigo -BaseUrl "https://cert-manager.com/api" `
 #                 -Username "user" `
 #                 -Password "pass" `

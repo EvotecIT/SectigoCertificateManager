@@ -16,7 +16,7 @@ Invoke-SectigoCertificateRenewal -CertificateId 17331734 `
     -DcvMode Email `
     -DcvEmail "admin@example.com"
 
-# Legacy connection (username/password) — uncomment if you need legacy renew by order number
+# Legacy connection (username/password) - uncomment if you need legacy renew by order number
 # Connect-Sectigo -BaseUrl "https://cert-manager.com/api" `
 #                 -Username "user" `
 #                 -Password "pass" `
