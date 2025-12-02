@@ -1,4 +1,4 @@
-# SectigoCertificateManager – Admin API Integration Plan
+# SectigoCertificateManager - Admin API Integration Plan
 
 > Status legend: `[ ]` not started, `[x]` done, `[-]` partially done
 
@@ -66,20 +66,20 @@
       - [x] `List` set: `-Size`, `-Position`, optional filters.
     - [x] Impl: use `CertificateService` to route Admin vs legacy.
 - [x] Remove auth parameters from all cmdlets and rely solely on connection state:
-  - [x] Certificates (list + single) – auth removed; use `CertificateService` and connection state.
-  - [x] Inventory (`Get-SectigoInventory`) – legacy config only, rejects Admin for now.
-  - [x] Certificate detail (`Get-SectigoCertificate`) – uses `CertificateService` for both Admin and legacy.
+  - [x] Certificates (list + single) - auth removed; use `CertificateService` and connection state.
+  - [x] Inventory (`Get-SectigoInventory`) - legacy config only, rejects Admin for now.
+  - [x] Certificate detail (`Get-SectigoCertificate`) - uses `CertificateService` for both Admin and legacy.
   - [x] Certificate status/revocation:
-    - [x] `Get-SectigoCertificateStatus` – uses `CertificateService` for Admin and legacy.
-    - [x] `Get-SectigoCertificateRevocation` – uses `CertificateService` for Admin and legacy.
+    - [x] `Get-SectigoCertificateStatus` - uses `CertificateService` for Admin and legacy.
+    - [x] `Get-SectigoCertificateRevocation` - uses `CertificateService` for Admin and legacy.
   - [x] Export:
-    - [x] `Export-SectigoCertificate` – uses `CertificateService` for Admin and legacy.
+    - [x] `Export-SectigoCertificate` - uses `CertificateService` for Admin and legacy.
   - [x] Orders:
-    - [x] `New-SectigoOrder`, `Invoke-SectigoCertificateRenewal`, `Update-SectigoCertificate` – legacy only, reject Admin.
-    - [x] `Get-SectigoOrders`, `Get-SectigoOrdersPage` – legacy only, reject Admin.
+    - [x] `New-SectigoOrder`, `Invoke-SectigoCertificateRenewal`, `Update-SectigoCertificate` - legacy only, reject Admin.
+    - [x] `Get-SectigoOrders`, `Get-SectigoOrdersPage` - legacy only, reject Admin.
   - [x] Organizations / profiles:
-    - [x] `Get-SectigoOrganizations` – legacy only, rejects Admin.
-    - [x] Profiles and related cmdlets – legacy only, use connection helper; Admin not yet supported.
+    - [x] `Get-SectigoOrganizations` - legacy only, rejects Admin.
+    - [x] Profiles and related cmdlets - legacy only, use connection helper; Admin not yet supported.
 
 ## 5. Admin API support per operation (PowerShell)
 
@@ -160,7 +160,7 @@
 
 The long-term execution order for remaining work is:
 
-1. Complete API surface for the scenarios we support (covered in sections 1–5).
+1. Complete API surface for the scenarios we support (covered in sections 1-5).
 2. Extend tests for error paths and edge conditions (section 8).
 3. Ensure the core library is fully async-friendly (no internal blocking on async calls).
 4. Migrate PowerShell cmdlets to use `AsyncPSCmdlet` where appropriate.
@@ -208,26 +208,26 @@ Concretely:
     - [x] Grouping by `Requester` for email notifications.
   - [x] Add a `Module/Examples` script that demonstrates collecting expiring certificates and sending notifications (without hard-coding a particular mail sender).
 
-## 10. Admin API – SSL extras (DCV, locations, metadata)
+## 10. Admin API - SSL extras (DCV, locations, metadata)
 
 - [x] Add Admin SSL DCV and location support in C#:
-  - [x] `GET /api/ssl/v2/{sslId}/dcv` – model and client method for current DCV status.
-  - [x] `POST /api/ssl/v2/{sslId}/dcv/recheck` – client method to trigger DCV recheck.
-  - [x] `GET /api/ssl/v2/{sslId}/location` – model and client method to list certificate locations.
-  - [x] `GET /api/ssl/v2/{sslId}/location/{locationId}` – model and client method for a single location.
+  - [x] `GET /api/ssl/v2/{sslId}/dcv` - model and client method for current DCV status.
+  - [x] `POST /api/ssl/v2/{sslId}/dcv/recheck` - client method to trigger DCV recheck.
+  - [x] `GET /api/ssl/v2/{sslId}/location` - model and client method to list certificate locations.
+  - [x] `GET /api/ssl/v2/{sslId}/location/{locationId}` - model and client method for a single location.
 - [x] Add Admin SSL renewal/replace helpers:
-  - [x] `POST /api/ssl/v2/renew/{renewId}` – client method for renew-by-renewId.
-  - [x] `POST /api/ssl/v2/renew/manual/{id}` – client method for manual renew.
-  - [x] `POST /api/ssl/v2/replace/{sslId}` – client method for replace-by-sslId.
+  - [x] `POST /api/ssl/v2/renew/{renewId}` - client method for renew-by-renewId.
+  - [x] `POST /api/ssl/v2/renew/manual/{id}` - client method for manual renew.
+  - [x] `POST /api/ssl/v2/replace/{sslId}` - client method for replace-by-sslId.
 - [x] Add Admin SSL metadata endpoints:
-  - [x] `GET /api/ssl/v2/types` – Admin-specific certificate type listing.
-  - [x] `GET /api/ssl/v2/customFields` – Admin-specific custom-field listing.
+  - [x] `GET /api/ssl/v2/types` - Admin-specific certificate type listing.
+  - [x] `GET /api/ssl/v2/customFields` - Admin-specific custom-field listing.
 - [x] Decide on routing for these features:
   - [x] Extend `CertificateService` where concepts align (for example, types/custom fields).
   - [x] Keep DCV and locations on dedicated Admin-only client surface (C# only for now).
 - [x] Add unit tests for all new Admin SSL operations (success and basic error paths).
 
-## 11. Admin API – S/MIME certificates
+## 11. Admin API - S/MIME certificates
 
 - [x] Add a `SmimeAdminClient` (or equivalent) for `/api/smime/v2` endpoints:
   - [x] List & get: `GET /api/smime/v2`, `GET /api/smime/v2/{certId}`.
@@ -243,7 +243,7 @@ Concretely:
 - [x] Add focused xUnit tests for S/MIME client (URI building, payloads, basic parsing).
 - [ ] (Optional) Plan PowerShell/CLI exposure for S/MIME (separate phase).
 
-## 12. Admin API – Device certificates
+## 12. Admin API - Device certificates
 
 - [x] Add a `DeviceAdminClient` (or equivalent) for `/api/device/v1` endpoints:
   - [x] List & get device certificates: `GET /api/device/v1`, `GET /api/device/v1/{deviceCertId}`.
@@ -259,7 +259,7 @@ Concretely:
 - [x] Add unit tests to verify URIs, payloads, and basic parsing.
 - [ ] (Optional) Consider a shared abstraction with SSL/S/MIME for common operations (issue/renew/revoke/collect).
 
-## 13. Admin API – Domains, organizations, DCV, and ACME
+## 13. Admin API - Domains, organizations, DCV, and ACME
 
 - [x] Domain management (`/api/domain/v1`):
   - [x] Client for listing/creating domains and updating state (activate/suspend/monitoring).
@@ -268,7 +268,7 @@ Concretely:
   - [x] Client to list organizations and managed-by reports (Admin organizations list, report-type and managed-by endpoints).
   - [-] Client for organization validations:
     - [x] List/get/delete validations and synchronize with CA backend (`/api/organization/v2/{orgId}/validations*`).
-    - [ ] Submit/revalidate/validator assignment endpoints (modeled requests and helpers) – deferred.
+    - [ ] Submit/revalidate/validator assignment endpoints (modeled requests and helpers) - deferred.
 - [x] DCV operations (`/api/dcv/v2/*`):
   - [x] Client for starting DCV via CNAME/HTTP/HTTPS/TXT/email (start/submit flows).
   - [x] List and status queries, plus clear/delete endpoints, via a dedicated Admin DCV client.
@@ -279,7 +279,7 @@ Concretely:
   - [x] Client for listing custom fields across SSL/S/MIME/Device using the `certType` filter, plus get/create/update operations.
 - [ ] Add tests for the above clients (URI building, minimal happy-path parsing) for domains, organizations, DCV, and ACME clients.
 
-## 14. Admin API – Accounts, persons, endpoints, notifications, reports, templates
+## 14. Admin API - Accounts, persons, endpoints, notifications, reports, templates
 
 - [ ] Endpoint accounts (`/api/endpoint/v1/*`):
   - [ ] Client to list/create/update/delete endpoint accounts, configuration, and delegations.
@@ -294,7 +294,7 @@ Concretely:
   - [x] Tests to validate URI construction, query handling, and `Location` header parsing for create/update/delete operations.
 - [ ] Tests for each new client in this group to validate URI construction and key behaviours.
 
-## 15. Admin API – Admin accounts, connectors, discovery, Azure, and code signing
+## 15. Admin API - Admin accounts, connectors, discovery, Azure, and code signing
 
 - [x] Admin users and roles (`/api/admin/v1/*`):
   - [x] Client to list/get admin users, manage passwords (`changepassword`, `password`), and unlink accounts.
@@ -317,7 +317,7 @@ Concretely:
   - [ ] Client to manage discovery buckets, assignments, delegations, and rule execution.
   - [ ] Tests to validate URI construction and core task/bucket workflows.
 
-## 16. Admin API – Discovery, agents, Azure, connectors, code-signing
+## 16. Admin API - Discovery, agents, Azure, connectors, code-signing
 
 - [ ] Discovery & agents:
   - [ ] Clients for `/api/discovery/v1/*` and `/api/discovery/v4/*` (tasks, operations, buckets, assignment rules).
