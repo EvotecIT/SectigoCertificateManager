@@ -15,8 +15,8 @@ version 25.6 explicitly, use `ApiVersion.V25_6`.
 
 The core library now supports two connection modes:
 
-- **Legacy SCM API** – username/password + customer URI (`ApiConfig`).
-- **Admin Operations API** – OAuth2 client credentials (`AdminApiConfig`) with
+- **Legacy SCM API** - username/password + customer URI (`ApiConfig`).
+- **Admin Operations API** - OAuth2 client credentials (`AdminApiConfig`) with
   routing handled by `CertificateService`.
 
 ## Choosing legacy vs Admin API
@@ -25,7 +25,7 @@ The core library now supports two connection modes:
   credentials and require features that are not yet exposed via the Admin
   Operations API (for example, some inventory and order/organization flows).
 - Use the **Admin Operations API** when you want modern OAuth2 client
-  credentials, better alignment with the web portal’s “Admin” experience, and
+  credentials, better alignment with the web portal’s "Admin" experience, and
   access to newer SSL endpoints such as `/api/ssl/v2`.
 
 ## Documentation
@@ -34,7 +34,7 @@ HTML copies of the official API reference are included in the repository:
 
 - [certmgr-api-doc-25.4.html](Documentation/certmgr-api-doc-25.4.html)
 - [certmgr-api-doc-25.5.html](Documentation/certmgr-api-doc-25.5.html)
-- [Admin API OpenAPI spec](Documentation/api.json) – this file is a snapshot of the Admin Operations
+- [Admin API OpenAPI spec](Documentation/api.json) - this file is a snapshot of the Admin Operations
   API OpenAPI document downloaded from the Sectigo portal. To refresh it, download the latest JSON
   from the Admin API docs URL and replace this file.
 
