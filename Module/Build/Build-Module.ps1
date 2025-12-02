@@ -9,7 +9,7 @@ Build-Module -ModuleName 'SectigoCertificateManager' {
         Author               = 'Przemyslaw Klys'
         CompanyName          = 'Evotec'
         Copyright            = "(c) 2011 - $((Get-Date).Year) Przemyslaw Klys @ Evotec. All rights reserved."
-        Description          = 'SectigoCertificateManager'
+        Description          = 'SectigoCertificateManager is a PowerShell module to manage Sectigo (formerly Comodo) SSL/TLS certificates via Sectigo APIs.'
         Tags                 = @('Windows', 'MacOS', 'Linux')
         #IconUri              = ''
         ProjectUri           = 'https://github.com/EvotecIT/SectigoCertificateManager'
@@ -87,6 +87,6 @@ Build-Module -ModuleName 'SectigoCertificateManager' {
     New-ConfigurationArtefact -Type Packed -Enable -Path "$PSScriptRoot\..\Artefacts\Packed" -IncludeTagName -ArtefactName "SectigoCertificateManager-PowerShellModule.<TagModuleVersionWithPreRelease>.zip" -ID 'ToGitHub'
 
     # global options for publishing to github/psgallery
-    New-ConfigurationPublish -Type PowerShellGallery -FilePath 'C:\Support\Important\PowerShellGalleryAPI.txt' -Enabled:$true
-    New-ConfigurationPublish -Type GitHub -FilePath 'C:\Support\Important\GitHubAPI.txt' -UserName 'EvotecIT' -Enabled:$true -ID 'ToGitHub' -OverwriteTagName 'SectigoCertificateManager-PowerShellModule.<TagModuleVersionWithPreRelease>'
+    #New-ConfigurationPublish -Type PowerShellGallery -FilePath 'C:\Support\Important\PowerShellGalleryAPI.txt' -Enabled:$true
+    #New-ConfigurationPublish -Type GitHub -FilePath 'C:\Support\Important\GitHubAPI.txt' -UserName 'EvotecIT' -Enabled:$true -ID 'ToGitHub' -OverwriteTagName 'SectigoCertificateManager-PowerShellModule.<TagModuleVersionWithPreRelease>'
 }
