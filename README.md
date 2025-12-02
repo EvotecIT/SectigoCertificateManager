@@ -25,7 +25,7 @@ The core library now supports two connection modes:
   credentials and require features that are not yet exposed via the Admin
   Operations API (for example, some inventory and order/organization flows).
 - Use the **Admin Operations API** when you want modern OAuth2 client
-  credentials, better alignment with the web portal’s “Admin” experience, and
+  credentials, better alignment with the web portal’s "Admin" experience, and
   access to newer SSL endpoints such as `/api/ssl/v2`.
 
 ## Documentation
