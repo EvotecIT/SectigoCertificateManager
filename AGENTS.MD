@@ -41,7 +41,7 @@ alwaysApply: true
 - Always use **full parameter names** in scripts.
 - Avoid `Where-Object`, `Measure-Object` inside loops for performance — use `foreach`, `.Count`.
 - Avoid `return` unless required; implicit return is sufficient.
-- No use of PowerShell 7–specific syntax unless explicitly required.
+- No use of PowerShell 7-specific syntax unless explicitly required.
 - Always support **PowerShell 5.1 and 7.0+** compatibility.
 
 ## 🧾 Function Header Documentation Format
