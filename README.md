@@ -6,6 +6,13 @@ The library defaults to **API version 25.6** as defined in `ApiConfigBuilder`.
 Support for version 25.5 remains available via `ApiVersion.V25_5`. To target
 version 25.6 explicitly, use `ApiVersion.V25_6`.
 
+## Installation
+
+- NuGet: `dotnet add package SectigoCertificateManager`
+- PowerShell module (built from this repo): `Import-Module SectigoCertificateManager`
+ - Targets: `net10.0`, `net9.0`, `net8.0`, `netstandard2.0`, `net472`
+- License: MIT · Source: https://github.com/EvotecIT/SectigoCertificateManager
+
 The core library now supports two connection modes:
 
 - **Legacy SCM API** – username/password + customer URI (`ApiConfig`).
