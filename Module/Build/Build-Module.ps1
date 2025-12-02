@@ -78,7 +78,7 @@ Build-Module -ModuleName 'SectigoCertificateManager' {
         NETFramework                      = 'net472', 'net8.0'
         DotSourceLibraries                = $true
         NETSearchClass                    = 'SectigoCertificateManager.PowerShell.NewSectigoOrderCommand'
-        RefreshPSD1Only                   = $false
+        RefreshPSD1Only                   = $true
     }
 
     New-ConfigurationBuild @newConfigurationBuildSplat
