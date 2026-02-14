@@ -320,21 +320,30 @@ public sealed class CertificateService : IDisposable {
 
         var result = new List<Certificate>();
         var position = 0;
-        const int pageSize = 200;
-        var processed = 0;
+        var pageSize = 200;
+        if (maxCertificatesToScan is int scanLimit && scanLimit > 0) {
+            pageSize = Math.Min(pageSize, scanLimit);
+        }
+
+        // Number of certificates (identities) scanned (i.e., details lookups attempted / scheduled).
+        var scanned = 0;
         int? total = null;
 
         // modest parallelism to keep API load reasonable
         const int maxConcurrency = 4;
 
         while (true) {
+            if (maxCertificatesToScan is int outerScanLimit && outerScanLimit > 0 && Volatile.Read(ref scanned) >= outerScanLimit) {
+                break;
+            }
+
             string? statusText = null;
             if (status != CertificateStatus.Any) {
                 statusText = status.ToString();
             }
 
             var listResult = await _adminClient
-                .ListWithTotalAsync(pageSize, position, statusText, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
+                .ListWithTotalAsync(pageSize, position, statusText, orgId, requester, expiresBefore: cutoff, expiresAfter: now, cancellationToken)
                 .ConfigureAwait(false);
             var identities = listResult.Items;
             if (total is null && listResult.TotalCount.HasValue && listResult.TotalCount.Value > 0) {
@@ -350,7 +359,19 @@ public sealed class CertificateService : IDisposable {
             var tasks = new List<Task<Certificate?>>(identities.Count);
 
             foreach (var identity in identities) {
+                if (maxCertificatesToScan is int innerScanLimit && innerScanLimit > 0 && Volatile.Read(ref scanned) >= innerScanLimit) {
+                    break;
+                }
+
                 await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                var current = Interlocked.Increment(ref scanned);
+                if (maxCertificatesToScan is int limit && limit > 0 && current > limit) {
+                    // We crossed the scan limit due to concurrency; stop scheduling more work.
+                    semaphore.Release();
+                    break;
+                }
+                progress?.Report(current);
 
                 var idCopy = identity;
                 var task = Task.Run(async () => {
@@ -372,8 +393,6 @@ public sealed class CertificateService : IDisposable {
                             certificate.IsAdminDetailFallback = true;
                             certificate.AdminDetailError = detailError;
                         }
-                var current = Interlocked.Increment(ref processed);
-                progress?.Report(current);
 
                         if (!ShouldIncludeByExpiry(certificate.Expires, cutoff, now)) {
                             return null;
@@ -392,13 +411,10 @@ public sealed class CertificateService : IDisposable {
             foreach (var certificate in pageResults) {
                 if (certificate is not null) {
                     result.Add(certificate);
-                    if (maxCertificatesToScan is int limit && result.Count >= limit) {
-                        break;
-                    }
                 }
             }
 
-            if ((identities.Count < pageSize) || (maxCertificatesToScan is int outerLimit && result.Count >= outerLimit)) {
+            if (identities.Count < pageSize) {
                 break;
             }
 

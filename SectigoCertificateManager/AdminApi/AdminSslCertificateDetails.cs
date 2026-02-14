@@ -1,6 +1,8 @@
 namespace SectigoCertificateManager.AdminApi;
 
+using SectigoCertificateManager.Utilities;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 /// <summary>
 /// Represents detailed SSL certificate information returned by the Admin API.
@@ -64,6 +66,7 @@ public sealed class AdminSslCertificateDetails {
     public string? Revoked { get; set; }
 
     /// <summary>Gets or sets the revocation reason code.</summary>
+    [JsonConverter(typeof(JsonStringOrNumberConverter))]
     public string? ReasonCode { get; set; }
 
     /// <summary>Gets or sets a value indicating whether notifications are suspended.</summary>
