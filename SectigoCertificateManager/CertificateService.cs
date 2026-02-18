@@ -7,6 +7,7 @@ using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -16,6 +17,17 @@ using System.Threading.Tasks;
 /// Provides a unified facade for certificate operations across legacy and Admin APIs.
 /// </summary>
 public sealed class CertificateService : IDisposable {
+    private static readonly Dictionary<string, string> s_usagePurposeByOid = new(StringComparer.OrdinalIgnoreCase) {
+        ["1.3.6.1.5.5.7.3.1"] = "ServerAuth",
+        ["1.3.6.1.5.5.7.3.2"] = "ClientAuth",
+        ["1.3.6.1.5.5.7.3.3"] = "CodeSigning",
+        ["1.3.6.1.5.5.7.3.4"] = "EmailProtection",
+        ["1.3.6.1.5.5.7.3.8"] = "TimeStamping",
+        ["1.3.6.1.5.5.7.3.9"] = "OcspSigning",
+        ["1.3.6.1.4.1.311.10.3.12"] = "DocumentSigning",
+        ["2.5.29.37.0"] = "AnyEku"
+    };
+
     private readonly CertificatesClient? _legacyClient;
     private readonly AdminSslClient? _adminClient;
     private readonly ISectigoClient? _ownedLegacyClient;
@@ -567,13 +579,31 @@ public sealed class CertificateService : IDisposable {
     }
 
     private static Certificate MapIdentity(AdminSslIdentity identity) {
-        return new Certificate {
+        var certificate = new Certificate {
             Id = identity.SslId,
             CommonName = identity.CommonName,
+            OrgId = identity.OrgId,
+            OrderNumber = identity.OrderNumber,
+            Vendor = identity.Vendor,
+            Term = identity.Term,
+            Owner = identity.Owner,
+            Requester = identity.Requester,
             SerialNumber = identity.SerialNumber,
             SubjectAlternativeNames = identity.SubjectAlternativeNames ?? Array.Empty<string>(),
-            ExternalRequester = identity.ExternalRequester
+            ExternalRequester = identity.ExternalRequester,
+            Requested = identity.Requested,
+            Expires = identity.Expires,
+            SuspendNotifications = identity.SuspendNotifications ?? false
         };
+
+        if (identity.Status is string statusText && !string.IsNullOrWhiteSpace(statusText)) {
+            var normalized = statusText.Replace(" ", string.Empty);
+            if (Enum.TryParse<CertificateStatus>(normalized, ignoreCase: true, out var status)) {
+                certificate.Status = status;
+            }
+        }
+
+        return certificate;
     }
 
     private static Certificate MapDetails(AdminSslCertificateDetails details) {
@@ -581,6 +611,7 @@ public sealed class CertificateService : IDisposable {
             Id = details.Id,
             CommonName = details.CommonName,
             OrgId = details.OrgId,
+            OrderNumber = details.OrderNumber,
             BackendCertId = details.BackendCertId ?? string.Empty,
             Vendor = details.Vendor,
             Term = details.Term,
@@ -594,6 +625,11 @@ public sealed class CertificateService : IDisposable {
             KeyAlgorithm = details.KeyAlgorithm,
             KeySize = details.KeySize,
             KeyType = details.KeyType,
+            KeyUsage = NormalizeKeyUsage(details.KeyUsages),
+            ExtendedKeyUsage = NormalizeCommaList(details.ExtendedKeyUsages),
+            UsagePurposes = BuildUsagePurposes(details.UsagePurposes, details.ExtendedKeyUsages),
+            Revoked = details.Revoked,
+            RevocationReasonCode = details.ReasonCode,
             SubjectAlternativeNames = details.SubjectAlternativeNames ?? Array.Empty<string>(),
             SuspendNotifications = details.SuspendNotifications
         };
@@ -763,6 +799,118 @@ public sealed class CertificateService : IDisposable {
         }
 
         return null;
+    }
+
+    private static string? NormalizeKeyUsage(IReadOnlyList<string>? values) {
+        if (values == null || values.Count == 0) {
+            return null;
+        }
+
+        var normalized = new List<string>(values.Count);
+        foreach (string? raw in values) {
+            if (string.IsNullOrWhiteSpace(raw)) {
+                continue;
+            }
+
+            string token = raw.Trim();
+            string compact = token.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase)
+                .Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+
+            string label = compact.ToUpperInvariant() switch {
+                "DIGITALSIGNATURE" => "DigitalSignature",
+                "NONREPUDIATION" => "NonRepudiation",
+                "CONTENTCOMMITMENT" => "NonRepudiation",
+                "KEYENCIPHERMENT" => "KeyEncipherment",
+                "DATAENCIPHERMENT" => "DataEncipherment",
+                "KEYAGREEMENT" => "KeyAgreement",
+                "KEYCERTSIGN" => "CertificateSign",
+                "CERTIFICATESIGN" => "CertificateSign",
+                "CRLSIGN" => "CrlSign",
+                "ENCIPHERONLY" => "EncipherOnly",
+                "DECIPHERONLY" => "DecipherOnly",
+                _ => token
+            };
+
+            if (!normalized.Contains(label, StringComparer.OrdinalIgnoreCase)) {
+                normalized.Add(label);
+            }
+        }
+
+        return normalized.Count == 0 ? null : string.Join(", ", normalized);
+    }
+
+    private static string? NormalizeCommaList(IReadOnlyList<string>? values) {
+        if (values == null || values.Count == 0) {
+            return null;
+        }
+
+        var normalized = new List<string>(values.Count);
+        foreach (string? raw in values) {
+            if (string.IsNullOrWhiteSpace(raw)) {
+                continue;
+            }
+
+            string token = raw.Trim();
+            if (!normalized.Contains(token, StringComparer.OrdinalIgnoreCase)) {
+                normalized.Add(token);
+            }
+        }
+
+        return normalized.Count == 0 ? null : string.Join(", ", normalized);
+    }
+
+    private static string? BuildUsagePurposes(IReadOnlyList<string>? apiPurposes, IReadOnlyList<string>? extendedKeyUsages) {
+        var purposes = new List<string>();
+
+        if (apiPurposes != null) {
+            foreach (string? raw in apiPurposes) {
+                if (string.IsNullOrWhiteSpace(raw)) {
+                    continue;
+                }
+
+                string token = raw.Trim().Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase);
+                if (!purposes.Contains(token, StringComparer.OrdinalIgnoreCase)) {
+                    purposes.Add(token);
+                }
+            }
+        }
+
+        if (extendedKeyUsages != null) {
+            foreach (string? raw in extendedKeyUsages) {
+                if (string.IsNullOrWhiteSpace(raw)) {
+                    continue;
+                }
+
+                if (TryMapPurposeFromEku(raw.Trim(), out string purpose) &&
+                    !purposes.Contains(purpose, StringComparer.OrdinalIgnoreCase)) {
+                    purposes.Add(purpose);
+                }
+            }
+        }
+
+        return purposes.Count == 0 ? null : string.Join(", ", purposes);
+    }
+
+    private static bool TryMapPurposeFromEku(string ekuValue, out string purpose) {
+        if (s_usagePurposeByOid.TryGetValue(ekuValue, out purpose!)) {
+            return true;
+        }
+
+        string normalized = ekuValue.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        purpose = normalized.ToUpperInvariant() switch {
+            "SERVERAUTHENTICATION" => "ServerAuth",
+            "CLIENTAUTHENTICATION" => "ClientAuth",
+            "CODESIGNING" => "CodeSigning",
+            "EMAILPROTECTION" => "EmailProtection",
+            "TIMESTAMPING" => "TimeStamping",
+            "OCSPSIGNING" => "OcspSigning",
+            "DOCUMENTSIGNING" => "DocumentSigning",
+            "ANYEXTENDEDKEYUSAGE" => "AnyEku",
+            _ => string.Empty
+        };
+
+        return !string.IsNullOrEmpty(purpose);
     }
 
     private static RevocationReason MapRevocationReason(string? code) {

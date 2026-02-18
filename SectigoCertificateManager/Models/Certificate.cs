@@ -85,6 +85,21 @@ public sealed class Certificate {
     /// <summary>Gets or sets the key type.</summary>
     public string? KeyType { get; set; }
 
+    /// <summary>Gets or sets normalized key usage values.</summary>
+    public string? KeyUsage { get; set; }
+
+    /// <summary>Gets or sets normalized extended key usage values.</summary>
+    public string? ExtendedKeyUsage { get; set; }
+
+    /// <summary>Gets or sets normalized usage purposes derived from EKU OIDs.</summary>
+    public string? UsagePurposes { get; set; }
+
+    /// <summary>Gets or sets the revocation timestamp text returned by API.</summary>
+    public string? Revoked { get; set; }
+
+    /// <summary>Gets or sets the revocation reason code returned by API.</summary>
+    public string? RevocationReasonCode { get; set; }
+
     /// <summary>Gets or sets subject alternative names.</summary>
     public IReadOnlyList<string> SubjectAlternativeNames { get; set; } = [];
 
@@ -100,21 +115,20 @@ public sealed class Certificate {
             throw new ArgumentException("Value cannot be null or empty.", nameof(data));
         }
 
-        byte[] bytes;
-        try {
-            bytes = Convert.FromBase64String(data);
-        } catch (FormatException) {
-            throw new ValidationException(new ApiError {
-                Code = ApiErrorCode.UnknownError,
-                Description = "Certificate data is not valid Base64."
-            });
+        string input = data.Trim();
+
+        if (TryCreateFromPem(input, out var pemCertificate) && pemCertificate is not null) {
+            return pemCertificate;
         }
 
-        // X509Certificate2 constructor is obsolete beginning with .NET 9.0,
-        // but remains necessary for earlier target frameworks.
-#pragma warning disable SYSLIB0057
-        return new X509Certificate2(bytes);
-#pragma warning restore SYSLIB0057
+        if (TryCreateFromBase64(input, out var base64Certificate) && base64Certificate is not null) {
+            return base64Certificate;
+        }
+
+        throw new ValidationException(new ApiError {
+            Code = ApiErrorCode.UnknownError,
+            Description = "Certificate data is not valid Base64."
+        });
     }
 
     /// <summary>
@@ -129,15 +143,14 @@ public sealed class Certificate {
             stream.Seek(0, SeekOrigin.Begin);
         }
 
-        using var reader = new StreamReader(stream, Encoding.ASCII, detectEncodingFromByteOrderMarks: false, bufferSize: 1024, leaveOpen: true);
-        var rented = ArrayPool<char>.Shared.Rent(4096);
-        var vsb = new ValueStringBuilder(stackalloc char[256]);
+        var rented = ArrayPool<byte>.Shared.Rent(8192);
+        using var buffer = new MemoryStream();
         long read = 0;
         long total = stream.CanSeek ? stream.Length : -1;
 
         int count;
-        while ((count = reader.Read(rented, 0, rented.Length)) > 0) {
-            vsb.Append(rented.AsSpan(0, count));
+        while ((count = stream.Read(rented, 0, rented.Length)) > 0) {
+            buffer.Write(rented, 0, count);
             read += count;
             if (progress is not null && total > 0) {
                 progress.Report((double)read / total);
@@ -147,9 +160,152 @@ public sealed class Certificate {
         if (progress is not null && total > 0) {
             progress.Report(1d);
         }
-        var result = FromBase64(vsb.ToString());
+
+        ArrayPool<byte>.Shared.Return(rented);
+
+        byte[] payload = buffer.ToArray();
+
+        if (TryCreateFromRawBytes(payload, out var rawCertificate) && rawCertificate is not null) {
+            return rawCertificate;
+        }
+
+        var text = Encoding.UTF8.GetString(payload);
+        return FromBase64(text);
+    }
+
+    private static bool TryCreateFromPem(string input, out X509Certificate2? certificate) {
+        certificate = null;
+        const string certBeginMarker = "-----BEGIN CERTIFICATE-----";
+        const string certEndMarker = "-----END CERTIFICATE-----";
+
+        int begin = input.IndexOf(certBeginMarker, StringComparison.OrdinalIgnoreCase);
+        if (begin < 0) {
+            // Some Sectigo collect responses return a PKCS#7 chain instead of a single certificate PEM.
+            const string pkcs7BeginMarker = "-----BEGIN PKCS7-----";
+            const string pkcs7EndMarker = "-----END PKCS7-----";
+            int pkcs7Begin = input.IndexOf(pkcs7BeginMarker, StringComparison.OrdinalIgnoreCase);
+            if (pkcs7Begin < 0) {
+                return false;
+            }
+
+            int pkcs7ContentStart = pkcs7Begin + pkcs7BeginMarker.Length;
+            int pkcs7End = input.IndexOf(pkcs7EndMarker, pkcs7ContentStart, StringComparison.OrdinalIgnoreCase);
+            if (pkcs7End < 0) {
+                return false;
+            }
+
+            string pkcs7Base64 = input.Substring(pkcs7ContentStart, pkcs7End - pkcs7ContentStart);
+            string normalizedPkcs7 = RemoveWhitespace(pkcs7Base64);
+            if (string.IsNullOrWhiteSpace(normalizedPkcs7)) {
+                return false;
+            }
+
+            try {
+                var pkcs7Bytes = Convert.FromBase64String(normalizedPkcs7);
+                return TryCreateFromPkcs7(pkcs7Bytes, out certificate);
+            }
+            catch (FormatException) {
+                return false;
+            }
+        }
+
+        int contentStart = begin + certBeginMarker.Length;
+        int end = input.IndexOf(certEndMarker, contentStart, StringComparison.OrdinalIgnoreCase);
+        if (end < 0) {
+            return false;
+        }
+
+        string base64 = input.Substring(contentStart, end - contentStart);
+        return TryCreateFromBase64(base64, out certificate);
+    }
+
+    private static bool TryCreateFromBase64(string input, out X509Certificate2? certificate) {
+        certificate = null;
+        string normalized = RemoveWhitespace(input);
+        if (string.IsNullOrWhiteSpace(normalized)) {
+            return false;
+        }
+
+        byte[] bytes;
+        try {
+            bytes = Convert.FromBase64String(normalized);
+        }
+        catch (FormatException) {
+            return false;
+        }
+
+        return TryCreateFromRawBytes(bytes, out certificate);
+    }
+
+    private static bool TryCreateFromRawBytes(byte[] payload, out X509Certificate2? certificate) {
+        certificate = null;
+        if (payload.Length == 0) {
+            return false;
+        }
+
+        try {
+            // X509Certificate2 constructor is obsolete beginning with .NET 9.0,
+            // but remains necessary for earlier target frameworks.
+#pragma warning disable SYSLIB0057
+            certificate = new X509Certificate2(payload);
+#pragma warning restore SYSLIB0057
+            return true;
+        }
+        catch {
+            return TryCreateFromPkcs7(payload, out certificate);
+        }
+    }
+
+    private static bool TryCreateFromPkcs7(byte[] payload, out X509Certificate2? certificate) {
+        certificate = null;
+        if (payload.Length == 0) {
+            return false;
+        }
+
+        try {
+            var collection = new X509Certificate2Collection();
+            collection.Import(payload);
+            if (collection.Count == 0) {
+                return false;
+            }
+
+            foreach (var candidate in collection) {
+                var basicConstraints = candidate.Extensions.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
+                if (basicConstraints is null || !basicConstraints.CertificateAuthority) {
+                    certificate = candidate;
+                    return true;
+                }
+            }
+
+            foreach (var candidate in collection) {
+                if (!candidate.Issuer.Equals(candidate.Subject, StringComparison.OrdinalIgnoreCase)) {
+                    certificate = candidate;
+                    return true;
+                }
+            }
+
+            certificate = collection[0];
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
+
+    private static string RemoveWhitespace(string input) {
+        if (string.IsNullOrWhiteSpace(input)) {
+            return string.Empty;
+        }
+
+        var vsb = new ValueStringBuilder(stackalloc char[256]);
+        foreach (char ch in input) {
+            if (!char.IsWhiteSpace(ch)) {
+                vsb.Append(ch);
+            }
+        }
+
+        var result = vsb.ToString();
         vsb.Dispose();
-        ArrayPool<char>.Shared.Return(rented);
         return result;
     }
 }

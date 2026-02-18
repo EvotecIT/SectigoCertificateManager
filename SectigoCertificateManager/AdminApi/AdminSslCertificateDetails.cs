@@ -20,6 +20,9 @@ public sealed class AdminSslCertificateDetails {
     /// <summary>Gets or sets the certificate status.</summary>
     public string? Status { get; set; }
 
+    /// <summary>Gets or sets the legacy order number for this certificate.</summary>
+    public long OrderNumber { get; set; }
+
     /// <summary>Gets or sets the backend certificate identifier.</summary>
     public string? BackendCertId { get; set; }
 
@@ -58,6 +61,22 @@ public sealed class AdminSslCertificateDetails {
 
     /// <summary>Gets or sets the key type description.</summary>
     public string? KeyType { get; set; }
+
+    /// <summary>
+    /// Gets or sets key usage flags returned by Admin API details (for example:
+    /// <c>Digital Signature</c>, <c>Key Encipherment</c>).
+    /// </summary>
+    public IReadOnlyList<string>? KeyUsages { get; set; }
+
+    /// <summary>
+    /// Gets or sets extended key usages returned by Admin API details (friendly names or OIDs).
+    /// </summary>
+    public IReadOnlyList<string>? ExtendedKeyUsages { get; set; }
+
+    /// <summary>
+    /// Gets or sets usage purpose labels when returned by the Admin API details payload.
+    /// </summary>
+    public IReadOnlyList<string>? UsagePurposes { get; set; }
 
     /// <summary>Gets or sets subject alternative names.</summary>
     public IReadOnlyList<string>? SubjectAlternativeNames { get; set; }
