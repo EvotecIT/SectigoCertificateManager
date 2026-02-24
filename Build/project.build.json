@@ -3,7 +3,7 @@
   "RootPath": "..",
   "ExpectedVersion": null,
   "ExpectedVersionMap": {
-    "SectigoCertificateManager": "0.1.X"
+    "SectigoCertificateManager": "0.X.0"
   },
   "ExpectedVersionMapAsInclude": true,
   "ExpectedVersionMapUseWildcards": false,
