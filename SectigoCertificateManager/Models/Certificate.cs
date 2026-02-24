@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Buffers;
+using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using SectigoCertificateManager.Utilities;
@@ -144,33 +145,36 @@ public sealed class Certificate {
         }
 
         var rented = ArrayPool<byte>.Shared.Rent(8192);
-        using var buffer = new MemoryStream();
-        long read = 0;
-        long total = stream.CanSeek ? stream.Length : -1;
+        try {
+            using var buffer = new MemoryStream();
+            long read = 0;
+            long total = stream.CanSeek ? stream.Length : -1;
 
-        int count;
-        while ((count = stream.Read(rented, 0, rented.Length)) > 0) {
-            buffer.Write(rented, 0, count);
-            read += count;
-            if (progress is not null && total > 0) {
-                progress.Report((double)read / total);
+            int count;
+            while ((count = stream.Read(rented, 0, rented.Length)) > 0) {
+                buffer.Write(rented, 0, count);
+                read += count;
+                if (progress is not null && total > 0) {
+                    progress.Report((double)read / total);
+                }
             }
+
+            if (progress is not null && total > 0) {
+                progress.Report(1d);
+            }
+
+            byte[] payload = buffer.ToArray();
+
+            if (TryCreateFromRawBytes(payload, out var rawCertificate) && rawCertificate is not null) {
+                return rawCertificate;
+            }
+
+            var text = Encoding.UTF8.GetString(payload);
+            return FromBase64(text);
         }
-
-        if (progress is not null && total > 0) {
-            progress.Report(1d);
+        finally {
+            ArrayPool<byte>.Shared.Return(rented);
         }
-
-        ArrayPool<byte>.Shared.Return(rented);
-
-        byte[] payload = buffer.ToArray();
-
-        if (TryCreateFromRawBytes(payload, out var rawCertificate) && rawCertificate is not null) {
-            return rawCertificate;
-        }
-
-        var text = Encoding.UTF8.GetString(payload);
-        return FromBase64(text);
     }
 
     private static bool TryCreateFromPem(string input, out X509Certificate2? certificate) {
@@ -244,11 +248,11 @@ public sealed class Certificate {
         }
 
         try {
-            // X509Certificate2 constructor is obsolete beginning with .NET 9.0,
-            // but remains necessary for earlier target frameworks.
-#pragma warning disable SYSLIB0057
+            #if NET9_0_OR_GREATER
+            certificate = X509CertificateLoader.LoadCertificate(payload);
+            #else
             certificate = new X509Certificate2(payload);
-#pragma warning restore SYSLIB0057
+            #endif
             return true;
         }
         catch {
@@ -263,8 +267,9 @@ public sealed class Certificate {
         }
 
         try {
-            var collection = new X509Certificate2Collection();
-            collection.Import(payload);
+            var cms = new SignedCms();
+            cms.Decode(payload);
+            X509Certificate2Collection collection = cms.Certificates;
             if (collection.Count == 0) {
                 return false;
             }

@@ -801,6 +801,10 @@ public sealed class CertificateService : IDisposable {
         return null;
     }
 
+    private static string RemoveUsageSeparators(string value) {
+        return value.Replace(" ", string.Empty).Replace("-", string.Empty);
+    }
+
     private static string? NormalizeKeyUsage(IReadOnlyList<string>? values) {
         if (values == null || values.Count == 0) {
             return null;
@@ -813,8 +817,7 @@ public sealed class CertificateService : IDisposable {
             }
 
             string token = raw.Trim();
-            string compact = token.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase)
-                .Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+            string compact = RemoveUsageSeparators(token);
 
             string label = compact.ToUpperInvariant() switch {
                 "DIGITALSIGNATURE" => "DigitalSignature",
@@ -868,7 +871,7 @@ public sealed class CertificateService : IDisposable {
                     continue;
                 }
 
-                string token = raw.Trim().Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase);
+                string token = RemoveUsageSeparators(raw.Trim());
                 if (!purposes.Contains(token, StringComparer.OrdinalIgnoreCase)) {
                     purposes.Add(token);
                 }
@@ -896,8 +899,7 @@ public sealed class CertificateService : IDisposable {
             return true;
         }
 
-        string normalized = ekuValue.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase)
-            .Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        string normalized = RemoveUsageSeparators(ekuValue);
         purpose = normalized.ToUpperInvariant() switch {
             "SERVERAUTHENTICATION" => "ServerAuth",
             "CLIENTAUTHENTICATION" => "ClientAuth",
@@ -918,7 +920,7 @@ public sealed class CertificateService : IDisposable {
             return RevocationReason.Unspecified;
         }
 
-        var value = code?.Trim() ?? string.Empty;
+        var value = code!.Trim();
         return value switch {
             "0" => RevocationReason.Unspecified,
             "1" => RevocationReason.KeyCompromise,
