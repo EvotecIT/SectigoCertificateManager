@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Buffers;
+using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -254,8 +255,7 @@ public sealed class Certificate {
             certificate = new X509Certificate2(payload);
             #endif
             return true;
-        }
-        catch {
+        } catch (Exception ex) when (ex is CryptographicException || ex is ArgumentException) {
             return TryCreateFromPkcs7(payload, out certificate);
         }
     }

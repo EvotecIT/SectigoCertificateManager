@@ -9,9 +9,14 @@ public static class RevocationReasons {
     private static readonly IReadOnlyDictionary<RevocationReason, string> s_descriptions = new Dictionary<RevocationReason, string> {
         [RevocationReason.Unspecified] = "unspecified",
         [RevocationReason.KeyCompromise] = "keyCompromise",
+        [RevocationReason.CaCompromise] = "cACompromise",
         [RevocationReason.AffiliationChanged] = "affiliationChanged",
         [RevocationReason.Superseded] = "superseded",
-        [RevocationReason.CessationOfOperation] = "cessationOfOperation"
+        [RevocationReason.CessationOfOperation] = "cessationOfOperation",
+        [RevocationReason.CertificateHold] = "certificateHold",
+        [RevocationReason.RemoveFromCrl] = "removeFromCRL",
+        [RevocationReason.PrivilegeWithdrawn] = "privilegeWithdrawn",
+        [RevocationReason.AaCompromise] = "aACompromise"
     };
 
     /// <summary>Gets the description associated with a revocation reason code.</summary>
