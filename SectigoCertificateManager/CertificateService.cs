@@ -7,6 +7,7 @@ using SectigoCertificateManager.Requests;
 using SectigoCertificateManager.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -16,6 +17,17 @@ using System.Threading.Tasks;
 /// Provides a unified facade for certificate operations across legacy and Admin APIs.
 /// </summary>
 public sealed class CertificateService : IDisposable {
+    private static readonly Dictionary<string, string> s_usagePurposeByOid = new(StringComparer.OrdinalIgnoreCase) {
+        ["1.3.6.1.5.5.7.3.1"] = "ServerAuth",
+        ["1.3.6.1.5.5.7.3.2"] = "ClientAuth",
+        ["1.3.6.1.5.5.7.3.3"] = "CodeSigning",
+        ["1.3.6.1.5.5.7.3.4"] = "EmailProtection",
+        ["1.3.6.1.5.5.7.3.8"] = "TimeStamping",
+        ["1.3.6.1.5.5.7.3.9"] = "OcspSigning",
+        ["1.3.6.1.4.1.311.10.3.12"] = "DocumentSigning",
+        ["2.5.29.37.0"] = "AnyEku"
+    };
+
     private readonly CertificatesClient? _legacyClient;
     private readonly AdminSslClient? _adminClient;
     private readonly ISectigoClient? _ownedLegacyClient;
@@ -286,7 +298,8 @@ public sealed class CertificateService : IDisposable {
     /// <param name="requester">Optional Admin requester filter.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <param name="progress">
-    /// Optional progress reporter that receives the total number of certificates processed so far.
+    /// Optional progress reporter that receives the total number of certificate detail fetches
+    /// completed so far.
     /// </param>
     /// <param name="maxCertificatesToScan">
     /// Optional maximum number of certificates to scan. When specified, the method stops scanning
@@ -320,21 +333,32 @@ public sealed class CertificateService : IDisposable {
 
         var result = new List<Certificate>();
         var position = 0;
-        const int pageSize = 200;
-        var processed = 0;
+        var pageSize = 200;
+        if (maxCertificatesToScan is int configuredScanLimit && configuredScanLimit > 0) {
+            pageSize = Math.Min(pageSize, configuredScanLimit);
+        }
+
+        // Number of certificates (identities) scheduled for detail retrieval.
+        var scanned = 0;
+        // Number of certificate detail fetches completed.
+        var completed = 0;
         int? total = null;
 
         // modest parallelism to keep API load reasonable
         const int maxConcurrency = 4;
 
         while (true) {
+            if (maxCertificatesToScan is int outerScanLimit && outerScanLimit > 0 && scanned >= outerScanLimit) {
+                break;
+            }
+
             string? statusText = null;
             if (status != CertificateStatus.Any) {
                 statusText = status.ToString();
             }
 
             var listResult = await _adminClient
-                .ListWithTotalAsync(pageSize, position, statusText, orgId, requester, expiresBefore: null, expiresAfter: null, cancellationToken)
+                .ListWithTotalAsync(pageSize, position, statusText, orgId, requester, expiresBefore: cutoff, expiresAfter: now, cancellationToken)
                 .ConfigureAwait(false);
             var identities = listResult.Items;
             if (total is null && listResult.TotalCount.HasValue && listResult.TotalCount.Value > 0) {
@@ -350,7 +374,12 @@ public sealed class CertificateService : IDisposable {
             var tasks = new List<Task<Certificate?>>(identities.Count);
 
             foreach (var identity in identities) {
+                if (maxCertificatesToScan is int scanLimit && scanLimit > 0 && scanned >= scanLimit) {
+                    break;
+                }
+
                 await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                scanned++;
 
                 var idCopy = identity;
                 var task = Task.Run(async () => {
@@ -372,8 +401,6 @@ public sealed class CertificateService : IDisposable {
                             certificate.IsAdminDetailFallback = true;
                             certificate.AdminDetailError = detailError;
                         }
-                var current = Interlocked.Increment(ref processed);
-                progress?.Report(current);
 
                         if (!ShouldIncludeByExpiry(certificate.Expires, cutoff, now)) {
                             return null;
@@ -381,6 +408,8 @@ public sealed class CertificateService : IDisposable {
 
                         return (Certificate?)certificate;
                     } finally {
+                        int current = Interlocked.Increment(ref completed);
+                        progress?.Report(current);
                         semaphore.Release();
                     }
                 }, cancellationToken);
@@ -392,13 +421,10 @@ public sealed class CertificateService : IDisposable {
             foreach (var certificate in pageResults) {
                 if (certificate is not null) {
                     result.Add(certificate);
-                    if (maxCertificatesToScan is int limit && result.Count >= limit) {
-                        break;
-                    }
                 }
             }
 
-            if ((identities.Count < pageSize) || (maxCertificatesToScan is int outerLimit && result.Count >= outerLimit)) {
+            if (identities.Count < pageSize) {
                 break;
             }
 
@@ -551,13 +577,25 @@ public sealed class CertificateService : IDisposable {
     }
 
     private static Certificate MapIdentity(AdminSslIdentity identity) {
-        return new Certificate {
+        var certificate = new Certificate {
             Id = identity.SslId,
             CommonName = identity.CommonName,
+            OrgId = identity.OrgId,
+            OrderNumber = identity.OrderNumber,
+            Vendor = identity.Vendor,
+            Term = identity.Term,
+            Owner = identity.Owner,
+            Requester = identity.Requester,
             SerialNumber = identity.SerialNumber,
             SubjectAlternativeNames = identity.SubjectAlternativeNames ?? Array.Empty<string>(),
-            ExternalRequester = identity.ExternalRequester
+            ExternalRequester = identity.ExternalRequester,
+            Requested = identity.Requested,
+            Expires = identity.Expires,
+            SuspendNotifications = identity.SuspendNotifications ?? false,
+            Status = ParseStatus(identity.Status)
         };
+
+        return certificate;
     }
 
     private static Certificate MapDetails(AdminSslCertificateDetails details) {
@@ -565,6 +603,7 @@ public sealed class CertificateService : IDisposable {
             Id = details.Id,
             CommonName = details.CommonName,
             OrgId = details.OrgId,
+            OrderNumber = details.OrderNumber,
             BackendCertId = details.BackendCertId ?? string.Empty,
             Vendor = details.Vendor,
             Term = details.Term,
@@ -578,16 +617,15 @@ public sealed class CertificateService : IDisposable {
             KeyAlgorithm = details.KeyAlgorithm,
             KeySize = details.KeySize,
             KeyType = details.KeyType,
+            KeyUsage = NormalizeKeyUsage(details.KeyUsages),
+            ExtendedKeyUsage = NormalizeCommaList(details.ExtendedKeyUsages),
+            UsagePurposes = BuildUsagePurposes(details.UsagePurposes, details.ExtendedKeyUsages),
+            Revoked = details.Revoked,
+            RevocationReasonCode = details.ReasonCode,
             SubjectAlternativeNames = details.SubjectAlternativeNames ?? Array.Empty<string>(),
-            SuspendNotifications = details.SuspendNotifications
+            SuspendNotifications = details.SuspendNotifications,
+            Status = ParseStatus(details.Status)
         };
-
-        if (details.Status is string statusText && !string.IsNullOrWhiteSpace(statusText)) {
-            var normalized = statusText.Replace(" ", string.Empty);
-            if (Enum.TryParse<CertificateStatus>(normalized, ignoreCase: true, out var status)) {
-                certificate.Status = status;
-            }
-        }
 
         return certificate;
     }
@@ -749,18 +787,168 @@ public sealed class CertificateService : IDisposable {
         return null;
     }
 
+    private static string RemoveUsageSeparators(string value) {
+        // Normalize common spelling variations (for example, "Non-Repudiation" and "Non Repudiation")
+        // so they map to the same canonical token.
+        return value.Replace(" ", string.Empty).Replace("-", string.Empty);
+    }
+
+    private static string? NormalizeKeyUsage(IReadOnlyList<string>? values) {
+        if (values == null || values.Count == 0) {
+            return null;
+        }
+
+        var normalized = new List<string>(values.Count);
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (string? raw in values) {
+            if (string.IsNullOrWhiteSpace(raw)) {
+                continue;
+            }
+
+            string token = raw.Trim();
+            string compact = RemoveUsageSeparators(token);
+
+            string label = compact.ToUpperInvariant() switch {
+                "DIGITALSIGNATURE" => "DigitalSignature",
+                "NONREPUDIATION" => "NonRepudiation",
+                "CONTENTCOMMITMENT" => "NonRepudiation",
+                "KEYENCIPHERMENT" => "KeyEncipherment",
+                "DATAENCIPHERMENT" => "DataEncipherment",
+                "KEYAGREEMENT" => "KeyAgreement",
+                "KEYCERTSIGN" => "CertificateSign",
+                "CERTIFICATESIGN" => "CertificateSign",
+                "CRLSIGN" => "CrlSign",
+                "ENCIPHERONLY" => "EncipherOnly",
+                "DECIPHERONLY" => "DecipherOnly",
+                _ => token
+            };
+
+            if (seen.Add(label)) {
+                normalized.Add(label);
+            }
+        }
+
+        return normalized.Count == 0 ? null : string.Join(", ", normalized);
+    }
+
+    private static string? NormalizeCommaList(IReadOnlyList<string>? values) {
+        if (values == null || values.Count == 0) {
+            return null;
+        }
+
+        var normalized = new List<string>(values.Count);
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (string? raw in values) {
+            if (string.IsNullOrWhiteSpace(raw)) {
+                continue;
+            }
+
+            string token = raw.Trim();
+            if (seen.Add(token)) {
+                normalized.Add(token);
+            }
+        }
+
+        return normalized.Count == 0 ? null : string.Join(", ", normalized);
+    }
+
+    private static string? BuildUsagePurposes(IReadOnlyList<string>? apiPurposes, IReadOnlyList<string>? extendedKeyUsages) {
+        var purposes = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        static void AddPurpose(List<string> output, HashSet<string> seenSet, string purpose) {
+            if (seenSet.Add(purpose)) {
+                output.Add(purpose);
+            }
+        }
+
+        if (apiPurposes != null) {
+            foreach (string? raw in apiPurposes) {
+                if (string.IsNullOrWhiteSpace(raw)) {
+                    continue;
+                }
+
+                string token = raw.Trim();
+                if (TryMapPurposeFromEku(token, out string purpose)) {
+                    AddPurpose(purposes, seen, purpose);
+                } else {
+                    AddPurpose(purposes, seen, token);
+                }
+            }
+        }
+
+        if (extendedKeyUsages != null) {
+            foreach (string? raw in extendedKeyUsages) {
+                if (string.IsNullOrWhiteSpace(raw)) {
+                    continue;
+                }
+
+                if (TryMapPurposeFromEku(raw.Trim(), out string purpose)) {
+                    AddPurpose(purposes, seen, purpose);
+                }
+            }
+        }
+
+        return purposes.Count == 0 ? null : string.Join(", ", purposes);
+    }
+
+    private static bool TryMapPurposeFromEku(string ekuValue, out string purpose) {
+        if (s_usagePurposeByOid.TryGetValue(ekuValue, out purpose!)) {
+            return true;
+        }
+
+        string normalized = RemoveUsageSeparators(ekuValue);
+        purpose = normalized.ToUpperInvariant() switch {
+            "SERVERAUTHENTICATION" => "ServerAuth",
+            "CLIENTAUTHENTICATION" => "ClientAuth",
+            "CODESIGNING" => "CodeSigning",
+            "EMAILPROTECTION" => "EmailProtection",
+            "TIMESTAMPING" => "TimeStamping",
+            "OCSPSIGNING" => "OcspSigning",
+            "DOCUMENTSIGNING" => "DocumentSigning",
+            "ANYEXTENDEDKEYUSAGE" => "AnyEku",
+            _ => string.Empty
+        };
+
+        return !string.IsNullOrEmpty(purpose);
+    }
+
+    private static CertificateStatus ParseStatus(string? statusText) {
+        if (statusText == null) {
+            return CertificateStatus.Any;
+        }
+
+        if (statusText.Trim().Length == 0) {
+            return CertificateStatus.Any;
+        }
+
+        string normalized = statusText.Replace(" ", string.Empty);
+        return Enum.TryParse<CertificateStatus>(normalized, ignoreCase: true, out var status)
+            ? status
+            : CertificateStatus.Any;
+    }
+
     private static RevocationReason MapRevocationReason(string? code) {
-        if (string.IsNullOrWhiteSpace(code)) {
+        if (code == null) {
             return RevocationReason.Unspecified;
         }
 
-        var value = code?.Trim() ?? string.Empty;
+        var value = code.Trim();
+        if (value.Length == 0) {
+            return RevocationReason.Unspecified;
+        }
+
         return value switch {
             "0" => RevocationReason.Unspecified,
             "1" => RevocationReason.KeyCompromise,
+            "2" => RevocationReason.CaCompromise,
             "3" => RevocationReason.AffiliationChanged,
             "4" => RevocationReason.Superseded,
             "5" => RevocationReason.CessationOfOperation,
+            "6" => RevocationReason.CertificateHold,
+            "8" => RevocationReason.RemoveFromCrl,
+            "9" => RevocationReason.PrivilegeWithdrawn,
+            "10" => RevocationReason.AaCompromise,
             _ => RevocationReason.Unspecified
         };
     }
@@ -779,9 +967,14 @@ public sealed class CertificateService : IDisposable {
     private static string MapRevocationReasonToAdminCode(RevocationReason reason) {
         return reason switch {
             RevocationReason.KeyCompromise => "1",
+            RevocationReason.CaCompromise => "2",
             RevocationReason.AffiliationChanged => "3",
             RevocationReason.Superseded => "4",
             RevocationReason.CessationOfOperation => "5",
+            RevocationReason.CertificateHold => "6",
+            RevocationReason.RemoveFromCrl => "8",
+            RevocationReason.PrivilegeWithdrawn => "9",
+            RevocationReason.AaCompromise => "10",
             _ => "0"
         };
     }
