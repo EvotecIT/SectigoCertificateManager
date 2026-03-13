@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -91,7 +92,39 @@ public sealed class ApiErrorHandlerTests {
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
         Assert.Contains("StatusCode: 503", ex.Message);
         Assert.Contains("upstream connect error", ex.Message);
+        Assert.Equal((ApiErrorCode)(int)HttpStatusCode.ServiceUnavailable, ex.ErrorCode);
         Assert.DoesNotContain("Failed to parse ApiError", ex.Message);
+    }
+
+    [Fact]
+    public async Task EmptyJsonContentTypeBody_DoesNotAddJsonParseNoise() {
+        var content = new StringContent(string.Empty);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) {
+            Content = content
+        };
+
+        using var client = CreateClient(response);
+
+        var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
+        Assert.Contains("StatusCode: 503", ex.Message);
+        Assert.DoesNotContain("Failed to parse ApiError", ex.Message);
+    }
+
+    [Fact]
+    public async Task JsonContentTypeBody_StillParsesApiError() {
+        var content = JsonContent.Create(new ApiError {
+            Code = ApiErrorCode.UnknownUser,
+            Description = "Unknown user"
+        });
+        var response = new HttpResponseMessage(HttpStatusCode.Unauthorized) {
+            Content = content
+        };
+
+        using var client = CreateClient(response);
+
+        var ex = await Assert.ThrowsAsync<AuthenticationException>(() => client.GetAsync("v1/test"));
+        Assert.Equal(ApiErrorCode.UnknownUser, ex.ErrorCode);
     }
 
     [Fact]

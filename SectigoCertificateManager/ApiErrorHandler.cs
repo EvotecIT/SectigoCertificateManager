@@ -76,17 +76,14 @@ internal static class ApiErrorHandler {
     }
 
     private static bool ShouldAttemptJsonParse(HttpResponseMessage response, string body) {
-        string? mediaType = response.Content.Headers.ContentType?.MediaType;
-        if (!string.IsNullOrWhiteSpace(mediaType)) {
-            string normalizedMediaType = mediaType!;
-            if (normalizedMediaType.Contains("json", StringComparison.OrdinalIgnoreCase) ||
-                normalizedMediaType.EndsWith("+json", StringComparison.OrdinalIgnoreCase)) {
-                return true;
-            }
-        }
-
         if (string.IsNullOrWhiteSpace(body)) {
             return false;
+        }
+
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        if (!string.IsNullOrWhiteSpace(mediaType) &&
+            mediaType.Contains("json", StringComparison.OrdinalIgnoreCase)) {
+            return true;
         }
 
         ReadOnlySpan<char> trimmed = body.AsSpan().TrimStart();
