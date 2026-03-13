@@ -36,18 +36,20 @@ internal static class ApiErrorHandler {
             : body;
 
         ApiError? error = null;
-        try {
-            error = JsonSerializer.Deserialize<ApiError>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        } catch (Exception ex) when (ex is JsonException or NotSupportedException) {
-            var parseMessage = $"StatusCode: {(int)response.StatusCode} ({response.StatusCode})";
-            if (!string.IsNullOrWhiteSpace(snippet)) {
-                parseMessage += $", Body: {snippet}";
+        if (ShouldAttemptJsonParse(response, body)) {
+            try {
+                error = JsonSerializer.Deserialize<ApiError>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            } catch (Exception ex) when (ex is JsonException or NotSupportedException) {
+                var parseMessage = $"StatusCode: {(int)response.StatusCode} ({response.StatusCode})";
+                if (!string.IsNullOrWhiteSpace(snippet)) {
+                    parseMessage += $", Body: {snippet}";
+                }
+                parseMessage += $", Error: Failed to parse ApiError from response: {ex.Message}";
+                throw new ApiException(new ApiError {
+                    Code = ApiErrorCode.UnknownError,
+                    Description = parseMessage
+                });
             }
-            parseMessage += $", Error: Failed to parse ApiError from response: {ex.Message}";
-            throw new ApiException(new ApiError {
-                Code = ApiErrorCode.UnknownError,
-                Description = parseMessage
-            });
         }
 
         error ??= new ApiError {
@@ -71,5 +73,20 @@ internal static class ApiErrorHandler {
             HttpStatusCode.BadRequest => new ValidationException(error),
             _ => new ApiException(error)
         };
+    }
+
+    private static bool ShouldAttemptJsonParse(HttpResponseMessage response, string body) {
+        if (string.IsNullOrWhiteSpace(body)) {
+            return false;
+        }
+
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        if (!string.IsNullOrWhiteSpace(mediaType) &&
+            mediaType.Contains("json", StringComparison.OrdinalIgnoreCase)) {
+            return true;
+        }
+
+        ReadOnlySpan<char> trimmed = body.AsSpan().TrimStart();
+        return !trimmed.IsEmpty && (trimmed[0] == '{' || trimmed[0] == '[');
     }
 }

@@ -2,6 +2,7 @@ using SectigoCertificateManager;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -67,15 +68,63 @@ public sealed class ApiErrorHandlerTests {
     }
 
     [Fact]
-    public async Task ThrowsApiException_WhenErrorBodyInvalid() {
+    public async Task ThrowsValidationException_WhenBadRequestBodyIsPlainText() {
         var response = new HttpResponseMessage(HttpStatusCode.BadRequest) {
             Content = new StringContent("oops")
         };
 
         using var client = CreateClient(response);
 
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => client.GetAsync("v1/test"));
+        Assert.Equal((ApiErrorCode)(int)HttpStatusCode.BadRequest, ex.ErrorCode);
+        Assert.Contains("Body: oops", ex.Message);
+        Assert.DoesNotContain("Failed to parse ApiError", ex.Message);
+    }
+
+    [Fact]
+    public async Task PlainTextErrorBody_DoesNotAddJsonParseNoise() {
+        var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) {
+            Content = new StringContent("upstream connect error or disconnect/reset before headers. reset reason: connection termination")
+        };
+
+        using var client = CreateClient(response);
+
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
-        Assert.Equal(ApiErrorCode.UnknownError, ex.ErrorCode);
+        Assert.Contains("StatusCode: 503", ex.Message);
+        Assert.Contains("upstream connect error", ex.Message);
+        Assert.Equal((ApiErrorCode)(int)HttpStatusCode.ServiceUnavailable, ex.ErrorCode);
+        Assert.DoesNotContain("Failed to parse ApiError", ex.Message);
+    }
+
+    [Fact]
+    public async Task EmptyJsonContentTypeBody_DoesNotAddJsonParseNoise() {
+        var content = new StringContent(string.Empty);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) {
+            Content = content
+        };
+
+        using var client = CreateClient(response);
+
+        var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
+        Assert.Contains("StatusCode: 503", ex.Message);
+        Assert.DoesNotContain("Failed to parse ApiError", ex.Message);
+    }
+
+    [Fact]
+    public async Task JsonContentTypeBody_StillParsesApiError() {
+        var content = JsonContent.Create(new ApiError {
+            Code = ApiErrorCode.UnknownUser,
+            Description = "Unknown user"
+        });
+        var response = new HttpResponseMessage(HttpStatusCode.Unauthorized) {
+            Content = content
+        };
+
+        using var client = CreateClient(response);
+
+        var ex = await Assert.ThrowsAsync<AuthenticationException>(() => client.GetAsync("v1/test"));
+        Assert.Equal(ApiErrorCode.UnknownUser, ex.ErrorCode);
     }
 
     [Fact]
@@ -101,7 +150,7 @@ public sealed class ApiErrorHandlerTests {
 
         using var client = CreateClient(response);
 
-        var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => client.GetAsync("v1/test"));
         Assert.Contains(new string('a', 200), ex.Message);
         Assert.DoesNotContain(new string('a', 201), ex.Message);
     }
