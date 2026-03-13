@@ -67,15 +67,31 @@ public sealed class ApiErrorHandlerTests {
     }
 
     [Fact]
-    public async Task ThrowsApiException_WhenErrorBodyInvalid() {
+    public async Task ThrowsValidationException_WhenBadRequestBodyIsPlainText() {
         var response = new HttpResponseMessage(HttpStatusCode.BadRequest) {
             Content = new StringContent("oops")
         };
 
         using var client = CreateClient(response);
 
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => client.GetAsync("v1/test"));
+        Assert.Equal((ApiErrorCode)(int)HttpStatusCode.BadRequest, ex.ErrorCode);
+        Assert.Contains("Body: oops", ex.Message);
+        Assert.DoesNotContain("Failed to parse ApiError", ex.Message);
+    }
+
+    [Fact]
+    public async Task PlainTextErrorBody_DoesNotAddJsonParseNoise() {
+        var response = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) {
+            Content = new StringContent("upstream connect error or disconnect/reset before headers. reset reason: connection termination")
+        };
+
+        using var client = CreateClient(response);
+
         var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
-        Assert.Equal(ApiErrorCode.UnknownError, ex.ErrorCode);
+        Assert.Contains("StatusCode: 503", ex.Message);
+        Assert.Contains("upstream connect error", ex.Message);
+        Assert.DoesNotContain("Failed to parse ApiError", ex.Message);
     }
 
     [Fact]
@@ -101,7 +117,7 @@ public sealed class ApiErrorHandlerTests {
 
         using var client = CreateClient(response);
 
-        var ex = await Assert.ThrowsAsync<ApiException>(() => client.GetAsync("v1/test"));
+        var ex = await Assert.ThrowsAsync<ValidationException>(() => client.GetAsync("v1/test"));
         Assert.Contains(new string('a', 200), ex.Message);
         Assert.DoesNotContain(new string('a', 201), ex.Message);
     }
