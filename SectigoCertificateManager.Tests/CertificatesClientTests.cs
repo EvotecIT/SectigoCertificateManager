@@ -22,6 +22,27 @@ namespace SectigoCertificateManager.Tests;
 /// Unit tests for <see cref="CertificatesClient"/>.
 /// </summary>
 public sealed class CertificatesClientTests {
+    private sealed class StubClient : ISectigoClient {
+        private readonly HttpResponseMessage _response;
+        public HttpClient HttpClient { get; } = new();
+
+        public StubClient(HttpResponseMessage response) {
+            _response = response;
+        }
+
+        public Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default)
+            => Task.FromResult(_response);
+
+        public Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
+            => Task.FromResult(_response);
+
+        public Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
+            => Task.FromResult(_response);
+
+        public Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default)
+            => Task.FromResult(_response);
+    }
+
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
@@ -47,6 +68,7 @@ public sealed class CertificatesClientTests {
         private readonly byte[] _data;
         public bool ReadAsStringCalled { get; private set; }
         public bool ReadAsByteArrayCalled { get; private set; }
+        public bool Disposed { get; private set; }
 
         public TrackingContent(byte[] data) => _data = data;
 
@@ -71,6 +93,11 @@ public sealed class CertificatesClientTests {
         protected override bool TryComputeLength(out long length) {
             length = _data.Length;
             return true;
+        }
+
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            Disposed = true;
         }
     }
 
@@ -105,6 +132,21 @@ public sealed class CertificatesClientTests {
         var actualResult = result!;
         Assert.Single(actualResult.Certificates);
         Assert.Equal(1, actualResult.Certificates[0].Id);
+    }
+
+    [Fact]
+    public async Task SearchAsync_DisposesResponseAfterReading() {
+        var content = new TrackingContent(Encoding.UTF8.GetBytes("[{\"id\":1,\"commonName\":\"test\"}]"));
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = content
+        };
+
+        var certificates = new CertificatesClient(new StubClient(response));
+
+        var result = await certificates.SearchAsync(new CertificateSearchRequest { Size = 2 });
+
+        Assert.NotNull(result);
+        Assert.True(content.Disposed);
     }
 
     [Theory]

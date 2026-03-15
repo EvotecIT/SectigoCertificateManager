@@ -15,6 +15,39 @@ namespace SectigoCertificateManager.Tests;
 /// Unit tests for <see cref="InventoryClient"/>.
 /// </summary>
 public sealed class InventoryClientTests {
+    private sealed class StubClient : ISectigoClient {
+        private readonly HttpResponseMessage _response;
+        public HttpClient HttpClient { get; } = new();
+
+        public StubClient(HttpResponseMessage response) {
+            _response = response;
+        }
+
+        public Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken = default)
+            => Task.FromResult(_response);
+
+        public Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+
+        public Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+
+        public Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken = default)
+            => throw new NotImplementedException();
+    }
+
+    private sealed class TrackingContent : StringContent {
+        public bool Disposed { get; private set; }
+
+        public TrackingContent(string content) : base(content) {
+        }
+
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+            Disposed = true;
+        }
+    }
+
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
@@ -44,6 +77,19 @@ public sealed class InventoryClientTests {
         Assert.Single(result);
         Assert.Equal(1, result[0].Id);
         Assert.Equal("example.com", result[0].CommonName);
+    }
+
+    [Fact]
+    public async Task DownloadCsvAsync_DisposesResponseAfterParsing() {
+        const string csv = "id,commonName\n1,example.com";
+        var content = new TrackingContent(csv);
+        var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = content };
+        var inventory = new InventoryClient(new StubClient(response));
+
+        var result = await inventory.DownloadCsvAsync(new InventoryCsvRequest { Size = 1 });
+
+        Assert.Single(result);
+        Assert.True(content.Disposed);
     }
 
     [Fact]

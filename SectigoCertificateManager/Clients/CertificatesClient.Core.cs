@@ -31,7 +31,7 @@ public sealed partial class CertificatesClient : BaseClient {
             throw new ArgumentOutOfRangeException(nameof(request.Term));
         }
 
-        var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync("v1/certificate/issue", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         return await response.Content
             .ReadFromJsonAsyncSafe<Certificate>(s_json, cancellationToken)
             .ConfigureAwait(false);
@@ -45,7 +45,7 @@ public sealed partial class CertificatesClient : BaseClient {
     public async Task RevokeAsync(RevokeCertificateRequest request, CancellationToken cancellationToken = default) {
         Guard.AgainstNull(request, nameof(request));
 
-        var response = await _client.PostAsync("v1/certificate/revoke", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync("v1/certificate/revoke", JsonContent.Create(request, options: s_json), cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -59,7 +59,7 @@ public sealed partial class CertificatesClient : BaseClient {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
         }
 
-        var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.DeleteAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -73,7 +73,7 @@ public sealed partial class CertificatesClient : BaseClient {
         CancellationToken cancellationToken = default) {
         Guard.AgainstNull(request, nameof(request));
 
-        var response = await _client
+        using var response = await _client
             .PostAsync("v1/certificate/validate", JsonContent.Create(request, options: s_json), cancellationToken)
             .ConfigureAwait(false);
         return await response.Content

@@ -29,21 +29,20 @@ public sealed class InventoryClient : BaseClient {
         Guard.AgainstNull(request, nameof(request));
 
         var query = BuildQuery(request);
-        var response = await _client
+        using var response = await _client
             .GetAsync($"v1/inventory.csv{query}", cancellationToken)
             .ConfigureAwait(false);
 #if NETSTANDARD2_0 || NET472
-        var csv = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 #else
-        var csv = await response.Content.ReadAsStringAsync(cancellationToken)
-            .ConfigureAwait(false);
+        var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 #endif
-        return ParseCsv(csv);
+        using var reader = new StreamReader(stream);
+        return ParseCsv(reader);
     }
 
-    private static IReadOnlyList<InventoryRecord> ParseCsv(string csv) {
+    private static IReadOnlyList<InventoryRecord> ParseCsv(TextReader reader) {
         var list = new List<InventoryRecord>();
-        using var reader = new StringReader(csv);
         var header = reader.ReadLine();
         if (header is null) {
             return list;
