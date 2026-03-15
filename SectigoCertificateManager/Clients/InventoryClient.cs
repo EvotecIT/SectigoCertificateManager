@@ -33,9 +33,9 @@ public sealed class InventoryClient : BaseClient {
             .GetAsync($"v1/inventory.csv{query}", cancellationToken)
             .ConfigureAwait(false);
 #if NETSTANDARD2_0 || NET472
-        using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 #else
-        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 #endif
         using var reader = new StreamReader(stream);
         return ParseCsv(reader);
