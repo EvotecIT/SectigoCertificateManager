@@ -16,7 +16,7 @@ public sealed partial class CertificatesClient : BaseClient {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
         }
 
-        var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/certificate/{certificateId}", cancellationToken).ConfigureAwait(false);
         return await response.Content
             .ReadFromJsonAsyncSafe<Certificate>(s_json, cancellationToken)
             .ConfigureAwait(false);
@@ -32,7 +32,7 @@ public sealed partial class CertificatesClient : BaseClient {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
         }
 
-        var response = await _client.GetAsync($"v1/certificate/{certificateId}/status", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/certificate/{certificateId}/status", cancellationToken).ConfigureAwait(false);
         var result = await response.Content
             .ReadFromJsonAsyncSafe<StatusResponse>(s_json, cancellationToken)
             .ConfigureAwait(false);
@@ -49,7 +49,7 @@ public sealed partial class CertificatesClient : BaseClient {
             throw new ArgumentOutOfRangeException(nameof(certificateId));
         }
 
-        var response = await _client.GetAsync($"v1/certificate/{certificateId}/revocation", cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync($"v1/certificate/{certificateId}/revocation", cancellationToken).ConfigureAwait(false);
         return await response.Content
             .ReadFromJsonAsyncSafe<CertificateRevocation>(s_json, cancellationToken)
             .ConfigureAwait(false);

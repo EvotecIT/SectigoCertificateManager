@@ -21,7 +21,7 @@ public sealed partial class CertificatesClient : BaseClient {
 
         var endpoint = $"ssl/v1/collect/{certificateId}";
         var url = $"{endpoint}?format=base64";
-        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
 #if NETSTANDARD2_0 || NET472
         var base64 = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #else
@@ -44,7 +44,7 @@ public sealed partial class CertificatesClient : BaseClient {
 
         var endpoint = $"ssl/v1/collect/{certificateId}";
         var url = $"{endpoint}?format=base64";
-        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
 #if NETSTANDARD2_0 || NET472
         var base64 = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 #else
@@ -103,8 +103,12 @@ public sealed partial class CertificatesClient : BaseClient {
 
         var endpoint = $"ssl/v1/collect/{certificateId}";
         var url = $"{endpoint}?format={Uri.EscapeDataString(format)}";
-        var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        using var response = await _client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+#if NETSTANDARD2_0 || NET472
         var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+#else
+        var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+#endif
         using (stream) {
             var directory = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(directory)) {
