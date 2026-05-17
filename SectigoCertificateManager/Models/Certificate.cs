@@ -78,6 +78,21 @@ public sealed class Certificate {
     /// <summary>Gets or sets the serial number.</summary>
     public string? SerialNumber { get; set; }
 
+    /// <summary>Gets or sets the certificate issuer distinguished name, when available.</summary>
+    public string? Issuer { get; set; }
+
+    /// <summary>Gets or sets the certificate subject distinguished name, when available.</summary>
+    public string? Subject { get; set; }
+
+    /// <summary>Gets or sets the SHA1 certificate thumbprint, when available.</summary>
+    public string? Sha1Thumbprint { get; set; }
+
+    /// <summary>Gets or sets the SHA256 certificate fingerprint, when available.</summary>
+    public string? Sha256Fingerprint { get; set; }
+
+    /// <summary>Gets or sets the MD5 certificate fingerprint, when returned by the API.</summary>
+    public string? Md5Fingerprint { get; set; }
+
     /// <summary>Gets or sets the key algorithm.</summary>
     public string? KeyAlgorithm { get; set; }
 

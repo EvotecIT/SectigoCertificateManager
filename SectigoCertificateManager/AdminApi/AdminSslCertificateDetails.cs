@@ -81,6 +81,9 @@ public sealed class AdminSslCertificateDetails {
     /// <summary>Gets or sets subject alternative names.</summary>
     public IReadOnlyList<string>? SubjectAlternativeNames { get; set; }
 
+    /// <summary>Gets or sets parsed certificate identity details, including fingerprints, when returned by the API.</summary>
+    public AdminSslCertificateHashDetails? CertificateDetails { get; set; }
+
     /// <summary>Gets or sets the revocation date.</summary>
     public string? Revoked { get; set; }
 
@@ -90,4 +93,27 @@ public sealed class AdminSslCertificateDetails {
 
     /// <summary>Gets or sets a value indicating whether notifications are suspended.</summary>
     public bool SuspendNotifications { get; set; }
+}
+
+/// <summary>
+/// Represents certificate identity details returned inside an SSL certificate detail response.
+/// </summary>
+public sealed class AdminSslCertificateHashDetails {
+    /// <summary>Gets or sets the issuing CA certificate subject.</summary>
+    public string? Issuer { get; set; }
+
+    /// <summary>Gets or sets the certificate subject.</summary>
+    public string? Subject { get; set; }
+
+    /// <summary>Gets or sets the subject alternative names text returned by the API.</summary>
+    public string? SubjectAltNames { get; set; }
+
+    /// <summary>Gets or sets the MD5 fingerprint.</summary>
+    public string? Md5Hash { get; set; }
+
+    /// <summary>Gets or sets the SHA1 fingerprint.</summary>
+    public string? Sha1Hash { get; set; }
+
+    /// <summary>Gets or sets the SHA256 fingerprint.</summary>
+    public string? Sha256Hash { get; set; }
 }

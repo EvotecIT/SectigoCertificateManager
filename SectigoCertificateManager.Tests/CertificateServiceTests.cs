@@ -168,7 +168,13 @@ public sealed class CertificateServiceTests {
             OrgId = 10,
             Status = "Issued",
             SerialNumber = "DETAIL",
-            Term = 365
+            Term = 365,
+            CertificateDetails = new AdminSslCertificateHashDetails {
+                Subject = "CN=detailed.example.com",
+                Issuer = "CN=Example CA",
+                Sha1Hash = "A1",
+                Sha256Hash = "B2"
+            }
         };
 
         var listResponse = new HttpResponseMessage(HttpStatusCode.OK) {
@@ -199,6 +205,10 @@ public sealed class CertificateServiceTests {
         Assert.Equal(10, cert.OrgId);
         Assert.Equal(365, cert.Term);
         Assert.Equal(CertificateStatus.Issued, cert.Status);
+        Assert.Equal("CN=detailed.example.com", cert.Subject);
+        Assert.Equal("CN=Example CA", cert.Issuer);
+        Assert.Equal("A1", cert.Sha1Thumbprint);
+        Assert.Equal("B2", cert.Sha256Fingerprint);
     }
 
     [Fact]
@@ -214,6 +224,12 @@ public sealed class CertificateServiceTests {
             OrgId = 7,
             Status = "Issued",
             SerialNumber = "ABC",
+            CertificateDetails = new AdminSslCertificateHashDetails {
+                Subject = "CN=example.org",
+                Issuer = "CN=Example CA",
+                Sha1Hash = "ABC-SHA1",
+                Sha256Hash = "ABC-SHA256"
+            },
             ReasonCode = "4",
             Revoked = "2025-01-02T03:04:05Z"
         };
@@ -239,6 +255,10 @@ public sealed class CertificateServiceTests {
         Assert.Equal("example.org", cert.CommonName);
         Assert.Equal(7, cert.OrgId);
         Assert.Equal("ABC", cert.SerialNumber);
+        Assert.Equal("CN=example.org", cert.Subject);
+        Assert.Equal("CN=Example CA", cert.Issuer);
+        Assert.Equal("ABC-SHA1", cert.Sha1Thumbprint);
+        Assert.Equal("ABC-SHA256", cert.Sha256Fingerprint);
         Assert.Equal(CertificateStatus.Issued, cert.Status);
 
         Assert.Equal(CertificateStatus.Issued, status);

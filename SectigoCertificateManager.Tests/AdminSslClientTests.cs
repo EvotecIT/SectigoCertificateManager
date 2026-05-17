@@ -247,7 +247,13 @@ public sealed class AdminSslClientTests {
         var details = new AdminSslCertificateDetails {
             Id = 2,
             CommonName = "example.org",
-            SerialNumber = "ABC"
+            SerialNumber = "ABC",
+            CertificateDetails = new AdminSslCertificateHashDetails {
+                Subject = "CN=example.org",
+                Issuer = "CN=Example CA",
+                Sha1Hash = "SHA1",
+                Sha256Hash = "SHA256"
+            }
         };
         var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
             Content = JsonContent.Create(details)
@@ -270,6 +276,11 @@ public sealed class AdminSslClientTests {
         Assert.Equal(2, result!.Id);
         Assert.Equal("example.org", result.CommonName);
         Assert.Equal("ABC", result.SerialNumber);
+        Assert.NotNull(result.CertificateDetails);
+        Assert.Equal("CN=example.org", result.CertificateDetails!.Subject);
+        Assert.Equal("CN=Example CA", result.CertificateDetails.Issuer);
+        Assert.Equal("SHA1", result.CertificateDetails.Sha1Hash);
+        Assert.Equal("SHA256", result.CertificateDetails.Sha256Hash);
     }
 
     [Fact]
