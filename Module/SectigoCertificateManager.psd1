@@ -12,11 +12,11 @@
     PowerShellVersion    = '5.1'
     PrivateData          = @{
         PSData = @{
-            ProjectUri               = 'https://github.com/EvotecIT/SectigoCertificateManager'
-            RequireLicenseAcceptance = $false
-            Tags                     = @('Windows', 'MacOS', 'Linux')
+            ProjectUri                 = 'https://github.com/EvotecIT/SectigoCertificateManager'
+            RequireLicenseAcceptance   = $false
+            Tags                       = @('Windows', 'MacOS', 'Linux')
             ExternalModuleDependencies = @()
-}
+        }
     }
     RootModule           = 'SectigoCertificateManager.psm1'
     RequiredModules      = @()
