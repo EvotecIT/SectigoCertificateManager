@@ -204,6 +204,7 @@ public sealed class SectigoClientTests {
 
     [Fact]
     public async Task RefreshesTokenAutomatically() {
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "token.json");
         var expired = DateTimeOffset.UtcNow.AddMinutes(-1);
         var called = false;
         Task<TokenInfo> Refresh(CancellationToken ct) {
@@ -219,7 +220,8 @@ public sealed class SectigoClientTests {
             ApiVersion.V25_4,
             token: "old",
             tokenExpiresAt: expired,
-            refreshToken: Refresh);
+            refreshToken: Refresh,
+            tokenCachePath: path);
         var handler = new TestHandler();
         using var httpClient = new HttpClient(handler);
         var client = new SectigoClient(config, httpClient);
@@ -232,6 +234,7 @@ public sealed class SectigoClientTests {
 
     [Fact]
     public async Task RefreshesTokenBeforeExpirationThreshold() {
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "token.json");
         var expires = DateTimeOffset.UtcNow.AddSeconds(30);
         var called = false;
         Task<TokenInfo> Refresh(CancellationToken ct) {
@@ -248,6 +251,7 @@ public sealed class SectigoClientTests {
             token: "old",
             tokenExpiresAt: expires,
             refreshToken: Refresh,
+            tokenCachePath: path,
             tokenRefreshThreshold: TimeSpan.FromMinutes(1));
         var handler = new TestHandler();
         using var httpClient = new HttpClient(handler);

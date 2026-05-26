@@ -27,6 +27,9 @@ public sealed class ApiConfigLoaderTests {
 
     [Fact]
     public void Load_FromEnvironment() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", Path.Combine(tempDir, "token.json"));
         Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", "https://example.com");
         Environment.SetEnvironmentVariable("SECTIGO_USERNAME", "user");
         Environment.SetEnvironmentVariable("SECTIGO_PASSWORD", "pass");
@@ -43,6 +46,8 @@ public sealed class ApiConfigLoaderTests {
         Environment.SetEnvironmentVariable("SECTIGO_PASSWORD", null);
         Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", null);
         Environment.SetEnvironmentVariable("SECTIGO_API_VERSION", null);
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", null);
+        Directory.Delete(tempDir, true);
     }
 
     [Fact]
@@ -50,6 +55,7 @@ public sealed class ApiConfigLoaderTests {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var path = Path.Combine(tempDir, "cred.json");
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", Path.Combine(tempDir, "token.json"));
         File.WriteAllText(path, "{\"baseUrl\":\"https://example.com\",\"username\":\"user\",\"password\":\"pass\",\"customerUri\":\"cst1\"}");
         Environment.SetEnvironmentVariable("SECTIGO_CREDENTIALS_PATH", path);
 
@@ -59,11 +65,15 @@ public sealed class ApiConfigLoaderTests {
         Assert.Equal(ApiVersion.V25_6, config.ApiVersion);
 
         Environment.SetEnvironmentVariable("SECTIGO_CREDENTIALS_PATH", null);
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", null);
         Directory.Delete(tempDir, true);
     }
 
     [Fact]
     public void Load_FromEnvironment_WithToken() {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", Path.Combine(tempDir, "token.json"));
         Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", "https://example.com");
         Environment.SetEnvironmentVariable("SECTIGO_TOKEN", "tok");
         Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", "cst1");
@@ -76,6 +86,8 @@ public sealed class ApiConfigLoaderTests {
         Environment.SetEnvironmentVariable("SECTIGO_BASE_URL", null);
         Environment.SetEnvironmentVariable("SECTIGO_TOKEN", null);
         Environment.SetEnvironmentVariable("SECTIGO_CUSTOMER_URI", null);
+        Environment.SetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH", null);
+        Directory.Delete(tempDir, true);
     }
 
     [Fact]
@@ -83,9 +95,10 @@ public sealed class ApiConfigLoaderTests {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var path = Path.Combine(tempDir, "cred.json");
+        var tokenPath = Path.Combine(tempDir, "token.json");
         File.WriteAllText(path, "{\"baseUrl\":\"https://example.com\",\"token\":\"tok\",\"customerUri\":\"cst1\"}");
 
-        var config = ApiConfigLoader.Load(path);
+        var config = ApiConfigLoader.Load(path, tokenPath);
 
         Assert.Equal("tok", config.Token);
         Assert.Equal(ApiVersion.V25_6, config.ApiVersion);
