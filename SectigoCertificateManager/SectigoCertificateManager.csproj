@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.9" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.8" />
     <None Include="..\\README.md" Pack="true" PackagePath="\" Link="README.md" />
   </ItemGroup>
 
