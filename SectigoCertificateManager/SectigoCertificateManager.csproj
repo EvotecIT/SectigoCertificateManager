@@ -36,13 +36,13 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="System.Net.Http.Json" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.8" />
-    <PackageReference Include="System.Formats.Asn1" Version="10.0.8" />
+    <PackageReference Include="System.Net.Http.Json" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.9" />
+    <PackageReference Include="System.Formats.Asn1" Version="10.0.9" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.8" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.9" />
     <None Include="..\\README.md" Pack="true" PackagePath="\" Link="README.md" />
   </ItemGroup>
 
