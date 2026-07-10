@@ -55,6 +55,20 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
+    public async Task Credentials_ClearInjectedAuthorizationHeader() {
+        var config = new ApiConfig("https://example.com/api/", "user", "pass", "cst1", ApiVersion.V25_4);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "stale");
+        using var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        Assert.Null(httpClient.DefaultRequestHeaders.Authorization);
+        Assert.Equal("user", httpClient.DefaultRequestHeaders.GetValues("login").Single());
+    }
+
+    [Fact]
     public async Task UsesBaseUrlWithoutTrailingSlash() {
         var config = new ApiConfig("https://example.com/api", "user", "pass", "cst1", ApiVersion.V25_4);
         var handler = new TestHandler();
@@ -134,7 +148,7 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
-    public void DisposeDisposesHttpClient() {
+    public void DisposeDoesNotDisposeInjectedHttpClient() {
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         var handler = new DisposableHandler();
         using var httpClient = new HttpClient(handler);
@@ -142,7 +156,7 @@ public sealed class SectigoClientTests {
 
         client.Dispose();
 
-        Assert.True(handler.Disposed);
+        Assert.False(handler.Disposed);
     }
 
     [Fact]
@@ -155,7 +169,7 @@ public sealed class SectigoClientTests {
         client.Dispose();
         client.Dispose();
 
-        Assert.True(handler.Disposed);
+        Assert.False(handler.Disposed);
     }
 
     [Fact]
@@ -171,7 +185,7 @@ public sealed class SectigoClientTests {
     }
 
     [Fact]
-    public async Task DisposeDuringRefresh_ThrowsObjectDisposedException() {
+    public async Task DisposeDuringRefresh_AllowsInFlightRequestToComplete() {
         var started = new TaskCompletionSource<object?>();
         var release = new TaskCompletionSource<TokenInfo>();
 
@@ -198,8 +212,9 @@ public sealed class SectigoClientTests {
         client.Dispose();
         release.SetResult(new TokenInfo("n", DateTimeOffset.UtcNow.AddMinutes(5)));
 
-        var ex = await Assert.ThrowsAnyAsync<Exception>(() => task);
-        Assert.True(ex is ObjectDisposedException || ex is IOException);
+        using var response = await task;
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => client.GetAsync("v1/test"));
     }
 
     [Fact]
@@ -316,6 +331,34 @@ public sealed class SectigoClientTests {
         var cached = ApiConfigLoader.ReadToken(path);
         Assert.NotNull(cached);
         Assert.Equal("new", cached!.Token);
+    }
+
+    [Fact]
+    public async Task PersistsTokenAfterRefreshUsingDefaultCacheResolution() {
+        string path = Environment.GetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH")!;
+        if (File.Exists(path)) {
+            File.Delete(path);
+        }
+        var expired = DateTimeOffset.UtcNow.AddMinutes(-1);
+        Task<TokenInfo> Refresh(CancellationToken ct) => Task.FromResult(new TokenInfo("default-cache", DateTimeOffset.UtcNow.AddMinutes(30)));
+        var config = new ApiConfig(
+            "https://example.com/",
+            string.Empty,
+            string.Empty,
+            "c",
+            ApiVersion.V25_4,
+            token: "old",
+            tokenExpiresAt: expired,
+            refreshToken: Refresh);
+        var handler = new TestHandler();
+        using var httpClient = new HttpClient(handler);
+        using var client = new SectigoClient(config, httpClient);
+
+        await client.GetAsync("v1/test");
+
+        TokenInfo? cached = ApiConfigLoader.ReadToken();
+        Assert.NotNull(cached);
+        Assert.Equal("default-cache", cached!.Token);
     }
 
     private sealed class ThrottleHandler : HttpMessageHandler {
@@ -457,6 +500,81 @@ public sealed class SectigoClientTests {
         await Assert.ThrowsAnyAsync<Exception>(() => client.GetAsync("v1/test"));
 
         Assert.Equal(2, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task PostAsync_DoesNotRetryAfterTransportFailure() {
+        var handler = new TransportFailureHandler();
+        using var httpClient = new HttpClient(handler);
+        var config = new ApiConfigBuilder()
+            .WithBaseUrl("https://example.com/")
+            .WithCredentials("u", "p")
+            .WithCustomerUri("c")
+            .WithRetryOptions(3, TimeSpan.Zero)
+            .Build();
+        using var client = new SectigoClient(config, httpClient) { DelayAsync = (_, _) => Task.CompletedTask };
+        using var content = new StringContent("mutation");
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => client.PostAsync("v1/orders", content));
+
+        Assert.Equal(1, handler.RequestCount);
+    }
+
+    [Fact]
+    public async Task PostAsync_DoesNotBufferStreamingContentBeforeSend() {
+        using var content = new TrackingStreamContent();
+        var handler = new ContentObservationHandler(content);
+        using var httpClient = new HttpClient(handler);
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+        using var client = new SectigoClient(config, httpClient);
+
+        using HttpResponseMessage response = await client.PostAsync("v1/import", content);
+
+        Assert.Equal(0, content.SerializationCountAtHandler);
+        Assert.Equal(0, content.SerializationCount);
+        Assert.False(content.Disposed);
+    }
+
+    private sealed class TransportFailureHandler : HttpMessageHandler {
+        public int RequestCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            RequestCount++;
+            throw new HttpRequestException("transport failed after dispatch");
+        }
+    }
+
+    private sealed class ContentObservationHandler : HttpMessageHandler {
+        private readonly TrackingStreamContent _content;
+
+        public ContentObservationHandler(TrackingStreamContent content) => _content = content;
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            _content.SerializationCountAtHandler = _content.SerializationCount;
+            var response = new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request };
+            return Task.FromResult(response);
+        }
+    }
+
+    private sealed class TrackingStreamContent : HttpContent {
+        public int SerializationCount { get; private set; }
+        public int SerializationCountAtHandler { get; set; }
+        public bool Disposed { get; private set; }
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) {
+            SerializationCount++;
+            return stream.WriteAsync(new byte[] { 1 }, 0, 1);
+        }
+
+        protected override bool TryComputeLength(out long length) {
+            length = -1;
+            return false;
+        }
+
+        protected override void Dispose(bool disposing) {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
     }
      
     [Fact]

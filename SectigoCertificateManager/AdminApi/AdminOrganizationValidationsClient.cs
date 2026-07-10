@@ -48,7 +48,7 @@ public sealed class AdminOrganizationValidationsClient : AdminApiClientBase {
             $"api/organization/v2/{organizationId}/validations");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -83,7 +83,7 @@ public sealed class AdminOrganizationValidationsClient : AdminApiClientBase {
             $"api/organization/v2/{organizationId}/validations/{validationId}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var details = await response.Content
@@ -118,7 +118,7 @@ public sealed class AdminOrganizationValidationsClient : AdminApiClientBase {
             $"api/organization/v2/{organizationId}/validations/{validationId}/sync");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var details = await response.Content
@@ -153,7 +153,7 @@ public sealed class AdminOrganizationValidationsClient : AdminApiClientBase {
             $"api/organization/v2/{organizationId}/validations/{validationId}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 

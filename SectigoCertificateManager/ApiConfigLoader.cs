@@ -1,6 +1,7 @@
 namespace SectigoCertificateManager;
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
 
@@ -8,6 +9,7 @@ using System.Text.Json;
 /// Provides helpers for loading <see cref="ApiConfig"/> from environment variables or a JSON file.
 /// </summary>
 public static class ApiConfigLoader {
+    private static readonly ConcurrentDictionary<string, object> s_tokenPathLocks = new(StringComparer.OrdinalIgnoreCase);
     private sealed class TokenFileModel {
         public string Token { get; set; } = string.Empty;
         public DateTimeOffset ExpiresAt { get; set; }
@@ -52,16 +54,18 @@ public static class ApiConfigLoader {
     /// </summary>
     /// <param name="path">Optional custom token cache path; defaults to <c>~/.sectigo/token.json</c> or the <c>SECTIGO_TOKEN_CACHE_PATH</c> environment variable.</param>
     public static TokenInfo? ReadToken(string? path = null) {
-        var tokenPath = GetTokenPath(path);
-        if (!File.Exists(tokenPath)) {
-            return null;
-        }
+        var tokenPath = Path.GetFullPath(GetTokenPath(path));
+        lock (s_tokenPathLocks.GetOrAdd(tokenPath, static _ => new object())) {
+            if (!File.Exists(tokenPath)) {
+                return null;
+            }
 
-        using var stream = File.OpenRead(tokenPath);
-        using var reader = new StreamReader(stream);
-        var json = reader.ReadToEnd();
-        var model = JsonSerializer.Deserialize<TokenFileModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        return model is null ? null : new TokenInfo(model.Token, model.ExpiresAt);
+            using var stream = new FileStream(tokenPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
+            var model = JsonSerializer.Deserialize<TokenFileModel>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return model is null ? null : new TokenInfo(model.Token, model.ExpiresAt);
+        }
     }
 
     /// <summary>
@@ -74,16 +78,33 @@ public static class ApiConfigLoader {
             throw new ArgumentNullException(nameof(info));
         }
 
-        var tokenPath = GetTokenPath(path);
+        var tokenPath = Path.GetFullPath(GetTokenPath(path));
         var dir = Path.GetDirectoryName(tokenPath);
         if (!string.IsNullOrEmpty(dir)) {
             Directory.CreateDirectory(dir);
         }
 
         var json = JsonSerializer.Serialize(new TokenFileModel { Token = info.Token, ExpiresAt = info.ExpiresAt });
-        using (var stream = new FileStream(tokenPath, FileMode.Create, FileAccess.Write, FileShare.None)) {
-            using var writer = new StreamWriter(stream);
-            writer.Write(json);
+        lock (s_tokenPathLocks.GetOrAdd(tokenPath, static _ => new object())) {
+            var tempPath = tokenPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try {
+                using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
+                    using var writer = new StreamWriter(stream);
+                    writer.Write(json);
+                    writer.Flush();
+                    stream.Flush();
+                }
+
+                if (File.Exists(tokenPath)) {
+                    File.Replace(tempPath, tokenPath, destinationBackupFileName: null);
+                } else {
+                    File.Move(tempPath, tokenPath);
+                }
+            } finally {
+                if (File.Exists(tempPath)) {
+                    File.Delete(tempPath);
+                }
+            }
         }
 #if NET6_0_OR_GREATER
         if (!OperatingSystem.IsWindows()) {

@@ -46,7 +46,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var response = await SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
@@ -77,7 +77,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/azure/v1/accounts/{id}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var response = await SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
@@ -103,7 +103,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         };
         SetBearer(httpRequest, token);
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var location = response.Headers.Location;
@@ -128,7 +128,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         };
         SetBearer(httpRequest, token);
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -142,7 +142,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/azure/v1/accounts/{id}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -160,7 +160,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         };
         SetBearer(httpRequest, token);
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         return await response.Content
@@ -178,7 +178,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/azure/v1/accounts/{id}/check");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var response = await SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
@@ -205,7 +205,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var response = await SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
@@ -224,7 +224,7 @@ public sealed class AdminAzureClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/azure/v1/accounts/{accountId}/resource-groups");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var response = await SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 

@@ -67,7 +67,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -92,7 +92,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/admin/v1/{id}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var details = await response.Content
@@ -117,7 +117,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         };
         SetBearer(httpRequest, token);
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
@@ -143,7 +143,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         };
         SetBearer(httpRequest, token);
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -167,7 +167,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Delete, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -186,7 +186,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Put, $"api/admin/v1/{id}/unlink");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -210,7 +210,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         SetBearer(request, token);
         request.Headers.Add("password", currentPassword);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -224,7 +224,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, "api/admin/v1/password");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var status = await response.Content
@@ -249,7 +249,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -281,7 +281,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -301,7 +301,7 @@ public sealed class AdminAdminClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, "api/admin/v1/idp");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content

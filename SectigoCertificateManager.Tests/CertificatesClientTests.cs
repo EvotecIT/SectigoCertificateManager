@@ -46,12 +46,14 @@ public sealed class CertificatesClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
+        public HttpContent? RequestContent { get; private set; }
         public string? Body { get; private set; }
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
+            RequestContent = request.Content;
             if (request.Content is not null) {
                 Body = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
@@ -613,8 +615,8 @@ public sealed class CertificatesClientTests {
     }
 
     public static IEnumerable<object[]> StatusCases() {
-        foreach (CertificateStatus status in Enum.GetValues(typeof(CertificateStatus))) {
-            yield return new object[] { status.ToString(), status };
+        foreach (var name in Enum.GetNames(typeof(CertificateStatus))) {
+            yield return new object[] { name, (CertificateStatus)Enum.Parse(typeof(CertificateStatus), name) };
         }
     }
 
@@ -799,8 +801,9 @@ public sealed class CertificatesClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal("https://example.com/v1/certificate/import?orgId=10", handler.Request.RequestUri!.ToString());
-        Assert.NotNull(handler.Request.Content);
-        Assert.StartsWith("multipart/form-data", handler.Request.Content!.Headers.ContentType!.MediaType);
+        Assert.NotNull(handler.RequestContent);
+        Assert.StartsWith("multipart/form-data", handler.RequestContent!.Headers.ContentType!.MediaType);
+        Assert.True(stream.CanRead);
         Assert.NotNull(result);
         Assert.Equal(2, result!.ProcessedCount);
         Assert.Single(result.Errors);

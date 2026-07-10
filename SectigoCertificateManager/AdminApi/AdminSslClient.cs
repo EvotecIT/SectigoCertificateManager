@@ -79,7 +79,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, BuildListUri(size, position, status, orgId, requester, expiresBefore, expiresAfter));
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         int? totalCount = null;
@@ -116,7 +116,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var details = await response.Content
@@ -157,7 +157,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -193,7 +193,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -224,7 +224,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -255,7 +255,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -298,7 +298,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -369,7 +369,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
@@ -404,7 +404,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -428,7 +428,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return await response.Content
@@ -456,7 +456,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return await response.Content
@@ -496,7 +496,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return await response.Content
@@ -534,7 +534,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -570,7 +570,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -608,7 +608,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
@@ -635,7 +635,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/dcv");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -662,7 +662,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"api/ssl/v2/{sslId}/dcv/recheck");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var info = await response.Content
@@ -689,7 +689,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/location");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var list = await response.Content
@@ -721,7 +721,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/ssl/v2/{sslId}/location/{locationId}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var location = await response.Content
@@ -755,7 +755,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
@@ -789,7 +789,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -815,7 +815,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/ssl/v2/{sslId}/location/{locationId}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -841,7 +841,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var types = await response.Content
@@ -862,7 +862,7 @@ public sealed class AdminSslClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, "api/ssl/v2/customFields");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var fields = await response.Content

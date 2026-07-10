@@ -27,6 +27,28 @@ public sealed partial class CertificatesClient : BaseClient {
     }
 
     /// <summary>
+    /// Retrieves exactly one page of certificates using the requested size and position.
+    /// </summary>
+    /// <param name="request">Filter and page boundaries to send to the API.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The page response, or <c>null</c> when the page is empty.</returns>
+    public async Task<CertificateResponse?> SearchPageAsync(
+        CertificateSearchRequest request,
+        CancellationToken cancellationToken = default) {
+        Guard.AgainstNull(request, nameof(request));
+
+        var query = BuildQuery(request);
+        using var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
+        var page = await response.Content
+            .ReadFromJsonAsyncSafe<IReadOnlyList<Certificate>>(s_json, cancellationToken)
+            .ConfigureAwait(false);
+
+        return page is null || page.Count == 0
+            ? null
+            : new CertificateResponse { Certificates = page };
+    }
+
+    /// <summary>
     /// Streams all certificates visible to the caller.
     /// </summary>
     /// <param name="pageSize">Number of certificates to request per page.</param>
@@ -126,13 +148,8 @@ public sealed partial class CertificatesClient : BaseClient {
         var position = request.Position ?? 0;
 
         try {
-            var query = BuildQuery(request);
-            IReadOnlyList<Certificate>? page;
-            using (var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false)) {
-                page = await response.Content
-                    .ReadFromJsonAsyncSafe<IReadOnlyList<Certificate>>(s_json, cancellationToken)
-                    .ConfigureAwait(false);
-            }
+            var response = await SearchPageAsync(request, cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<Certificate>? page = response?.Certificates;
             if (page is null || page.Count == 0) {
                 yield break;
             }
@@ -150,11 +167,8 @@ public sealed partial class CertificatesClient : BaseClient {
 
             while (true) {
                 request.Position = position;
-                query = BuildQuery(request);
-                using var response = await _client.GetAsync($"v1/certificate{query}", cancellationToken).ConfigureAwait(false);
-                page = await response.Content
-                    .ReadFromJsonAsyncSafe<IReadOnlyList<Certificate>>(s_json, cancellationToken)
-                    .ConfigureAwait(false);
+                response = await SearchPageAsync(request, cancellationToken).ConfigureAwait(false);
+                page = response?.Certificates;
                 if (page is null || page.Count == 0) {
                     yield break;
                 }
