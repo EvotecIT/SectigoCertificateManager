@@ -523,13 +523,15 @@ public sealed class SectigoClientTests {
     [Fact]
     public async Task PostAsync_DoesNotBufferStreamingContentBeforeSend() {
         using var content = new TrackingStreamContent();
-        var handler = new ContentObservationHandler(content);
+        using var expectedResponse = new HttpResponseMessage(HttpStatusCode.OK);
+        var handler = new ContentObservationHandler(content, expectedResponse);
         using var httpClient = new HttpClient(handler);
         var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
         using var client = new SectigoClient(config, httpClient);
 
         using HttpResponseMessage response = await client.PostAsync("v1/import", content);
 
+        Assert.Same(expectedResponse, response);
         Assert.Equal(0, content.SerializationCountAtHandler);
         Assert.Equal(0, content.SerializationCount);
         Assert.False(content.Disposed);
@@ -546,12 +548,17 @@ public sealed class SectigoClientTests {
 
     private sealed class ContentObservationHandler : HttpMessageHandler {
         private readonly TrackingStreamContent _content;
+        private readonly HttpResponseMessage _response;
 
-        public ContentObservationHandler(TrackingStreamContent content) => _content = content;
+        public ContentObservationHandler(TrackingStreamContent content, HttpResponseMessage response) {
+            _content = content;
+            _response = response;
+        }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             _content.SerializationCountAtHandler = _content.SerializationCount;
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request });
+            _response.RequestMessage = request;
+            return Task.FromResult(_response);
         }
     }
 
