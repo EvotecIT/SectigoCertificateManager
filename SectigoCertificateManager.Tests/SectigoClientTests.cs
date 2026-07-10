@@ -551,8 +551,7 @@ public sealed class SectigoClientTests {
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             _content.SerializationCountAtHandler = _content.SerializationCount;
-            var response = new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request };
-            return Task.FromResult(response);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request });
         }
     }
 
