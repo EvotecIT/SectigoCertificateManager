@@ -69,7 +69,7 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, absolute);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         int? total = null;
@@ -100,7 +100,7 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, "api/notification/v1/types");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var types = await response.Content
@@ -133,7 +133,7 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         };
         SetBearer(httpRequest, token);
 
-        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -154,7 +154,7 @@ public sealed class AdminNotificationClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/notification/v1/{notificationId}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 }

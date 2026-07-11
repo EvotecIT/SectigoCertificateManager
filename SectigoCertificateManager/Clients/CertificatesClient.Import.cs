@@ -26,12 +26,12 @@ public sealed partial class CertificatesClient : BaseClient {
         Guard.AgainstNull(stream, nameof(stream));
         Guard.AgainstNullOrEmpty(fileName, nameof(fileName), "File name cannot be null or empty.");
 
-        var content = new MultipartFormDataContent();
-        var fileContent = new StreamContent(stream);
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ProgressStreamContent(stream);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
         content.Add(fileContent, "file", fileName);
 
-        var response = await _client.PostAsync($"v1/certificate/import?orgId={orgId}", content, cancellationToken).ConfigureAwait(false);
+        using var response = await _client.PostAsync($"v1/certificate/import?orgId={orgId}", content, cancellationToken).ConfigureAwait(false);
         return await response.Content
             .ReadFromJsonAsyncSafe<ImportCertificateResponse>(s_json, cancellationToken)
             .ConfigureAwait(false);

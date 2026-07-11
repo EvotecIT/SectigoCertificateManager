@@ -61,7 +61,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -90,7 +90,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
@@ -119,7 +119,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -146,7 +146,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -167,7 +167,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Put, $"api/domain/v1/{domainId}/suspend");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -188,7 +188,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Put, $"api/domain/v1/{domainId}/activate");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -215,7 +215,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -248,7 +248,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -281,7 +281,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -302,7 +302,7 @@ public sealed class AdminDomainClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 

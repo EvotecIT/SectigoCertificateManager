@@ -54,7 +54,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -79,7 +79,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/acme/v2/account/{id}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var account = await response.Content
@@ -107,7 +107,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
@@ -140,7 +140,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -177,7 +177,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
@@ -214,7 +214,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var result = await response.Content
@@ -253,7 +253,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -283,7 +283,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
             $"api/acme/v2/account/{accountId}/client/{Uri.EscapeDataString(clientId)}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
@@ -313,7 +313,7 @@ public sealed class AdminAcmePublicClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, absolute);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var servers = await response.Content

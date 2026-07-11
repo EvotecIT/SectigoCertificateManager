@@ -20,12 +20,14 @@ public sealed class OrdersClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         private readonly HttpResponseMessage _response;
         public HttpRequestMessage? Request { get; private set; }
+        public HttpContent? RequestContent { get; private set; }
         public string? Body { get; private set; }
 
         public TestHandler(HttpResponseMessage response) => _response = response;
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
             Request = request;
+            RequestContent = request.Content;
             if (request.Content is not null) {
 #if NETSTANDARD2_0 || NET472
                 Body = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -72,7 +74,7 @@ public sealed class OrdersClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal("https://example.com/v1/order/5/cancel", handler.Request.RequestUri!.ToString());
-        await AssertContentDisposedAsync(handler.Request.Content);
+        await AssertContentDisposedAsync(handler.RequestContent);
     }
 
     [Theory]
@@ -115,7 +117,7 @@ public sealed class OrdersClientTests {
 
         Assert.NotNull(result);
         Assert.NotNull(handler.Request);
-        await AssertContentDisposedAsync(handler.Request!.Content);
+        await AssertContentDisposedAsync(handler.RequestContent);
     }
 
     [Fact]
@@ -138,7 +140,7 @@ public sealed class OrdersClientTests {
 
         Assert.NotNull(result);
         Assert.NotNull(handler.Request);
-        await AssertContentDisposedAsync(handler.Request!.Content);
+        await AssertContentDisposedAsync(handler.RequestContent);
     }
 
     [Fact]
@@ -161,7 +163,7 @@ public sealed class OrdersClientTests {
 
         Assert.NotNull(result);
         Assert.NotNull(handler.Request);
-        await AssertContentDisposedAsync(handler.Request!.Content);
+        await AssertContentDisposedAsync(handler.RequestContent);
     }
 
     [Fact]
@@ -418,7 +420,7 @@ public sealed class OrdersClientTests {
         Assert.NotNull(handler.Request);
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal("https://example.com/v1/order/bulk", handler.Request.RequestUri!.ToString());
-        Assert.Equal("text/csv", handler.Request.Content!.Headers.ContentType!.MediaType);
+        Assert.Equal("text/csv", handler.RequestContent!.Headers.ContentType!.MediaType);
     }
 
     [Fact]
@@ -475,7 +477,7 @@ public sealed class OrdersClientTests {
 
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/order/bulk", handler.Request!.RequestUri!.ToString());
-        Assert.Equal("application/json", handler.Request.Content!.Headers.ContentType!.MediaType);
+        Assert.Equal("application/json", handler.RequestContent!.Headers.ContentType!.MediaType);
         Assert.StartsWith("[", handler.Body);
         Assert.Equal(2, result.Count);
     }
@@ -499,7 +501,6 @@ public sealed class OrdersClientTests {
 
         Assert.NotNull(handler.Request);
         Assert.Equal("https://example.com/v1/order/bulk", handler.Request!.RequestUri!.ToString());
-        Assert.StartsWith("multipart/", handler.Request.Content!.Headers.ContentType!.MediaType);
-        Assert.IsType<MultipartContent>(handler.Request.Content);
+        Assert.StartsWith("multipart/", handler.RequestContent!.Headers.ContentType!.MediaType);
     }
 }

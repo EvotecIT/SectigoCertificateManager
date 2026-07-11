@@ -50,7 +50,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path.ToString());
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var fields = await response.Content
@@ -77,7 +77,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/customField/v2/{id}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return await response.Content
@@ -103,7 +103,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);
@@ -129,7 +129,7 @@ public sealed class AdminCustomFieldsV2Client : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var updated = await response.Content

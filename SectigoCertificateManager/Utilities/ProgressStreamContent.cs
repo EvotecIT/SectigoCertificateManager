@@ -46,7 +46,7 @@ internal sealed class ProgressStreamContent : HttpContent {
 
     private async Task TransferToAsync(Stream target, CancellationToken cancellationToken) {
         var buffer = new byte[_bufferSize];
-        long total = _stream.CanSeek ? _stream.Length : -1;
+        long total = _stream.CanSeek ? _stream.Length - _stream.Position : -1;
         long uploaded = 0;
         int read;
         while (true) {
@@ -76,7 +76,7 @@ internal sealed class ProgressStreamContent : HttpContent {
 
     protected override bool TryComputeLength(out long length) {
         if (_stream.CanSeek) {
-            length = _stream.Length;
+            length = _stream.Length - _stream.Position;
             return true;
         }
 

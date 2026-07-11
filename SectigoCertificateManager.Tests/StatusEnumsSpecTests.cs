@@ -1,4 +1,5 @@
 using Xunit;
+using System.Text.Json;
 
 namespace SectigoCertificateManager.Tests;
 
@@ -15,22 +16,27 @@ public sealed class StatusEnumsSpecTests {
     }
 
     [Fact]
-    public void CertificateStatus_ValuesMatchSpec() {
-        Assert.Equal(0, (int)CertificateStatus.Any);
-        Assert.Equal(1, (int)CertificateStatus.Requested);
-        Assert.Equal(8, (int)CertificateStatus.Approved);
-        Assert.Equal(9, (int)CertificateStatus.Applied);
-        Assert.Equal(2, (int)CertificateStatus.Issued);
-        Assert.Equal(3, (int)CertificateStatus.Declined);
-        Assert.Equal(4, (int)CertificateStatus.Downloaded);
-        Assert.Equal(5, (int)CertificateStatus.Rejected);
-        Assert.Equal(6, (int)CertificateStatus.AwaitingApproval);
-        Assert.Equal(7, (int)CertificateStatus.Invalid);
-        Assert.Equal(8, (int)CertificateStatus.Replaced);
-        Assert.Equal(9, (int)CertificateStatus.Unmanaged);
-        Assert.Equal(10, (int)CertificateStatus.SAApproved);
-        Assert.Equal(11, (int)CertificateStatus.Init);
-        Assert.Equal(3, (int)CertificateStatus.Revoked);
-        Assert.Equal(4, (int)CertificateStatus.Expired);
+    public void CertificateStatus_ValuesAreUnique() {
+        var values = Enum.GetValues(typeof(CertificateStatus)).Cast<CertificateStatus>().Select(static status => (int)status).ToArray();
+
+        Assert.Equal(values.Length, values.Distinct().Count());
+    }
+
+    [Theory]
+    [InlineData(0, CertificateStatus.Any)]
+    [InlineData(1, CertificateStatus.Requested)]
+    [InlineData(2, CertificateStatus.Issued)]
+    [InlineData(3, CertificateStatus.Revoked)]
+    [InlineData(4, CertificateStatus.Expired)]
+    [InlineData(5, CertificateStatus.EnrolledPendingDownload)]
+    [InlineData(6, CertificateStatus.NotEnrolled)]
+    [InlineData(7, CertificateStatus.AwaitingApproval)]
+    [InlineData(8, CertificateStatus.Approved)]
+    [InlineData(9, CertificateStatus.Applied)]
+    [InlineData(10, CertificateStatus.Downloaded)]
+    [InlineData(11, CertificateStatus.External)]
+    public void CertificateStatus_LegacyNumericWireCodesRemainStable(int code, CertificateStatus expected) {
+        Assert.Equal(expected, JsonSerializer.Deserialize<CertificateStatus>(code.ToString()));
+        Assert.Equal(expected, JsonSerializer.Deserialize<CertificateStatus>($"\"{code}\""));
     }
 }

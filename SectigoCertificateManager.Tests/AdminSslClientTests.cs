@@ -18,6 +18,76 @@ namespace SectigoCertificateManager.Tests;
 /// Unit tests for <see cref="AdminSslClient"/>.
 /// </summary>
 public sealed class AdminSslClientTests {
+    private sealed class RetryHandler : HttpMessageHandler {
+        private readonly HttpResponseMessage _tokenResponse = new(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new { access_token = "token", expires_in = 3600 })
+        };
+        private readonly HttpResponseMessage _retryResponse = new(HttpStatusCode.ServiceUnavailable) {
+            Content = JsonContent.Create(new { })
+        };
+        private readonly HttpResponseMessage _successResponse = new(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new[] { new AdminSslIdentity { SslId = 7 } })
+        };
+
+        public int ApiRequestCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            if (request.RequestUri!.AbsoluteUri.Contains("protocol/openid-connect/token", StringComparison.Ordinal)) {
+                return Task.FromResult(_tokenResponse);
+            }
+
+            ApiRequestCount++;
+            if (ApiRequestCount == 1) {
+                return Task.FromResult(_retryResponse);
+            }
+
+            return Task.FromResult(_successResponse);
+        }
+
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
+                _tokenResponse.Dispose();
+                _retryResponse.Dispose();
+                _successResponse.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
+
+    private sealed class TokenRetryAfterHandler : HttpMessageHandler {
+        private readonly HttpResponseMessage _throttledTokenResponse = new((HttpStatusCode)429);
+        private readonly HttpResponseMessage _tokenResponse = new(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new { access_token = "token", expires_in = 3600 })
+        };
+        private readonly HttpResponseMessage _apiResponse = new(HttpStatusCode.OK) {
+            Content = JsonContent.Create(Array.Empty<AdminSslIdentity>())
+        };
+
+        public TokenRetryAfterHandler(TimeSpan retryAfter) {
+            _throttledTokenResponse.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(retryAfter);
+        }
+
+        public int TokenRequestCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+            if (request.RequestUri!.AbsoluteUri.Contains("protocol/openid-connect/token", StringComparison.Ordinal)) {
+                TokenRequestCount++;
+                return Task.FromResult(TokenRequestCount == 1 ? _throttledTokenResponse : _tokenResponse);
+            }
+
+            return Task.FromResult(_apiResponse);
+        }
+
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
+                _throttledTokenResponse.Dispose();
+                _tokenResponse.Dispose();
+                _apiResponse.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
+
     private sealed class TestHandler : HttpMessageHandler {
         private readonly string _tokenJson;
         private readonly HttpStatusCode _tokenStatus;
@@ -67,6 +137,76 @@ public sealed class AdminSslClientTests {
             }
             return apiResponse;
         }
+    }
+
+    [Fact]
+    public async Task ListAsync_RetriesTransientAdminApiFailure() {
+        var handler = new RetryHandler();
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret") {
+            RetryCount = 2,
+            RetryInitialDelay = TimeSpan.Zero
+        };
+        using var client = new AdminSslClient(config, http);
+
+        IReadOnlyList<AdminSslIdentity> result = await client.ListAsync(5, 0);
+
+        Assert.Single(result);
+        Assert.Equal(2, handler.ApiRequestCount);
+    }
+
+    [Fact]
+    public async Task EnrollAsync_DoesNotRetryTransientMutationFailure() {
+        var handler = new RetryHandler();
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret") {
+            RetryCount = 5,
+            RetryInitialDelay = TimeSpan.Zero
+        };
+        using var client = new AdminSslClient(config, http);
+
+        await Assert.ThrowsAsync<ApiException>(() => client.EnrollAsync(new AdminSslEnrollRequest {
+            OrgId = 5,
+            CertType = 123,
+            Term = 365,
+            Csr = "CSR-DATA"
+        }));
+
+        Assert.Equal(1, handler.ApiRequestCount);
+    }
+
+    [Fact]
+    public async Task TokenRequest_HonorsRetryAfter() {
+        var expected = TimeSpan.FromSeconds(17);
+        var handler = new TokenRetryAfterHandler(expected);
+        using var http = new HttpClient(handler);
+        var config = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret") {
+            RetryCount = 2,
+            RetryInitialDelay = TimeSpan.Zero
+        };
+        using var client = new AdminSslClient(config, http);
+        TimeSpan? observed = null;
+        client.DelayAsync = (delay, _) => {
+            observed = delay;
+            return Task.CompletedTask;
+        };
+
+        await client.ListAsync(1, 0);
+
+        Assert.Equal(2, handler.TokenRequestCount);
+        Assert.Equal(expected, observed);
     }
 
     [Fact]
@@ -197,7 +337,7 @@ public sealed class AdminSslClientTests {
         Assert.NotNull(handler.LastRequest);
         Assert.Equal("https://admin.enterprise.sectigo.com/api/ssl/v2/import?orgId=15", handler.LastRequest!.RequestUri!.ToString());
         Assert.Equal(HttpMethod.Post, handler.LastRequest.Method);
-        Assert.IsType<MultipartFormDataContent>(handler.LastRequest.Content);
+        Assert.StartsWith("multipart/", handler.LastRequest.Content!.Headers.ContentType!.MediaType);
 
         Assert.NotNull(result);
         Assert.Equal(3, result!.ProcessedCount);

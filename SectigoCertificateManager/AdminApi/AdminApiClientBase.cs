@@ -3,7 +3,11 @@ namespace SectigoCertificateManager.AdminApi;
 using SectigoCertificateManager.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -21,6 +25,7 @@ public abstract class AdminApiClientBase : IDisposable {
     protected readonly HttpClient _httpClient;
     private readonly bool _ownsHttpClient;
     private readonly AdminTokenManager _tokenManager;
+    internal Func<TimeSpan, CancellationToken, Task>? DelayAsync { get; set; }
 
     /// <summary>
     /// Initializes a new Admin Operations API client base with the specified configuration and HTTP client.
@@ -44,7 +49,7 @@ public abstract class AdminApiClientBase : IDisposable {
             _httpClient.BaseAddress = new Uri(_config.BaseUrl);
         }
 
-        _tokenManager = new AdminTokenManager(_httpClient, _config);
+        _tokenManager = new AdminTokenManager(_httpClient, _config, DelayBeforeRetryAsync);
     }
 
     /// <summary>
@@ -66,11 +71,166 @@ public abstract class AdminApiClientBase : IDisposable {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
     }
 
+    /// <summary>
+    /// Sends an Admin API request with bounded retries for rate limiting, server failures,
+    /// transient transport errors, and timeouts that were not requested by the caller.
+    /// </summary>
+    protected async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken) =>
+        await SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
+
+    /// <summary>Sends a retryable Admin API request with an explicit response buffering policy.</summary>
+    protected async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        HttpCompletionOption completionOption,
+        CancellationToken cancellationToken) {
+        if (request is null) {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        if (!RequestSnapshot.CanReplaySafely(request.Method, request.Content)) {
+            return await _httpClient.SendAsync(request, completionOption, cancellationToken).ConfigureAwait(false);
+        }
+
+        var snapshot = await RequestSnapshot.CreateAsync(request).ConfigureAwait(false);
+        var attempts = Math.Max(1, _config.RetryCount);
+        var delay = _config.RetryInitialDelay < TimeSpan.Zero ? TimeSpan.Zero : _config.RetryInitialDelay;
+
+        for (var attempt = 0; ; attempt++) {
+            cancellationToken.ThrowIfCancellationRequested();
+            try {
+                using var currentRequest = snapshot.CreateRequest();
+                var response = await _httpClient.SendAsync(currentRequest, completionOption, cancellationToken).ConfigureAwait(false);
+                if (!IsRetryable(response.StatusCode) || attempt >= attempts - 1) {
+                    return response;
+                }
+
+                var wait = GetRetryDelay(response, delay);
+                response.Dispose();
+                await DelayBeforeRetryAsync(wait, cancellationToken).ConfigureAwait(false);
+            } catch (HttpRequestException) when (attempt < attempts - 1) {
+                await DelayBeforeRetryAsync(delay, cancellationToken).ConfigureAwait(false);
+            } catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && attempt < attempts - 1) {
+                await DelayBeforeRetryAsync(delay, cancellationToken).ConfigureAwait(false);
+            }
+
+            delay = TimeSpan.FromTicks(Math.Min(TimeSpan.FromMinutes(1).Ticks, Math.Max(1, delay.Ticks * 2)));
+        }
+    }
+
+    private Task DelayBeforeRetryAsync(TimeSpan delay, CancellationToken cancellationToken) =>
+        DelayAsync is null ? Task.Delay(delay, cancellationToken) : DelayAsync(delay, cancellationToken);
+
+    private static bool IsRetryable(HttpStatusCode statusCode) {
+        var status = (int)statusCode;
+        return status == 429 || status >= 500 && status < 600 && statusCode != HttpStatusCode.NotImplemented;
+    }
+
+    internal static TimeSpan GetRetryDelay(HttpResponseMessage response, TimeSpan fallback) {
+        RetryConditionHeaderValue? retryAfter = response.Headers.RetryAfter;
+        if (retryAfter?.Delta is TimeSpan delta) {
+            return delta < TimeSpan.Zero ? TimeSpan.Zero : delta;
+        }
+
+        if (retryAfter?.Date is DateTimeOffset date) {
+            var delay = date - DateTimeOffset.UtcNow;
+            return delay < TimeSpan.Zero ? TimeSpan.Zero : delay;
+        }
+
+        return fallback;
+    }
+
     /// <inheritdoc />
     public void Dispose() {
         _tokenManager.Dispose();
         if (_ownsHttpClient) {
             _httpClient.Dispose();
+        }
+    }
+}
+
+internal sealed class RequestSnapshot {
+    private readonly HttpMethod _method;
+    private readonly Uri? _requestUri;
+    private readonly Version _version;
+    private readonly IReadOnlyList<KeyValuePair<string, IEnumerable<string>>> _headers;
+    private readonly byte[]? _content;
+    private readonly IReadOnlyList<KeyValuePair<string, IEnumerable<string>>> _contentHeaders;
+
+    private RequestSnapshot(
+        HttpMethod method,
+        Uri? requestUri,
+        Version version,
+        IReadOnlyList<KeyValuePair<string, IEnumerable<string>>> headers,
+        byte[]? content,
+        IReadOnlyList<KeyValuePair<string, IEnumerable<string>>> contentHeaders) {
+        _method = method;
+        _requestUri = requestUri;
+        _version = version;
+        _headers = headers;
+        _content = content;
+        _contentHeaders = contentHeaders;
+    }
+
+    public static async Task<RequestSnapshot> CreateAsync(HttpRequestMessage request) {
+        byte[]? content = null;
+        IReadOnlyList<KeyValuePair<string, IEnumerable<string>>> contentHeaders = Array.Empty<KeyValuePair<string, IEnumerable<string>>>();
+        if (request.Content is not null) {
+            content = await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+            contentHeaders = CopyHeaders(request.Content.Headers);
+        }
+
+        return new RequestSnapshot(
+            request.Method,
+            request.RequestUri,
+            request.Version,
+            CopyHeaders(request.Headers),
+            content,
+            contentHeaders);
+    }
+
+    /// <summary>
+    /// Returns whether a request can be buffered and replayed without duplicating a mutation
+    /// or consuming a streaming body before the network send.
+    /// </summary>
+    public static bool CanReplaySafely(HttpMethod method, HttpContent? content) {
+        bool idempotentMethod = method == HttpMethod.Get
+            || method == HttpMethod.Head
+            || method == HttpMethod.Options
+            || method == HttpMethod.Put
+            || method == HttpMethod.Delete;
+        if (!idempotentMethod) {
+            return false;
+        }
+
+        return content is null
+            || content is ByteArrayContent
+            || content is StringContent
+            || content is FormUrlEncodedContent
+            || content is JsonContent;
+    }
+
+    public HttpRequestMessage CreateRequest() {
+        var request = new HttpRequestMessage(_method, _requestUri) { Version = _version };
+        CopyHeadersTo(_headers, request.Headers);
+        if (_content is not null) {
+            request.Content = new ByteArrayContent(_content);
+            CopyHeadersTo(_contentHeaders, request.Content.Headers);
+        }
+
+        return request;
+    }
+
+    private static IReadOnlyList<KeyValuePair<string, IEnumerable<string>>> CopyHeaders(HttpHeaders headers) =>
+        headers.Select(static header =>
+            new KeyValuePair<string, IEnumerable<string>>(header.Key, header.Value.ToArray())).ToArray();
+
+    private static void CopyHeadersTo(
+        IReadOnlyList<KeyValuePair<string, IEnumerable<string>>> source,
+        HttpHeaders destination) {
+        foreach (var header in source) {
+            destination.TryAddWithoutValidation(header.Key, header.Value);
         }
     }
 }
@@ -85,14 +245,19 @@ internal sealed class AdminTokenManager : IDisposable {
 
     private readonly HttpClient _httpClient;
     private readonly AdminApiConfig _config;
+    private readonly Func<TimeSpan, CancellationToken, Task> _delayAsync;
     private readonly SemaphoreSlim _lock = new(1, 1);
 
     private string _cachedToken = string.Empty;
     private DateTimeOffset _tokenExpiresAt;
 
-    public AdminTokenManager(HttpClient httpClient, AdminApiConfig config) {
+    public AdminTokenManager(
+        HttpClient httpClient,
+        AdminApiConfig config,
+        Func<TimeSpan, CancellationToken, Task> delayAsync) {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _config = config ?? throw new ArgumentNullException(nameof(config));
+        _delayAsync = delayAsync ?? throw new ArgumentNullException(nameof(delayAsync));
     }
 
     public async Task<string> GetTokenAsync(CancellationToken cancellationToken) {
@@ -106,15 +271,7 @@ internal sealed class AdminTokenManager : IDisposable {
                 return _cachedToken;
             }
 
-            using var content = new FormUrlEncodedContent(new Dictionary<string, string> {
-                ["grant_type"] = "client_credentials",
-                ["client_id"] = _config.ClientId,
-                ["client_secret"] = _config.ClientSecret
-            });
-
-            using var response = await _httpClient
-                .PostAsync(_config.TokenUrl, content, cancellationToken)
-                .ConfigureAwait(false);
+            using var response = await SendTokenRequestAsync(cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var model = await response.Content
@@ -133,6 +290,37 @@ internal sealed class AdminTokenManager : IDisposable {
             return _cachedToken;
         } finally {
             _lock.Release();
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendTokenRequestAsync(CancellationToken cancellationToken) {
+        var attempts = Math.Max(1, _config.RetryCount);
+        var delay = _config.RetryInitialDelay < TimeSpan.Zero ? TimeSpan.Zero : _config.RetryInitialDelay;
+        for (var attempt = 0; ; attempt++) {
+            var wait = delay;
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string> {
+                ["grant_type"] = "client_credentials",
+                ["client_id"] = _config.ClientId,
+                ["client_secret"] = _config.ClientSecret
+            });
+
+            try {
+                var response = await _httpClient.PostAsync(_config.TokenUrl, content, cancellationToken).ConfigureAwait(false);
+                var status = (int)response.StatusCode;
+                if ((status != 429 && (status < 500 || status >= 600 || response.StatusCode == HttpStatusCode.NotImplemented)) || attempt >= attempts - 1) {
+                    return response;
+                }
+
+                wait = AdminApiClientBase.GetRetryDelay(response, delay);
+                response.Dispose();
+            } catch (HttpRequestException ex) when (attempt < attempts - 1) {
+                Trace.TraceWarning("Admin token request attempt {0} of {1} failed: {2}", attempt + 1, attempts, ex.Message);
+            } catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && attempt < attempts - 1) {
+                Trace.TraceWarning("Admin token request attempt {0} of {1} timed out: {2}", attempt + 1, attempts, ex.Message);
+            }
+
+            await _delayAsync(wait, cancellationToken).ConfigureAwait(false);
+            delay = TimeSpan.FromTicks(Math.Min(TimeSpan.FromMinutes(1).Ticks, Math.Max(1, delay.Ticks * 2)));
         }
     }
 

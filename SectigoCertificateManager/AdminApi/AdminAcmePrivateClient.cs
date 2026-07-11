@@ -53,7 +53,7 @@ public sealed class AdminAcmePrivateClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(request, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         var items = await response.Content
@@ -81,7 +81,7 @@ public sealed class AdminAcmePrivateClient : AdminApiClientBase {
         };
         SetBearer(message, token);
 
-        using var response = await _httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        using var response = await SendAsync(message, cancellationToken).ConfigureAwait(false);
         await ApiErrorHandler.ThrowIfErrorAsync(response, cancellationToken).ConfigureAwait(false);
 
         return LocationHeaderParser.ParseId(response);

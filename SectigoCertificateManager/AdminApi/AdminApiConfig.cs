@@ -37,6 +37,12 @@ public sealed class AdminApiConfig(
         ? throw new ArgumentNullException(nameof(clientSecret))
         : clientSecret;
 
+    /// <summary>Gets or initializes the total number of attempts for transient HTTP failures.</summary>
+    public int RetryCount { get; set; } = 5;
+
+    /// <summary>Gets or initializes the first exponential-backoff delay.</summary>
+    public TimeSpan RetryInitialDelay { get; set; } = TimeSpan.FromSeconds(1);
+
     private static string ValidateHttpsUrl(string url, string paramName) {
         if (string.IsNullOrWhiteSpace(url)) {
             throw new ArgumentNullException(paramName);

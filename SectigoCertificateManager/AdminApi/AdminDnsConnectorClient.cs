@@ -65,7 +65,7 @@ public sealed class AdminDnsConnectorClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var response = await SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
@@ -96,7 +96,7 @@ public sealed class AdminDnsConnectorClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/connector/v1/dns/{Uri.EscapeDataString(uuid)}");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var response = await SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
@@ -115,7 +115,7 @@ public sealed class AdminDnsConnectorClient : AdminApiClientBase {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"api/connector/v1/dns/{Uri.EscapeDataString(uuid)}/provider");
         SetBearer(request, token);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+        using var response = await SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 

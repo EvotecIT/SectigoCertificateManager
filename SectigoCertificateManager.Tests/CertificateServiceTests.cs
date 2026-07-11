@@ -291,6 +291,22 @@ public sealed class CertificateServiceTests {
     }
 
     [Fact]
+    public async Task ListAsync_Legacy_ForwardsOrganizationAndRequesterFilters() {
+        var response = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create<IReadOnlyList<Certificate>>(Array.Empty<Certificate>())
+        };
+        var stub = new LegacyStubClient(response);
+        var config = new ApiConfig("https://example.com/", "u", "p", "c", ApiVersion.V25_4);
+
+        using var service = new CertificateService(config, stub);
+        _ = await service.ListAsync(25, 50, CertificateStatus.Issued, orgId: 7, requester: "owner@example.test");
+
+        Assert.Equal(
+            "v1/certificate?size=25&position=50&status=Issued&orgId=7&requester=owner%40example.test",
+            stub.LastRequest!.RequestUri!.ToString());
+    }
+
+    [Fact]
     public async Task GetAsync_Legacy_UsesCertificatesClient() {
         var certificate = new Certificate {
             Id = 2,
