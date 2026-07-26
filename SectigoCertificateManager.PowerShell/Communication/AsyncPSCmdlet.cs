@@ -90,30 +90,31 @@ public abstract partial class AsyncPSCmdlet : PSCmdlet, IDisposable {
 
         private void PublishReply(Func<PipelineReply> createReply) {
             try {
-                if (Volatile.Read(ref _requesterOwner) == 0)
+                if (Volatile.Read(ref _requesterOwner) == 0) {
                     return;
+                }
 
-            PipelineReply reply;
-            try {
-                reply = createReply();
-            } catch (Exception exception) {
-                TryPublish(new PipelineReply(value: null, exception));
-                throw;
+                PipelineReply reply;
+                try {
+                    reply = createReply();
+                } catch (Exception exception) {
+                    TryPublish(new PipelineReply(value: null, exception));
+                    throw;
+                }
+
+                TryPublish(reply);
+            } finally {
+                ReleasePipeline();
             }
-
-            TryPublish(reply);
-        } finally {
-            ReleasePipeline();
         }
-    }
 
-    private void TryPublish(PipelineReply reply) {
-        try {
-            _pipe.Add(reply);
-        } catch (InvalidOperationException) {
-            // The requester and pipeline can finish concurrently during cancellation.
+        private void TryPublish(PipelineReply reply) {
+            try {
+                _pipe.Add(reply);
+            } catch (InvalidOperationException) {
+                // The requester and pipeline can finish concurrently during cancellation.
+            }
         }
-    }
 
         public void Abandon() {
             ReleaseRequester();
@@ -121,18 +122,21 @@ public abstract partial class AsyncPSCmdlet : PSCmdlet, IDisposable {
         }
 
         public void ReleaseRequester() {
-            if (Interlocked.Exchange(ref _requesterOwner, 0) == 1)
+            if (Interlocked.Exchange(ref _requesterOwner, 0) == 1) {
                 Release();
+            }
         }
 
         public void ReleasePipeline() {
-            if (Interlocked.Exchange(ref _pipelineOwner, 0) == 1)
+            if (Interlocked.Exchange(ref _pipelineOwner, 0) == 1) {
                 Release();
+            }
         }
 
         private void Release() {
-            if (Interlocked.Decrement(ref _owners) == 0)
+            if (Interlocked.Decrement(ref _owners) == 0) {
                 _pipe.Dispose();
+            }
         }
     }
 
