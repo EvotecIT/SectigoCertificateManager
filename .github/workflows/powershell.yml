@@ -42,9 +42,7 @@ jobs:
         shell: pwsh
 
       - name: Refresh module manifest
-        env:
-          RefreshPSD1Only: 'true'
-        run: ./Module/Build/Build-Module.ps1
+        run: ./Module/Build/Build-Module.ps1 -ConfigurationGateMode Manifest
         shell: pwsh
 
       - name: Verify generated documentation
