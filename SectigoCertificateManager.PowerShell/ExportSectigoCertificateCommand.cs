@@ -15,7 +15,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   </item>
 /// </list>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsData.Export, "SectigoCertificate")]
 [CmdletBinding()]
 public sealed class ExportSectigoCertificateCommand : AsyncPSCmdlet {

@@ -21,7 +21,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Blocks until order 100 completes or is cancelled for the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsLifecycle.Wait, "SectigoOrder")]
 [CmdletBinding()]
 [OutputType(typeof(OrderStatus))]

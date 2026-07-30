@@ -1,6 +1,11 @@
-#Import-Module "C:\Support\GitHub\PSPublishModule\PSPublishModule.psd1" -Force
+param(
+    [ValidateSet('Manifest', 'Documentation', 'Build', 'Publish')]
+    [string] $ConfigurationGateMode = 'Build',
 
-Build-Module -ModuleName 'SectigoCertificateManager' {
+    [bool] $SignModule = $true
+)
+
+Build-Module -ModuleName 'SectigoCertificateManager' -NoInteractive {
     # Usual defaults as per standard module
     $Manifest = [ordered] @{
         ModuleVersion        = '0.1.0'
@@ -59,13 +64,13 @@ Build-Module -ModuleName 'SectigoCertificateManager' {
     New-ConfigurationFormat -ApplyTo 'DefaultPSD1', 'OnMergePSD1' -PSD1Style 'Minimal'
 
     # configuration for documentation, at the same time it enables documentation processing
-    New-ConfigurationDocumentation -Enable:$false -PathReadme 'Docs\Readme.md' -Path 'Docs'
+    New-ConfigurationDocumentation -Enable -PathReadme 'Docs\Readme.md' -Path 'Docs' -SyncExternalHelpToProjectRoot
 
     New-ConfigurationImportModule -ImportSelf -ImportRequiredModules
 
     $newConfigurationBuildSplat = @{
         Enable                            = $true
-        SignModule                        = $true
+        SignModule                        = $SignModule
         MergeModuleOnBuild                = $true
         MergeFunctionsFromApprovedModules = $true
         CertificateThumbprint             = '483292C9E317AA13B07BB7A96AE9D1A5ED9E7703'
@@ -74,6 +79,7 @@ Build-Module -ModuleName 'SectigoCertificateManager' {
         ResolveBinaryConflictsName        = 'SectigoCertificateManager.PowerShell'
         NETProjectName                    = 'SectigoCertificateManager.PowerShell'
         NETBinaryModule                   = 'SectigoCertificateManager.PowerShell.dll'
+        NETBinaryModuleDocumentation      = $true
         NETConfiguration                  = 'Release'
         NETFramework                      = 'net472', 'net8.0'
         DotSourceLibraries                = $true
@@ -89,4 +95,6 @@ Build-Module -ModuleName 'SectigoCertificateManager' {
     # global options for publishing to github/psgallery
     #New-ConfigurationPublish -Type PowerShellGallery -FilePath 'C:\Support\Important\PowerShellGalleryAPI.txt' -Enabled:$true
     #New-ConfigurationPublish -Type GitHub -FilePath 'C:\Support\Important\GitHubAPI.txt' -UserName 'EvotecIT' -Enabled:$true -ID 'ToGitHub' -OverwriteTagName 'SectigoCertificateManager-PowerShellModule.<TagModuleVersionWithPreRelease>'
-}
+
+    New-ConfigurationGate -Mode $ConfigurationGateMode
+} -ExitCode

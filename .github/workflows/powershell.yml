@@ -47,6 +47,16 @@ jobs:
         run: ./Module/Build/Build-Module.ps1
         shell: pwsh
 
+      - name: Verify generated documentation
+        run: |
+          ./Module/Build/Build-Module.ps1 -ConfigurationGateMode Documentation
+          $documentationChanges = @(git status --porcelain --untracked-files=all -- Module/Docs Module/en-US)
+          if ($documentationChanges.Count -gt 0) {
+            $documentationChanges | Write-Host
+            throw 'Generated documentation is not up to date.'
+          }
+        shell: pwsh
+
       - name: Commit refreshed PSD1
         if: ${{ github.event_name == 'push' }}
         env:

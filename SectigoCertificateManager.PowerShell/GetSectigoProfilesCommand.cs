@@ -21,7 +21,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Outputs every profile available to the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoProfiles")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Profile))]

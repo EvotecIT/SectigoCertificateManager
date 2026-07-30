@@ -39,7 +39,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Connects using the Admin API and lists detailed certificates that are issued, requested by the specified user and expiring within the next 30 days.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificate", DefaultParameterSetName = ListParameterSet)]
 [Alias("Get-SectigoCertificates")]
 [CmdletBinding()]

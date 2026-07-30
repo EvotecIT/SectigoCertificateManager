@@ -21,7 +21,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Permanently removes certificate 10 for the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/shouldprocess-attribute"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Remove, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
 public sealed class RemoveSectigoCertificateCommand : AsyncPSCmdlet {

@@ -1,7 +1,7 @@
 ﻿@{
     AliasesToExport      = @('Get-SectigoCertificates')
     Author               = 'Przemyslaw Klys'
-    CmdletsToExport      = @('Connect-Sectigo', 'Disconnect-Sectigo', 'Export-SectigoCertificate', 'Get-SectigoCertificate', 'Get-SectigoCertificateKeystoreLink', 'Get-SectigoCertificateRevocation', 'Get-SectigoCertificateStatus', 'Get-SectigoCertificateTypes', 'Get-SectigoEnrollCertificates', 'Get-SectigoInventory', 'Get-SectigoOrderHistory', 'Get-SectigoOrders', 'Get-SectigoOrdersPage', 'Get-SectigoOrganizations', 'Get-SectigoProfile', 'Get-SectigoProfiles', 'New-SectigoCsr', 'New-SectigoOrder', 'New-SectigoOrganization', 'Remove-SectigoCertificate', 'Invoke-SectigoCertificateRenewal', 'Stop-SectigoOrder', 'Update-SectigoCertificate', 'Wait-SectigoOrder')
+    CmdletsToExport      = @('Connect-Sectigo', 'Disconnect-Sectigo', 'Export-SectigoCertificate', 'Get-SectigoCertificate', 'Get-SectigoCertificateKeystoreLink', 'Get-SectigoCertificateRevocation', 'Get-SectigoCertificateStatus', 'Get-SectigoCertificateTypes', 'Get-SectigoEnrollCertificates', 'Get-SectigoInventory', 'Get-SectigoOrderHistory', 'Get-SectigoOrders', 'Get-SectigoOrdersPage', 'Get-SectigoOrganizations', 'Get-SectigoProfile', 'Get-SectigoProfiles', 'Invoke-SectigoCertificateRenewal', 'New-SectigoCsr', 'New-SectigoOrder', 'New-SectigoOrganization', 'Remove-SectigoCertificate', 'Stop-SectigoOrder', 'Update-SectigoCertificate', 'Wait-SectigoOrder')
     CompanyName          = 'Evotec'
     CompatiblePSEditions = @('Desktop', 'Core')
     Copyright            = '(c) 2011 - 2026 Przemyslaw Klys @ Evotec. All rights reserved.'

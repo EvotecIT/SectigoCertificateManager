@@ -27,7 +27,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Returns types available for the specified organization.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateTypes")]
 [CmdletBinding()]
 [OutputType(typeof(Models.CertificateType))]

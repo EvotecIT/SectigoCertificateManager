@@ -28,7 +28,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Retrieves the next fifty orders after position fifty.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoOrdersPage")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Order))]
