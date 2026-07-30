@@ -23,14 +23,17 @@ namespace SectigoCertificateManager.PowerShell;
 public sealed class GetSectigoInventoryCommand : AsyncPSCmdlet {
     /// <summary>API version to use.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>Maximum number of records to return.</summary>
     [Parameter]
+    [PSDefaultValue(Value = 50)]
     public int? Size { get; set; } = 50;
 
     /// <summary>Position offset for paging.</summary>
     [Parameter]
+    [PSDefaultValue(Value = 0)]
     public int? Position { get; set; } = 0;
 
     /// <summary>Filter certificates issued or updated from this date (yyyy-MM-dd).</summary>

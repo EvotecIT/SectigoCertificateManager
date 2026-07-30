@@ -28,6 +28,7 @@ namespace SectigoCertificateManager.PowerShell;
 public sealed class WaitSectigoOrderCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The identifier of the order to wait on.</summary>
@@ -36,6 +37,7 @@ public sealed class WaitSectigoOrderCommand : AsyncPSCmdlet {
 
     /// <summary>Delay between status checks.</summary>
     [Parameter]
+    [PSDefaultValue(Value = "00:00:05")]
     public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>Optional cancellation token.</summary>

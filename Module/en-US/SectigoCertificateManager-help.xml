@@ -323,7 +323,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
       <command:verb>Disconnect</command:verb>
       <command:noun>Sectigo</command:noun>
       <maml:description>
-        <maml:para>Clears shared defaults set by ConnectSectigoCommand.</maml:para>
+        <maml:para>Clears shared defaults set by Connect-Sectigo.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>

@@ -14,7 +14,7 @@ SectigoCertificateManager is a PowerShell module to manage Sectigo (formerly Com
 Creates shared defaults for Sectigo cmdlets.
 
 ### [Disconnect-Sectigo](Disconnect-Sectigo.md)
-Clears shared defaults set by ConnectSectigoCommand.
+Clears shared defaults set by Connect-Sectigo.
 
 ### [Export-SectigoCertificate](Export-SectigoCertificate.md)
 Downloads and exports a certificate.

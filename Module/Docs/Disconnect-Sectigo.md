@@ -6,7 +6,7 @@ schema: 2.0.0
 ---
 # Disconnect-Sectigo
 ## SYNOPSIS
-Clears shared defaults set by ConnectSectigoCommand.
+Clears shared defaults set by Connect-Sectigo.
 
 ## SYNTAX
 ### __AllParameterSets

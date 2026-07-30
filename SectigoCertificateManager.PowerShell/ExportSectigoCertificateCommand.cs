@@ -21,6 +21,7 @@ namespace SectigoCertificateManager.PowerShell;
 public sealed class ExportSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The certificate identifier.</summary>
@@ -34,6 +35,7 @@ public sealed class ExportSectigoCertificateCommand : AsyncPSCmdlet {
 
     /// <summary>Export format.</summary>
     [Parameter]
+    [PSDefaultValue(Value = CertificateFileFormat.Pem)]
     public CertificateFileFormat Format { get; set; } = CertificateFileFormat.Pem;
 
     /// <summary>Password protecting the PFX when <see cref="CertificateFileFormat.Pfx"/> is used.</summary>

@@ -23,6 +23,7 @@ namespace SectigoCertificateManager.PowerShell;
 public sealed class NewSectigoOrderCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The certificate common name.</summary>
@@ -35,6 +36,7 @@ public sealed class NewSectigoOrderCommand : AsyncPSCmdlet {
 
     /// <summary>The certificate term in months.</summary>
     [Parameter]
+    [PSDefaultValue(Value = 12)]
     public int Term { get; set; } = 12;
 
     /// <summary>Optional subject alternative names.</summary>

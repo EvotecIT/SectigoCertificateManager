@@ -28,6 +28,7 @@ namespace SectigoCertificateManager.PowerShell;
 public sealed class GetSectigoOrdersCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>Optional cancellation token.</summary>

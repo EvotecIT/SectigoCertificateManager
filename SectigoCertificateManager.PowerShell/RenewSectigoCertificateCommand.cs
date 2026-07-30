@@ -32,6 +32,7 @@ public sealed class RenewSectigoCertificateCommand : PSCmdlet {
 
     /// <summary>The API version to use (legacy only).</summary>
     [Parameter(ParameterSetName = LegacyParameterSet)]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The legacy order number.</summary>

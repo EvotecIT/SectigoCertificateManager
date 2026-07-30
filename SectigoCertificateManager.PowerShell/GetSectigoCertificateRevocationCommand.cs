@@ -21,6 +21,7 @@ namespace SectigoCertificateManager.PowerShell;
 public sealed class GetSectigoCertificateRevocationCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The certificate identifier.</summary>

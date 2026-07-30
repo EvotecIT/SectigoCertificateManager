@@ -30,10 +30,12 @@ public sealed class GetSectigoEnrollCertificatesCommand : AsyncPSCmdlet {
 
     /// <summary>Maximum records to fetch.</summary>
     [Parameter]
+    [PSDefaultValue(Value = 30)]
     public int Size { get; set; } = 30;
 
     /// <summary>Paging offset.</summary>
     [Parameter]
+    [PSDefaultValue(Value = 0)]
     public int Position { get; set; } = 0;
 
     /// <summary>Optional cancellation token.</summary>

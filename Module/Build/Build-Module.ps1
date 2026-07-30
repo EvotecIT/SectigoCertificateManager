@@ -1,3 +1,5 @@
+#Requires -Modules @{ ModuleName = 'PSPublishModule'; ModuleVersion = '3.0.83' }
+
 param(
     [ValidateSet('Manifest', 'Documentation', 'Build', 'Publish')]
     [string] $ConfigurationGateMode = 'Build',

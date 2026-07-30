@@ -27,6 +27,7 @@ namespace SectigoCertificateManager.PowerShell;
 public sealed class RemoveSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The identifier of the certificate to delete.</summary>
@@ -35,6 +36,7 @@ public sealed class RemoveSectigoCertificateCommand : AsyncPSCmdlet {
 
     /// <summary>The revocation reason code used when revoking via the Admin API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = RevocationReason.Unspecified)]
     public RevocationReason ReasonCode { get; set; } = RevocationReason.Unspecified;
 
     /// <summary>Optional human-readable revocation reason text used when revoking via the Admin API.</summary>

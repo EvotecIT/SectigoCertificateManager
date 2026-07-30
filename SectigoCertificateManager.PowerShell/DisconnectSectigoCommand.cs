@@ -2,7 +2,7 @@ namespace SectigoCertificateManager.PowerShell;
 
 using System.Management.Automation;
 
-/// <summary>Clears shared defaults set by <see cref="ConnectSectigoCommand"/>.</summary>
+/// <summary>Clears shared defaults set by <c>Connect-Sectigo</c>.</summary>
 /// <para>Removes Sectigo entries from <c>PSDefaultParameterValues</c> so subsequent cmdlets no longer inherit the connection parameters.</para>
 /// <example>
 ///   <summary>Clear stored defaults</summary>
