@@ -1,4 +1,4 @@
-#Requires -Modules @{ ModuleName = 'PSPublishModule'; ModuleVersion = '3.0.83' }
+#Requires -Modules @{ ModuleName = 'PSPublishModule'; ModuleVersion = '3.0.87' }
 
 param(
     [ValidateSet('Manifest', 'Documentation', 'Build', 'Publish')]

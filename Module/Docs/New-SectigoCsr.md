@@ -70,7 +70,7 @@ Possible values: P256, P384, P521
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.CsrCurve]::P256
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -118,7 +118,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 'SHA256'
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -134,7 +134,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 2048
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -150,7 +150,7 @@ Possible values: Rsa, Ecdsa
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.CsrKeyType]::Rsa
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

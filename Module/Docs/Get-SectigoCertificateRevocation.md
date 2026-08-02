@@ -21,9 +21,10 @@ Resolves revocation details for the specified certificate using the active Secti
 
 ### EXAMPLE 1
 ```powershell
-Get-SectigoCertificateRevocation -ApiVersion 'Value'
+Get-SectigoCertificateRevocation -CertificateId 12345
 ```
 
+Returns revocation information for the certificate through the active connection.
 
 ## PARAMETERS
 
@@ -38,7 +39,7 @@ Possible values: V25_4, V25_5, V25_6
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.ApiVersion]::V25_6
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

@@ -7,6 +7,11 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate revocation information.</summary>
 /// <para>Resolves revocation details for the specified certificate using the active Sectigo connection.</para>
+/// <example>
+///   <summary>Retrieve revocation details for a certificate</summary>
+///   <code>Get-SectigoCertificateRevocation -CertificateId 12345</code>
+///   <para>Returns revocation information for the certificate through the active connection.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>

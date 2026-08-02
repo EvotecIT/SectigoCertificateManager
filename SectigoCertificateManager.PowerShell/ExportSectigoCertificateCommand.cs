@@ -8,6 +8,11 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Downloads and exports a certificate.</summary>
 /// <para>Uses the active Sectigo connection, downloads the certificate, and saves it to disk.</para>
+/// <example>
+///   <summary>Export a certificate as PEM</summary>
+///   <code>Export-SectigoCertificate -CertificateId 12345 -Path '.\certificate.pem' -Format Pem</code>
+///   <para>Downloads the certificate and writes it to the requested path in PEM format.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>

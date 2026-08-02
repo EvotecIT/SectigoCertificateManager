@@ -53,7 +53,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 'https://admin.enterprise.sectigo.com'
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -69,7 +69,7 @@ Possible values: V25_4, V25_5, V25_6
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.ApiVersion]::V25_6
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -85,7 +85,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 'https://cert-manager.com/api'
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -149,7 +149,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 'enterprise'
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -181,7 +181,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 'https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token'
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -211,7 +211,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-- `System.Object`
+- `System.Management.Automation.PSObject`
 
 ## RELATED LINKS
 

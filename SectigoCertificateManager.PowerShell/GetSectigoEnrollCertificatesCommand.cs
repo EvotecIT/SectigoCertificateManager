@@ -9,8 +9,14 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Lists certificates using the Enroll/Enterprise endpoint (<c>/api/v1/certificates</c>).</summary>
 /// <para>Use this when your tenant exposes the Enroll API shown in the portal (e.g., https://yourtenant.enroll.enterprise.sectigo.com/api/v1/certificates).</para>
+/// <example>
+///   <summary>List certificates from an Enroll endpoint</summary>
+///   <code>$credential = Get-Credential; Get-SectigoEnrollCertificates -BaseUrl 'https://tenant.enroll.enterprise.sectigo.com' -Username $credential.UserName -Password $credential.GetNetworkCredential().Password -CustomerUri 'tenant' -Size 50</code>
+///   <para>Prompts for Enroll credentials and returns the first page of certificates for the tenant.</para>
+/// </example>
 [Cmdlet(VerbsCommon.Get, "SectigoEnrollCertificates")]
 [CmdletBinding()]
+[OutputType(typeof(JsonElement))]
 public sealed class GetSectigoEnrollCertificatesCommand : AsyncPSCmdlet {
     /// <summary>Base URL, e.g., https://company.enroll.enterprise.sectigo.com.</summary>
     [Parameter(Mandatory = true)]

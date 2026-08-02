@@ -21,9 +21,10 @@ Resolves certificate status using the active Sectigo connection.
 
 ### EXAMPLE 1
 ```powershell
-Get-SectigoCertificateStatus -ApiVersion 'Value'
+Get-SectigoCertificateStatus -CertificateId 12345
 ```
 
+Returns the status reported by the active Sectigo connection.
 
 ## PARAMETERS
 
@@ -38,7 +39,7 @@ Possible values: V25_4, V25_5, V25_6
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.ApiVersion]::V25_6
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -84,7 +85,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-- `System.Object`
+- `SectigoCertificateManager.CertificateStatus`
 
 ## RELATED LINKS
 

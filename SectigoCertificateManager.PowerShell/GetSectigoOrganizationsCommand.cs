@@ -8,7 +8,16 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves organizations.</summary>
 /// <para>Builds an API client and lists all organizations for the account.</para>
+/// <example>
+///   <summary>List organizations using a legacy connection</summary>
+///   <code>$credential = Get-Credential; Connect-Sectigo -BaseUrl 'https://cert-manager.com/api' -Username $credential.UserName -Password $credential.GetNetworkCredential().Password -CustomerUri 'tenant'; Get-SectigoOrganizations</code>
+///   <para>Creates a legacy API connection and lists its organizations.</para>
+/// </example>
 /// <list type="alertSet">
+///   <item>
+///     <term>Legacy connection required</term>
+///     <description>This cmdlet does not support an Admin (OAuth2) connection. Connect with legacy credentials before calling it.</description>
+///   </item>
 ///   <item>
 ///     <term>Network</term>
 ///     <description>Requests organization data from the Sectigo API.</description>

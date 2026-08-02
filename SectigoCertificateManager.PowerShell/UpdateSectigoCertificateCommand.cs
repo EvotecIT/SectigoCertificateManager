@@ -8,6 +8,11 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Renews an existing certificate.</summary>
 /// <para>Uses the active Sectigo connection and submits a <see cref="RenewCertificateRequest"/> to the appropriate renew endpoint.</para>
+/// <example>
+///   <summary>Renew a certificate by identifier</summary>
+///   <code>$csr = Get-Content -Raw '.\renewal.csr'; Update-SectigoCertificate -CertificateId 12345 -Csr $csr -DcvMode Email -DcvEmail 'admin@example.com'</code>
+///   <para>Submits a CSR and email validation details for the specified certificate.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>

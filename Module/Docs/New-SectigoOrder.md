@@ -38,7 +38,7 @@ Possible values: V25_4, V25_5, V25_6
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.ApiVersion]::V25_6
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -118,7 +118,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 12
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

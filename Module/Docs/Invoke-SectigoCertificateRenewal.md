@@ -27,9 +27,10 @@ Admin mode: uses certificate id with the Admin Operations API.
 
 ### EXAMPLE 1
 ```powershell
-Invoke-SectigoCertificateRenewal -Csr 'Value' -DcvMode 'Value'
+$csr = Get-Content -Raw '.\renewal.csr'; Invoke-SectigoCertificateRenewal -OrderNumber 100 -Csr $csr -DcvMode Email -DcvEmail 'admin@example.com'
 ```
 
+Submits a CSR and email validation details for the legacy order.
 
 ## PARAMETERS
 
@@ -44,7 +45,7 @@ Possible values: V25_4, V25_5, V25_6
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.ApiVersion]::V25_6
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

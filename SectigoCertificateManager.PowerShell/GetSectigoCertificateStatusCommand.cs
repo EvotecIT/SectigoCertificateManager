@@ -7,6 +7,11 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate status.</summary>
 /// <para>Resolves certificate status using the active Sectigo connection.</para>
+/// <example>
+///   <summary>Retrieve a certificate's current status</summary>
+///   <code>Get-SectigoCertificateStatus -CertificateId 12345</code>
+///   <para>Returns the status reported by the active Sectigo connection.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -17,6 +22,7 @@ namespace SectigoCertificateManager.PowerShell;
 /// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateStatus")]
 [CmdletBinding()]
+[OutputType(typeof(CertificateStatus))]
 public sealed class GetSectigoCertificateStatusCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]

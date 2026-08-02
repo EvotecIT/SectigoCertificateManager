@@ -21,9 +21,10 @@ Uses the active Sectigo connection, downloads the certificate, and saves it to d
 
 ### EXAMPLE 1
 ```powershell
-Export-SectigoCertificate -Path 'C:\Path'
+Export-SectigoCertificate -CertificateId 12345 -Path '.\certificate.pem' -Format Pem
 ```
 
+Downloads the certificate and writes it to the requested path in PEM format.
 
 ## PARAMETERS
 
@@ -38,7 +39,7 @@ Possible values: V25_4, V25_5, V25_6
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.ApiVersion]::V25_6
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -86,7 +87,7 @@ Possible values: Pem, Der, Pfx
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.PowerShell.CertificateFileFormat]::Pem
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -132,7 +133,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-- `System.Object`
+- `None`
 
 ## RELATED LINKS
 

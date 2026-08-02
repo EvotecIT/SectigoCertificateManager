@@ -24,6 +24,7 @@ using System.Management.Automation;
 /// </example>
 [Cmdlet(VerbsCommunications.Connect, "Sectigo")]
 [CmdletBinding(DefaultParameterSetName = LegacyParameterSet)]
+[OutputType(typeof(PSObject))]
 public sealed class ConnectSectigoCommand : PSCmdlet {
     private const string DefaultBaseUrl = "https://cert-manager.com/api";
     private const string LegacyParameterSet = "Legacy";

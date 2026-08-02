@@ -32,7 +32,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>BaseUrl</maml:name>
@@ -44,7 +44,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>'https://cert-manager.com/api'</dev:defaultValue>
         </command:parameter>
         <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CustomerUri</maml:name>
@@ -95,7 +95,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>'https://admin.enterprise.sectigo.com'</dev:defaultValue>
         </command:parameter>
         <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>ClientId</maml:name>
@@ -131,7 +131,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>'enterprise'</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>TokenUrl</maml:name>
@@ -143,7 +143,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>'https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token'</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -158,7 +158,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>'https://admin.enterprise.sectigo.com'</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>ApiVersion</maml:name>
@@ -175,7 +175,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>BaseUrl</maml:name>
@@ -187,7 +187,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>'https://cert-manager.com/api'</dev:defaultValue>
       </command:parameter>
       <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>ClientId</maml:name>
@@ -235,7 +235,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>'enterprise'</dev:defaultValue>
       </command:parameter>
       <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>Password</maml:name>
@@ -259,7 +259,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>'https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token'</dev:defaultValue>
       </command:parameter>
       <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>Username</maml:name>
@@ -284,7 +284,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <maml:name>System.Object</maml:name>
+          <maml:name>System.Management.Automation.PSObject</maml:name>
         </dev:type>
       </command:returnValue>
     </command:returnValues>
@@ -342,13 +342,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
         </dev:type>
       </command:inputType>
     </command:inputTypes>
-    <command:returnValues>
-      <command:returnValue>
-        <dev:type>
-          <maml:name>System.Object</maml:name>
-        </dev:type>
-      </command:returnValue>
-    </command:returnValues>
+    <command:returnValues />
     <maml:alertSet>
       <maml:alert>
         <maml:para></maml:para>
@@ -398,7 +392,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -439,7 +433,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
             <maml:name>CertificateFileFormat</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.PowerShell.CertificateFileFormat]::Pem</dev:defaultValue>
         </command:parameter>
         <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>Path</maml:name>
@@ -483,7 +477,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -524,7 +518,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
           <maml:name>CertificateFileFormat</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.PowerShell.CertificateFileFormat]::Pem</dev:defaultValue>
       </command:parameter>
       <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>Path</maml:name>
@@ -558,13 +552,7 @@ reuse the active connection without repeating authentication arguments.</maml:pa
         </dev:type>
       </command:inputType>
     </command:inputTypes>
-    <command:returnValues>
-      <command:returnValue>
-        <dev:type>
-          <maml:name>System.Object</maml:name>
-        </dev:type>
-      </command:returnValue>
-    </command:returnValues>
+    <command:returnValues />
     <maml:alertSet>
       <maml:alert>
         <maml:para>Network</maml:para>
@@ -573,10 +561,10 @@ reuse the active connection without repeating authentication arguments.</maml:pa
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>EXAMPLE 1</maml:title>
-        <dev:code>Export-SectigoCertificate -Path 'C:\Path'</dev:code>
+        <maml:title>Export a certificate as PEM</maml:title>
+        <dev:code>Export-SectigoCertificate -CertificateId 12345 -Path '.\certificate.pem' -Format Pem</dev:code>
         <dev:remarks>
-          <maml:para></maml:para>
+          <maml:para>Downloads the certificate and writes it to the requested path in PEM format.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -622,7 +610,7 @@ for the active Sectigo connection (legacy SCM or Admin Operations API).</maml:pa
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -751,7 +739,7 @@ Intended primarily for testing and exploratory use when combined with ExpiresWit
             <maml:name>Int32</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>30</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>Status</maml:name>
@@ -784,7 +772,7 @@ Intended primarily for testing and exploratory use when combined with ExpiresWit
             <maml:name>CertificateStatus</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.CertificateStatus]::Any</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
       <command:syntaxItem parameterSetName="ById">
@@ -804,7 +792,7 @@ Intended primarily for testing and exploratory use when combined with ExpiresWit
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -848,7 +836,7 @@ Intended primarily for testing and exploratory use when combined with ExpiresWit
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -989,7 +977,7 @@ Intended primarily for testing and exploratory use when combined with ExpiresWit
           <maml:name>Int32</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>30</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>Status</maml:name>
@@ -1022,7 +1010,7 @@ Intended primarily for testing and exploratory use when combined with ExpiresWit
           <maml:name>CertificateStatus</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.CertificateStatus]::Any</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>
@@ -1283,7 +1271,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -1327,7 +1315,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -1376,10 +1364,10 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>EXAMPLE 1</maml:title>
-        <dev:code>Get-SectigoCertificateRevocation -ApiVersion 'Value'</dev:code>
+        <maml:title>Retrieve revocation details for a certificate</maml:title>
+        <dev:code>Get-SectigoCertificateRevocation -CertificateId 12345</dev:code>
         <dev:remarks>
-          <maml:para></maml:para>
+          <maml:para>Returns revocation information for the certificate through the active connection.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -1424,7 +1412,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -1468,7 +1456,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -1505,7 +1493,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <maml:name>System.Object</maml:name>
+          <maml:name>SectigoCertificateManager.CertificateStatus</maml:name>
         </dev:type>
       </command:returnValue>
     </command:returnValues>
@@ -1517,10 +1505,10 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>EXAMPLE 1</maml:title>
-        <dev:code>Get-SectigoCertificateStatus -ApiVersion 'Value'</dev:code>
+        <maml:title>Retrieve a certificate's current status</maml:title>
+        <dev:code>Get-SectigoCertificateStatus -CertificateId 12345</dev:code>
         <dev:remarks>
-          <maml:para></maml:para>
+          <maml:para>Returns the status reported by the active Sectigo connection.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -1565,7 +1553,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -1609,7 +1597,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -1762,7 +1750,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>Int32</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>0</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>Size</maml:name>
@@ -1774,7 +1762,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>Int32</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>30</dev:defaultValue>
         </command:parameter>
         <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>Username</maml:name>
@@ -1849,7 +1837,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>Int32</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>0</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>Size</maml:name>
@@ -1861,7 +1849,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>Int32</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>30</dev:defaultValue>
       </command:parameter>
       <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>Username</maml:name>
@@ -1886,7 +1874,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <maml:name>System.Object</maml:name>
+          <maml:name>System.Text.Json.JsonElement</maml:name>
         </dev:type>
       </command:returnValue>
     </command:returnValues>
@@ -1897,10 +1885,10 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>EXAMPLE 1</maml:title>
-        <dev:code>Get-SectigoEnrollCertificates -BaseUrl 'Value' -Username 'Name' -Password 'Value' -CustomerUri 'https://example.com'</dev:code>
+        <maml:title>List certificates from an Enroll endpoint</maml:title>
+        <dev:code>$credential = Get-Credential; Get-SectigoEnrollCertificates -BaseUrl 'https://tenant.enroll.enterprise.sectigo.com' -Username $credential.UserName -Password $credential.GetNetworkCredential().Password -CustomerUri 'tenant' -Size 50</dev:code>
         <dev:remarks>
-          <maml:para></maml:para>
+          <maml:para>Prompts for Enroll credentials and returns the first page of certificates for the tenant.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -1936,7 +1924,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -1984,7 +1972,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>Nullable`1</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>0</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>Size</maml:name>
@@ -1996,7 +1984,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>Nullable`1</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>50</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -2016,7 +2004,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -2064,7 +2052,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>Nullable`1</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>0</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>Size</maml:name>
@@ -2076,7 +2064,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>Nullable`1</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>50</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>
@@ -2142,7 +2130,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -2186,7 +2174,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -2286,7 +2274,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -2318,7 +2306,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -2406,7 +2394,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_4</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -2462,7 +2450,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_4</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -2584,7 +2572,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -2616,7 +2604,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -2647,16 +2635,20 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
+        <maml:para>Legacy connection required</maml:para>
+        <maml:para>This cmdlet does not support an Admin (OAuth2) connection. Connect with legacy credentials before calling it.</maml:para>
+      </maml:alert>
+      <maml:alert>
         <maml:para>Network</maml:para>
         <maml:para>Requests organization data from the Sectigo API.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>EXAMPLE 1</maml:title>
-        <dev:code>Get-SectigoOrganizations -ApiVersion 'Value'</dev:code>
+        <maml:title>List organizations using a legacy connection</maml:title>
+        <dev:code>$credential = Get-Credential; Connect-Sectigo -BaseUrl 'https://cert-manager.com/api' -Username $credential.UserName -Password $credential.GetNetworkCredential().Password -CustomerUri 'tenant'; Get-SectigoOrganizations</dev:code>
         <dev:remarks>
-          <maml:para></maml:para>
+          <maml:para>Creates a legacy API connection and lists its organizations.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -2701,7 +2693,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -2745,7 +2737,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -2845,7 +2837,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -2877,7 +2869,7 @@ Admin (OAuth2) connection created with Connect-Sectigo -ClientId/-ClientSecret.<
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -2966,7 +2958,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -3125,7 +3117,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -3230,10 +3222,10 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>EXAMPLE 1</maml:title>
-        <dev:code>Invoke-SectigoCertificateRenewal -Csr 'Value' -DcvMode 'Value'</dev:code>
+        <maml:title>Renew a legacy certificate order</maml:title>
+        <dev:code>$csr = Get-Content -Raw '.\renewal.csr'; Invoke-SectigoCertificateRenewal -OrderNumber 100 -Csr $csr -DcvMode Email -DcvEmail 'admin@example.com'</dev:code>
         <dev:remarks>
-          <maml:para></maml:para>
+          <maml:para>Submits a CSR and email validation details for the legacy order.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -3302,7 +3294,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>CsrCurve</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.CsrCurve]::P256</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>DnsName</maml:name>
@@ -3338,7 +3330,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>'SHA256'</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>KeySize</maml:name>
@@ -3350,7 +3342,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>Int32</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>2048</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>KeyType</maml:name>
@@ -3366,7 +3358,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>CsrKeyType</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.CsrKeyType]::Rsa</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>Locality</maml:name>
@@ -3458,7 +3450,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>CsrCurve</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.CsrCurve]::P256</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>DnsName</maml:name>
@@ -3494,7 +3486,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>'SHA256'</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>KeySize</maml:name>
@@ -3506,7 +3498,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>Int32</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>2048</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>KeyType</maml:name>
@@ -3522,7 +3514,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>CsrKeyType</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.CsrKeyType]::Rsa</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>Locality</maml:name>
@@ -3633,7 +3625,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -3693,7 +3685,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>Int32</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>12</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -3713,7 +3705,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -3773,7 +3765,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>Int32</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>12</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>
@@ -3846,7 +3838,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -3902,7 +3894,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -4014,7 +4006,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -4074,7 +4066,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>RevocationReason</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.RevocationReason]::Unspecified</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -4094,7 +4086,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -4154,7 +4146,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>RevocationReason</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.RevocationReason]::Unspecified</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>
@@ -4164,13 +4156,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
         </dev:type>
       </command:inputType>
     </command:inputTypes>
-    <command:returnValues>
-      <command:returnValue>
-        <dev:type>
-          <maml:name>System.Object</maml:name>
-        </dev:type>
-      </command:returnValue>
-    </command:returnValues>
+    <command:returnValues />
     <maml:alertSet>
       <maml:alert>
         <maml:para>Irreversible</maml:para>
@@ -4230,7 +4216,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -4274,7 +4260,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -4308,13 +4294,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
         </dev:type>
       </command:inputType>
     </command:inputTypes>
-    <command:returnValues>
-      <command:returnValue>
-        <dev:type>
-          <maml:name>System.Object</maml:name>
-        </dev:type>
-      </command:returnValue>
-    </command:returnValues>
+    <command:returnValues />
     <maml:alertSet>
       <maml:alert>
         <maml:para>Irreversible</maml:para>
@@ -4374,7 +4354,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -4462,7 +4442,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -4555,10 +4535,10 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>EXAMPLE 1</maml:title>
-        <dev:code>Update-SectigoCertificate -Csr 'Value' -DcvMode 'Value'</dev:code>
+        <maml:title>Renew a certificate by identifier</maml:title>
+        <dev:code>$csr = Get-Content -Raw '.\renewal.csr'; Update-SectigoCertificate -CertificateId 12345 -Csr $csr -DcvMode Email -DcvEmail 'admin@example.com'</dev:code>
         <dev:remarks>
-          <maml:para></maml:para>
+          <maml:para>Submits a CSR and email validation details for the specified certificate.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -4603,7 +4583,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>ApiVersion</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
           <maml:name>CancellationToken</maml:name>
@@ -4639,7 +4619,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
             <maml:name>TimeSpan</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
+          <dev:defaultValue>'00:00:05'</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -4659,7 +4639,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>ApiVersion</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>[SectigoCertificateManager.ApiVersion]::V25_6</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="False" position="named" aliases="None">
         <maml:name>CancellationToken</maml:name>
@@ -4695,7 +4675,7 @@ Admin mode: uses certificate id with the Admin Operations API.</maml:para>
           <maml:name>TimeSpan</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
+        <dev:defaultValue>'00:00:05'</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>

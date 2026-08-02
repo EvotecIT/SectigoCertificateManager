@@ -15,6 +15,11 @@ namespace SectigoCertificateManager.PowerShell;
 /// Legacy mode: uses order number with the legacy API.
 /// Admin mode: uses certificate id with the Admin Operations API.
 /// </para>
+/// <example>
+///   <summary>Renew a legacy certificate order</summary>
+///   <code>$csr = Get-Content -Raw '.\renewal.csr'; Invoke-SectigoCertificateRenewal -OrderNumber 100 -Csr $csr -DcvMode Email -DcvEmail 'admin@example.com'</code>
+///   <para>Submits a CSR and email validation details for the legacy order.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>

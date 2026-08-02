@@ -21,9 +21,10 @@ Use this when your tenant exposes the Enroll API shown in the portal (e.g., http
 
 ### EXAMPLE 1
 ```powershell
-Get-SectigoEnrollCertificates -BaseUrl 'Value' -Username 'Name' -Password 'Value' -CustomerUri 'https://example.com'
+$credential = Get-Credential; Get-SectigoEnrollCertificates -BaseUrl 'https://tenant.enroll.enterprise.sectigo.com' -Username $credential.UserName -Password $credential.GetNetworkCredential().Password -CustomerUri 'tenant' -Size 50
 ```
 
+Prompts for Enroll credentials and returns the first page of certificates for the tenant.
 
 ## PARAMETERS
 
@@ -102,7 +103,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 0
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -118,7 +119,7 @@ Possible values:
 
 Required: False
 Position: named
-Default value: None
+Default value: 30
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -148,7 +149,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-- `System.Object`
+- `System.Text.Json.JsonElement`
 
 ## RELATED LINKS
 

@@ -21,9 +21,10 @@ Builds an API client and lists all organizations for the account.
 
 ### EXAMPLE 1
 ```powershell
-Get-SectigoOrganizations -ApiVersion 'Value'
+$credential = Get-Credential; Connect-Sectigo -BaseUrl 'https://cert-manager.com/api' -Username $credential.UserName -Password $credential.GetNetworkCredential().Password -CustomerUri 'tenant'; Get-SectigoOrganizations
 ```
 
+Creates a legacy API connection and lists its organizations.
 
 ## PARAMETERS
 
@@ -38,7 +39,7 @@ Possible values: V25_4, V25_5, V25_6
 
 Required: False
 Position: named
-Default value: None
+Default value: [SectigoCertificateManager.ApiVersion]::V25_6
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -76,6 +77,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - [https://github.com/EvotecIT/SectigoCertificateManager](https://github.com/EvotecIT/SectigoCertificateManager)
 
 ## NOTES
+
+### Legacy connection required
+
+This cmdlet does not support an Admin (OAuth2) connection. Connect with legacy credentials before calling it.
 
 ### Network
 
