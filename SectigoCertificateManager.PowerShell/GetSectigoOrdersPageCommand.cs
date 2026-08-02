@@ -28,13 +28,14 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Retrieves the next fifty orders after position fifty.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoOrdersPage")]
 [CmdletBinding()]
 [OutputType(typeof(Models.Order))]
 public sealed class GetSectigoOrdersPageCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_4)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_4;
 
     /// <summary>The result offset.</summary>

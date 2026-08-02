@@ -8,6 +8,11 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Downloads and exports a certificate.</summary>
 /// <para>Uses the active Sectigo connection, downloads the certificate, and saves it to disk.</para>
+/// <example>
+///   <summary>Export a certificate as PEM</summary>
+///   <code>Export-SectigoCertificate -CertificateId 12345 -Path '.\certificate.pem' -Format Pem</code>
+///   <para>Downloads the certificate and writes it to the requested path in PEM format.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -15,12 +20,13 @@ namespace SectigoCertificateManager.PowerShell;
 ///   </item>
 /// </list>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsData.Export, "SectigoCertificate")]
 [CmdletBinding()]
 public sealed class ExportSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The certificate identifier.</summary>
@@ -34,6 +40,7 @@ public sealed class ExportSectigoCertificateCommand : AsyncPSCmdlet {
 
     /// <summary>Export format.</summary>
     [Parameter]
+    [PSDefaultValue(Value = CertificateFileFormat.Pem)]
     public CertificateFileFormat Format { get; set; } = CertificateFileFormat.Pem;
 
     /// <summary>Password protecting the PFX when <see cref="CertificateFileFormat.Pfx"/> is used.</summary>

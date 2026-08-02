@@ -54,20 +54,24 @@ public sealed class NewSectigoCsrCommand : PSCmdlet {
 
     /// <summary>Key algorithm to use.</summary>
     [Parameter()]
+    [PSDefaultValue(Value = CsrKeyType.Rsa)]
     public CsrKeyType KeyType { get; set; } = CsrKeyType.Rsa;
 
     /// <summary>RSA key size (applies when KeyType is RSA).</summary>
     [Parameter()]
     [ValidateRange(1024, int.MaxValue)]
+    [PSDefaultValue(Value = DefaultKeySize)]
     public int KeySize { get; set; } = DefaultKeySize;
 
     /// <summary>Elliptic curve (applies when KeyType is Ecdsa).</summary>
     [Parameter()]
+    [PSDefaultValue(Value = CsrCurve.P256)]
     public CsrCurve Curve { get; set; } = CsrCurve.P256;
 
     /// <summary>Hash algorithm name (e.g., SHA256).</summary>
     [Parameter()]
     [ValidateNotNullOrEmpty]
+    [PSDefaultValue(Value = "SHA256")]
     public string HashAlgorithm { get; set; } = "SHA256";
 
     /// <inheritdoc />

@@ -20,13 +20,14 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Shows all history entries for order 100 on the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoOrderHistory")]
 [CmdletBinding()]
 [OutputType(typeof(Models.OrderHistoryEntry))]
 public sealed class GetSectigoOrderHistoryCommand : PSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The identifier of the order.</summary>

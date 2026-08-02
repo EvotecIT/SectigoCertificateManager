@@ -24,14 +24,18 @@ using System.Management.Automation;
 /// </example>
 [Cmdlet(VerbsCommunications.Connect, "Sectigo")]
 [CmdletBinding(DefaultParameterSetName = LegacyParameterSet)]
+[OutputType(typeof(PSObject))]
 public sealed class ConnectSectigoCommand : PSCmdlet {
     private const string DefaultBaseUrl = "https://cert-manager.com/api";
     private const string LegacyParameterSet = "Legacy";
     private const string AdminParameterSet = "Admin";
+    private const string DefaultInstance = "enterprise";
     private const string DefaultAdminBaseUrl = "https://admin.enterprise.sectigo.com";
+    private const string DefaultTokenUrl = "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token";
 
     /// <summary>The API base URL (e.g., https://cert-manager.com/ssl).</summary>
     [Parameter(ParameterSetName = LegacyParameterSet)]
+    [PSDefaultValue(Value = DefaultBaseUrl)]
     public string BaseUrl { get; set; } = DefaultBaseUrl;
 
     /// <summary>The user name for authentication.</summary>
@@ -48,6 +52,7 @@ public sealed class ConnectSectigoCommand : PSCmdlet {
 
     /// <summary>The API version to use.</summary>
     [Parameter(ParameterSetName = LegacyParameterSet)]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The OAuth2 client identifier for the Admin API.</summary>
@@ -60,15 +65,18 @@ public sealed class ConnectSectigoCommand : PSCmdlet {
 
     /// <summary>The Sectigo instance name (for example, enterprise).</summary>
     [Parameter(ParameterSetName = AdminParameterSet)]
-    public string Instance { get; set; } = "enterprise";
+    [PSDefaultValue(Value = DefaultInstance)]
+    public string Instance { get; set; } = DefaultInstance;
 
     /// <summary>Base URL of the Admin API.</summary>
     [Parameter(ParameterSetName = AdminParameterSet)]
+    [PSDefaultValue(Value = DefaultAdminBaseUrl)]
     public string AdminBaseUrl { get; set; } = DefaultAdminBaseUrl;
 
     /// <summary>OAuth2 token endpoint URL for the Admin API.</summary>
     [Parameter(ParameterSetName = AdminParameterSet)]
-    public string TokenUrl { get; set; } = "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token";
+    [PSDefaultValue(Value = DefaultTokenUrl)]
+    public string TokenUrl { get; set; } = DefaultTokenUrl;
 
     /// <summary>Sets default parameter values for all Sectigo cmdlets.</summary>
     protected override void ProcessRecord() {

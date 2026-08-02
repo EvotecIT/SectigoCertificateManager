@@ -116,9 +116,9 @@ Follow **Conventional Commits + Gitmoji**:
 
 ---
 
-# 🧾 C# Cmdlet Documentation Rules (XmlDoc2CmdletDoc)
+# 🧾 C# Cmdlet Documentation Rules
 
-Use XML documentation blocks **per MatejKafka.XmlDoc2CmdletDoc**, not standard PowerShell help.
+Use XML documentation blocks that PowerForge can turn into command Markdown and external PowerShell help.
 
 ## Cmdlet Synopsis & Description
 
@@ -177,5 +177,5 @@ public class MyType2 {}
 
 ```csharp
 /// <seealso href="https://learn.microsoft.com/..."/>
-/// <seealso href="https://github.com/MatejKafka/XmlDoc2CmdletDoc/">XmlDoc2CmdletDoc repository</seealso>
+/// <seealso href="https://github.com/EvotecIT/PSPublishModule/blob/main/Docs/PSPublishModule.ModuleDocumentation.md">PowerForge module documentation</seealso>
 ```

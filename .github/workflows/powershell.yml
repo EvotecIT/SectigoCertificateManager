@@ -38,13 +38,21 @@ jobs:
 
       - name: Setup PowerShell modules
         run: |
-          Install-Module PSPublishModule -Force -Scope CurrentUser -AllowClobber
+          Install-Module PSPublishModule -RequiredVersion 3.0.87 -Force -Scope CurrentUser -AllowClobber
         shell: pwsh
 
       - name: Refresh module manifest
-        env:
-          RefreshPSD1Only: 'true'
-        run: ./Module/Build/Build-Module.ps1
+        run: ./Module/Build/Build-Module.ps1 -ConfigurationGateMode Manifest
+        shell: pwsh
+
+      - name: Verify generated documentation
+        run: |
+          ./Module/Build/Build-Module.ps1 -ConfigurationGateMode Documentation
+          $documentationChanges = @(git status --porcelain --untracked-files=all -- Module/Docs Module/en-US)
+          if ($documentationChanges.Count -gt 0) {
+            $documentationChanges | Write-Host
+            throw 'Generated documentation is not up to date.'
+          }
         shell: pwsh
 
       - name: Commit refreshed PSD1

@@ -15,6 +15,11 @@ namespace SectigoCertificateManager.PowerShell;
 /// Legacy mode: uses order number with the legacy API.
 /// Admin mode: uses certificate id with the Admin Operations API.
 /// </para>
+/// <example>
+///   <summary>Renew a legacy certificate order</summary>
+///   <code>$csr = Get-Content -Raw '.\renewal.csr'; Invoke-SectigoCertificateRenewal -OrderNumber 100 -Csr $csr -DcvMode Email -DcvEmail 'admin@example.com'</code>
+///   <para>Submits a CSR and email validation details for the legacy order.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -22,7 +27,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   </item>
 /// </list>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsLifecycle.Invoke, "SectigoCertificateRenewal", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = LegacyParameterSet)]
 [CmdletBinding()]
 [OutputType(typeof(int))]
@@ -32,6 +37,7 @@ public sealed class RenewSectigoCertificateCommand : PSCmdlet {
 
     /// <summary>The API version to use (legacy only).</summary>
     [Parameter(ParameterSetName = LegacyParameterSet)]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The legacy order number.</summary>

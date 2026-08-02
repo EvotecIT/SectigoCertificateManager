@@ -8,6 +8,11 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Renews an existing certificate.</summary>
 /// <para>Uses the active Sectigo connection and submits a <see cref="RenewCertificateRequest"/> to the appropriate renew endpoint.</para>
+/// <example>
+///   <summary>Renew a certificate by identifier</summary>
+///   <code>$csr = Get-Content -Raw '.\renewal.csr'; Update-SectigoCertificate -CertificateId 12345 -Csr $csr -DcvMode Email -DcvEmail 'admin@example.com'</code>
+///   <para>Submits a CSR and email validation details for the specified certificate.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -15,13 +20,14 @@ namespace SectigoCertificateManager.PowerShell;
 ///   </item>
 /// </list>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsData.Update, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
 [CmdletBinding()]
 [OutputType(typeof(int))]
 public sealed class UpdateSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The identifier of the certificate to renew.</summary>

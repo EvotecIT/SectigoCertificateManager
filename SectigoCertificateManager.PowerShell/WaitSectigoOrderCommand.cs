@@ -21,13 +21,14 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Blocks until order 100 completes or is cancelled for the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsLifecycle.Wait, "SectigoOrder")]
 [CmdletBinding()]
 [OutputType(typeof(OrderStatus))]
 public sealed class WaitSectigoOrderCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The identifier of the order to wait on.</summary>
@@ -36,6 +37,7 @@ public sealed class WaitSectigoOrderCommand : AsyncPSCmdlet {
 
     /// <summary>Delay between status checks.</summary>
     [Parameter]
+    [PSDefaultValue(Value = "00:00:05")]
     public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(5);
 
     /// <summary>Optional cancellation token.</summary>

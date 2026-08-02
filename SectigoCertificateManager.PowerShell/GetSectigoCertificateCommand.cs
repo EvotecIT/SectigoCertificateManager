@@ -39,7 +39,7 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Connects using the Admin API and lists detailed certificates that are issued, requested by the specified user and expiring within the next 30 days.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificate", DefaultParameterSetName = ListParameterSet)]
 [Alias("Get-SectigoCertificates")]
 [CmdletBinding()]
@@ -50,6 +50,7 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
 
     /// <summary>The API version to use when using the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The certificate identifier.</summary>
@@ -58,6 +59,7 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
 
     /// <summary>Maximum number of certificates to retrieve.</summary>
     [Parameter(ParameterSetName = ListParameterSet)]
+    [PSDefaultValue(Value = 30)]
     public int Size { get; set; } = 30;
 
     /// <summary>Position offset for paging.</summary>
@@ -68,6 +70,7 @@ public sealed class GetSectigoCertificateCommand : AsyncPSCmdlet {
     /// Optional certificate status filter (for example, Issued, Expired). When specified, applies only to Admin connections.
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet)]
+    [PSDefaultValue(Value = CertificateStatus.Any)]
     public CertificateStatus Status { get; set; } = CertificateStatus.Any;
 
     /// <summary>

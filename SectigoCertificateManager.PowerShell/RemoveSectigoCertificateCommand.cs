@@ -21,12 +21,13 @@ namespace SectigoCertificateManager.PowerShell;
 ///   <para>Permanently removes certificate 10 for the connected account.</para>
 /// </example>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/shouldprocess-attribute"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Remove, "SectigoCertificate", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
 [CmdletBinding()]
 public sealed class RemoveSectigoCertificateCommand : AsyncPSCmdlet {
     /// <summary>The API version to use when calling the legacy API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The identifier of the certificate to delete.</summary>
@@ -35,6 +36,7 @@ public sealed class RemoveSectigoCertificateCommand : AsyncPSCmdlet {
 
     /// <summary>The revocation reason code used when revoking via the Admin API.</summary>
     [Parameter]
+    [PSDefaultValue(Value = RevocationReason.Unspecified)]
     public RevocationReason ReasonCode { get; set; } = RevocationReason.Unspecified;
 
     /// <summary>Optional human-readable revocation reason text used when revoking via the Admin API.</summary>

@@ -7,6 +7,11 @@ namespace SectigoCertificateManager.PowerShell;
 
 /// <summary>Retrieves certificate revocation information.</summary>
 /// <para>Resolves revocation details for the specified certificate using the active Sectigo connection.</para>
+/// <example>
+///   <summary>Retrieve revocation details for a certificate</summary>
+///   <code>Get-SectigoCertificateRevocation -CertificateId 12345</code>
+///   <para>Returns revocation information for the certificate through the active connection.</para>
+/// </example>
 /// <list type="alertSet">
 ///   <item>
 ///     <term>Network</term>
@@ -14,13 +19,14 @@ namespace SectigoCertificateManager.PowerShell;
 ///   </item>
 /// </list>
 /// <seealso href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/writing-a-cmdlet"/>
-/// <seealso href="https://github.com/SectigoCertificateManager/SectigoCertificateManager"/>
+/// <seealso href="https://github.com/EvotecIT/SectigoCertificateManager"/>
 [Cmdlet(VerbsCommon.Get, "SectigoCertificateRevocation")]
 [CmdletBinding()]
 [OutputType(typeof(Models.CertificateRevocation))]
 public sealed class GetSectigoCertificateRevocationCommand : AsyncPSCmdlet {
     /// <summary>The API version to use.</summary>
     [Parameter]
+    [PSDefaultValue(Value = ApiVersion.V25_6)]
     public ApiVersion ApiVersion { get; set; } = ApiVersion.V25_6;
 
     /// <summary>The certificate identifier.</summary>
