@@ -123,6 +123,51 @@ public sealed class Certificate {
     /// <summary>Gets or sets a value indicating whether notifications are suspended.</summary>
     public bool SuspendNotifications { get; set; }
 
+    /// <summary>Gets or sets the validation type (for example <c>OV</c>), when available.</summary>
+    public string? ValidationType { get; set; }
+
+    /// <summary>Gets or sets the identifier of the administrator who approved the request (Admin API only).</summary>
+    public int? ApproverId { get; set; }
+
+    /// <summary>Gets or sets the requester identifier (Admin API only).</summary>
+    public int? RequesterId { get; set; }
+
+    /// <summary>Gets or sets how the certificate was requested, when available.</summary>
+    public string? RequestedVia { get; set; }
+
+    /// <summary>Gets or sets the approval date text returned by the API.</summary>
+    public string? Approved { get; set; }
+
+    /// <summary>Gets or sets the issue date text returned by the API.</summary>
+    public string? Issued { get; set; }
+
+    /// <summary>Gets or sets the date text the request was declined.</summary>
+    public string? Declined { get; set; }
+
+    /// <summary>Gets or sets the date text the certificate was replaced.</summary>
+    public string? Replaced { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether the certificate was renewed, when the API reports it.</summary>
+    public bool? Renewed { get; set; }
+
+    /// <summary>Gets or sets the renewal date text returned by the API.</summary>
+    public string? RenewedDate { get; set; }
+
+    /// <summary>Gets or sets the signature algorithm.</summary>
+    public string? SignatureAlgorithm { get; set; }
+
+    /// <summary>Gets or sets custom field values set on the certificate.</summary>
+    public IReadOnlyList<CertificateCustomFieldValue> CustomFields { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the auto-renewal state (<c>Not scheduled</c>, <c>Scheduled</c>, <c>Started</c>, <c>Successful</c>
+    /// or <c>Failed</c>), when the API reports it.
+    /// </summary>
+    public string? AutoRenewState { get; set; }
+
+    /// <summary>Gets or sets how many days before expiry auto-renewal starts, when configured.</summary>
+    public int? AutoRenewDaysBeforeExpiration { get; set; }
+
     /// <summary>
     /// Creates an <see cref="X509Certificate2"/> from a base64 encoded certificate.
     /// </summary>
