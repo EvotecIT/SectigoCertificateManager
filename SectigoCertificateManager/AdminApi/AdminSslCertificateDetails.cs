@@ -1,5 +1,6 @@
 namespace SectigoCertificateManager.AdminApi;
 
+using SectigoCertificateManager.Models;
 using SectigoCertificateManager.Utilities;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -93,6 +94,76 @@ public sealed class AdminSslCertificateDetails {
 
     /// <summary>Gets or sets a value indicating whether notifications are suspended.</summary>
     public bool SuspendNotifications { get; set; }
+
+    /// <summary>Gets or sets the certificate profile the certificate was enrolled from.</summary>
+    public Profile? CertType { get; set; }
+
+    /// <summary>Gets or sets the validation type (for example <c>OV</c>), available for managed SSL certificates.</summary>
+    public string? ValidationType { get; set; }
+
+    /// <summary>
+    /// Gets or sets the identifier of the administrator who approved the request. The API documents
+    /// <see cref="Owner"/> as that approver.
+    /// </summary>
+    public int? OwnerId { get; set; }
+
+    /// <summary>Gets or sets the requester identifier, when available.</summary>
+    public int? RequesterId { get; set; }
+
+    /// <summary>Gets or sets how the certificate was requested (for example through the API or an enrollment form).</summary>
+    public string? RequestedVia { get; set; }
+
+    /// <summary>Gets or sets the approval date.</summary>
+    public string? Approved { get; set; }
+
+    /// <summary>Gets or sets the issue date.</summary>
+    public string? Issued { get; set; }
+
+    /// <summary>Gets or sets the date the request was declined.</summary>
+    public string? Declined { get; set; }
+
+    /// <summary>Gets or sets the date the certificate was replaced.</summary>
+    public string? Replaced { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether the certificate was renewed.</summary>
+    public bool? Renewed { get; set; }
+
+    /// <summary>Gets or sets the renewal date.</summary>
+    public string? RenewedDate { get; set; }
+
+    /// <summary>Gets or sets the signature algorithm.</summary>
+    public string? SignatureAlg { get; set; }
+
+    /// <summary>Gets or sets the custom field values set on the certificate.</summary>
+    public IReadOnlyList<AdminSslCustomFieldValue>? CustomFields { get; set; }
+
+    /// <summary>Gets or sets the auto-renewal state and lead time.</summary>
+    public AdminSslAutoRenewDetails? AutoRenewDetails { get; set; }
+}
+
+/// <summary>
+/// A custom field value on an SSL certificate.
+/// </summary>
+public sealed class AdminSslCustomFieldValue {
+    /// <summary>Gets or sets the custom field name.</summary>
+    public string? Name { get; set; }
+
+    /// <summary>Gets or sets the value.</summary>
+    public string? Value { get; set; }
+}
+
+/// <summary>
+/// Auto-renewal information for an SSL certificate.
+/// </summary>
+public sealed class AdminSslAutoRenewDetails {
+    /// <summary>
+    /// Gets or sets the renewal state: <c>Not scheduled</c>, <c>Scheduled</c>, <c>Started</c>, <c>Successful</c> or
+    /// <c>Failed</c>.
+    /// </summary>
+    public string? State { get; set; }
+
+    /// <summary>Gets or sets how many days before expiry the renewal starts.</summary>
+    public int? DaysBeforeExpiration { get; set; }
 }
 
 /// <summary>

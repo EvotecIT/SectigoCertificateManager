@@ -269,6 +269,60 @@ public sealed class CertificateServiceTests {
     }
 
     [Fact]
+    public async Task GetAsync_Admin_MapsLifecycleProfileAndCustomFields() {
+        var tokenResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = JsonContent.Create(new { access_token = "tok" })
+        };
+        // Shaped as the Admin API documents the certificate details response.
+        const string json = """
+            {
+              "id": 9, "commonName": "portal.example.com", "orgId": 3, "status": "Issued",
+              "certType": { "id": 224, "name": "OV SSL", "description": "Organization validated", "terms": [365] },
+              "validationType": "OV", "owner": "approver@example.com", "ownerId": 41, "requesterId": 77,
+              "requestedVia": "Enrollment Form", "requested": "2025-09-30T08:00:00Z", "approved": "2025-10-01T09:00:00Z",
+              "issued": "2025-10-01T09:05:00Z", "expires": "2026-10-01T09:05:00Z", "replaced": "2026-09-20T10:00:00Z",
+              "renewed": true, "renewedDate": "2026-09-20T10:00:00Z", "signatureAlg": "SHA256withRSA",
+              "customFields": [ { "name": "Business owner", "value": "web-team@example.com" }, { "name": " ", "value": "ignored" } ],
+              "autoRenewDetails": { "state": "Scheduled", "daysBeforeExpiration": 30 },
+              "suspendNotifications": false
+            }
+            """;
+        var apiResponse = new HttpResponseMessage(HttpStatusCode.OK) {
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+
+        var handler = new AdminHandler(tokenResponse, apiResponse);
+        using var http = new HttpClient(handler);
+        var adminConfig = new AdminApiConfig(
+            "https://admin.enterprise.sectigo.com",
+            "https://auth.sso.sectigo.com/auth/realms/apiclients/protocol/openid-connect/token",
+            "id",
+            "secret");
+
+        using var service = new CertificateService(adminConfig, http);
+        var cert = await service.GetAsync(9);
+
+        Assert.NotNull(cert);
+        Assert.Equal("OV SSL", cert!.CertType?.Name);
+        Assert.Equal(224, cert.CertType?.Id);
+        Assert.Equal("OV", cert.ValidationType);
+        Assert.Equal(41, cert.ApproverId);
+        Assert.Equal(77, cert.RequesterId);
+        Assert.Equal("Enrollment Form", cert.RequestedVia);
+        Assert.Equal("2025-10-01T09:00:00Z", cert.Approved);
+        Assert.Equal("2025-10-01T09:05:00Z", cert.Issued);
+        Assert.Equal("2026-09-20T10:00:00Z", cert.Replaced);
+        Assert.True(cert.Renewed);
+        Assert.Equal("2026-09-20T10:00:00Z", cert.RenewedDate);
+        Assert.Equal("SHA256withRSA", cert.SignatureAlgorithm);
+        var field = Assert.Single(cert.CustomFields);
+        Assert.Equal("Business owner", field.Name);
+        Assert.Equal("web-team@example.com", field.Value);
+        Assert.Equal("Scheduled", cert.AutoRenewState);
+        Assert.Equal(30, cert.AutoRenewDaysBeforeExpiration);
+    }
+
+    [Fact]
     public async Task ListAsync_Legacy_UsesCertificatesClient() {
         var certificates = new[] {
             new Certificate { Id = 1, CommonName = "legacy.example.com" }
