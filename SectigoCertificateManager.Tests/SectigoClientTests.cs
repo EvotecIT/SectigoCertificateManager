@@ -16,6 +16,7 @@ namespace SectigoCertificateManager.Tests;
 /// <summary>
 /// Unit tests for <see cref="SectigoClient"/>.
 /// </summary>
+[Collection(ApiConfigEnvironmentCollection.Name)]
 public sealed class SectigoClientTests {
     private sealed class TestHandler : HttpMessageHandler {
         public HttpRequestMessage? Request { get; private set; }
@@ -219,7 +220,8 @@ public sealed class SectigoClientTests {
 
     [Fact]
     public async Task RefreshesTokenAutomatically() {
-        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "token.json");
+        using var environment = new ApiConfigEnvironmentScope();
+        var path = environment.TokenCachePath;
         var expired = DateTimeOffset.UtcNow.AddMinutes(-1);
         var called = false;
         Task<TokenInfo> Refresh(CancellationToken ct) {
@@ -249,7 +251,8 @@ public sealed class SectigoClientTests {
 
     [Fact]
     public async Task RefreshesTokenBeforeExpirationThreshold() {
-        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "token.json");
+        using var environment = new ApiConfigEnvironmentScope();
+        var path = environment.TokenCachePath;
         var expires = DateTimeOffset.UtcNow.AddSeconds(30);
         var called = false;
         Task<TokenInfo> Refresh(CancellationToken ct) {
@@ -308,7 +311,8 @@ public sealed class SectigoClientTests {
 
     [Fact]
     public async Task PersistsTokenAfterRefresh() {
-        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "token.json");
+        using var environment = new ApiConfigEnvironmentScope();
+        var path = environment.TokenCachePath;
         var expired = DateTimeOffset.UtcNow.AddMinutes(-1);
         Task<TokenInfo> Refresh(CancellationToken ct) => Task.FromResult(new TokenInfo("new", DateTimeOffset.UtcNow.AddMinutes(30)));
 
@@ -335,10 +339,8 @@ public sealed class SectigoClientTests {
 
     [Fact]
     public async Task PersistsTokenAfterRefreshUsingDefaultCacheResolution() {
-        string path = Environment.GetEnvironmentVariable("SECTIGO_TOKEN_CACHE_PATH")!;
-        if (File.Exists(path)) {
-            File.Delete(path);
-        }
+        using var environment = new ApiConfigEnvironmentScope();
+        string path = environment.TokenCachePath;
         var expired = DateTimeOffset.UtcNow.AddMinutes(-1);
         Task<TokenInfo> Refresh(CancellationToken ct) => Task.FromResult(new TokenInfo("default-cache", DateTimeOffset.UtcNow.AddMinutes(30)));
         var config = new ApiConfig(
