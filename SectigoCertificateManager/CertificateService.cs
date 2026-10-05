@@ -603,6 +603,23 @@ public sealed partial class CertificateService : IDisposable {
         return certificate;
     }
 
+    private static IReadOnlyList<CertificateCustomFieldValue> MapCustomFields(IReadOnlyList<AdminSslCustomFieldValue>? fields) {
+        if (fields is null || fields.Count == 0) {
+            return Array.Empty<CertificateCustomFieldValue>();
+        }
+
+        var result = new List<CertificateCustomFieldValue>(fields.Count);
+        foreach (var field in fields) {
+            if (string.IsNullOrWhiteSpace(field?.Name)) {
+                continue;
+            }
+
+            result.Add(new CertificateCustomFieldValue { Name = field!.Name!.Trim(), Value = field.Value });
+        }
+
+        return result;
+    }
+
     private static Certificate MapDetails(AdminSslCertificateDetails details) {
         var certificate = new Certificate {
             Id = details.Id,
@@ -634,7 +651,22 @@ public sealed partial class CertificateService : IDisposable {
             RevocationReasonCode = details.ReasonCode,
             SubjectAlternativeNames = details.SubjectAlternativeNames ?? Array.Empty<string>(),
             SuspendNotifications = details.SuspendNotifications,
-            Status = ParseStatus(details.Status)
+            Status = ParseStatus(details.Status),
+            CertType = details.CertType,
+            ValidationType = details.ValidationType,
+            ApproverId = details.OwnerId,
+            RequesterId = details.RequesterId,
+            RequestedVia = details.RequestedVia,
+            Approved = details.Approved,
+            Issued = details.Issued,
+            Declined = details.Declined,
+            Replaced = details.Replaced,
+            Renewed = details.Renewed,
+            RenewedDate = details.RenewedDate,
+            SignatureAlgorithm = details.SignatureAlg,
+            CustomFields = MapCustomFields(details.CustomFields),
+            AutoRenewState = details.AutoRenewDetails?.State,
+            AutoRenewDaysBeforeExpiration = details.AutoRenewDetails?.DaysBeforeExpiration
         };
 
         return certificate;
