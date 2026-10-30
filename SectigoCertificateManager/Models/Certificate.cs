@@ -159,6 +159,9 @@ public sealed class Certificate {
     /// <summary>Gets or sets custom field values set on the certificate.</summary>
     public IReadOnlyList<CertificateCustomFieldValue> CustomFields { get; set; } = [];
 
+    /// <summary>Gets or sets whether the response supplied custom fields, including an explicitly empty list. False means the field was unavailable.</summary>
+    public bool CustomFieldsAvailable { get; set; }
+
     /// <summary>
     /// Gets or sets the auto-renewal state (<c>Not scheduled</c>, <c>Scheduled</c>, <c>Started</c>, <c>Successful</c>
     /// or <c>Failed</c>), when the API reports it.

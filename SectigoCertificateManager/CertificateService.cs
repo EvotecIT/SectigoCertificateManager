@@ -665,6 +665,7 @@ public sealed partial class CertificateService : IDisposable {
             RenewedDate = details.RenewedDate,
             SignatureAlgorithm = details.SignatureAlg,
             CustomFields = MapCustomFields(details.CustomFields),
+            CustomFieldsAvailable = details.CustomFields is not null,
             AutoRenewState = details.AutoRenewDetails?.State,
             AutoRenewDaysBeforeExpiration = details.AutoRenewDetails?.DaysBeforeExpiration
         };

@@ -316,10 +316,27 @@ public sealed class CertificateServiceTests {
         Assert.Equal("2026-09-20T10:00:00Z", cert.RenewedDate);
         Assert.Equal("SHA256withRSA", cert.SignatureAlgorithm);
         var field = Assert.Single(cert.CustomFields);
+        Assert.True(cert.CustomFieldsAvailable);
         Assert.Equal("Business owner", field.Name);
         Assert.Equal("web-team@example.com", field.Value);
         Assert.Equal("Scheduled", cert.AutoRenewState);
         Assert.Equal(30, cert.AutoRenewDaysBeforeExpiration);
+    }
+
+    [Theory]
+    [InlineData("", false)]
+    [InlineData(",\"customFields\":null", false)]
+    [InlineData(",\"customFields\":[]", true)]
+    public async Task GetAsync_Admin_CustomFieldsAvailabilityDistinguishesOmittedAndEmpty(string fields, bool available) {
+        using var http = new HttpClient(new AdminHandler(
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(new { access_token = "tok" }) },
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"id\":9,\"status\":\"Issued\"" + fields + "}", Encoding.UTF8, "application/json") }));
+        var config = new AdminApiConfig("https://admin.example.test", "https://auth.example.test/protocol/openid-connect/token", "id", "synthetic-secret");
+        using var service = new CertificateService(config, http);
+        Certificate? certificate = await service.GetAsync(9);
+        Assert.NotNull(certificate);
+        Assert.Empty(certificate!.CustomFields);
+        Assert.Equal(available, certificate.CustomFieldsAvailable);
     }
 
     [Fact]
