@@ -72,11 +72,6 @@ jobs:
             9.0.x
             8.0.x
 
-      - name: Install Mono
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mono-complete
-
       - name: Restore dependencies
         run: dotnet restore SectigoCertificateManager.sln
 
@@ -84,7 +79,12 @@ jobs:
         run: dotnet build SectigoCertificateManager.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
 
       - name: Run tests
-        run: dotnet test SectigoCertificateManager.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+        shell: bash
+        run: |
+          # VSTest supports .NET Framework execution only on Windows.
+          for framework in net8.0 net9.0; do
+            dotnet test SectigoCertificateManager.sln --configuration ${{ env.BUILD_CONFIGURATION }} --framework "$framework" --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+          done
 
       - name: Upload test results
         uses: actions/upload-artifact@v7
@@ -116,9 +116,6 @@ jobs:
             9.0.x
             8.0.x
 
-      - name: Install Mono
-        run: brew install mono
-
       - name: Restore dependencies
         run: dotnet restore SectigoCertificateManager.sln
 
@@ -126,7 +123,12 @@ jobs:
         run: dotnet build SectigoCertificateManager.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
 
       - name: Run tests
-        run: dotnet test SectigoCertificateManager.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+        shell: bash
+        run: |
+          # VSTest supports .NET Framework execution only on Windows.
+          for framework in net8.0 net9.0; do
+            dotnet test SectigoCertificateManager.sln --configuration ${{ env.BUILD_CONFIGURATION }} --framework "$framework" --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+          done
 
       - name: Upload test results
         uses: actions/upload-artifact@v7
